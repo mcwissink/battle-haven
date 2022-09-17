@@ -29,12 +29,15 @@ export class BattleHaven {
         window.requestAnimationFrame(this.update);
     }
 
+    wait = 2;
     update: FrameRequestCallback = (time) => {
         const dx = time - this.previousTime;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        this.scene.update(dx);
-        this.scene.render(this.ctx);
+        if (!--this.wait) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.scene.update(dx);
+            this.scene.render(this.ctx);
+            this.wait = 2;
+        }
 
         window.requestAnimationFrame(this.update);
         this.previousTime = time;

@@ -4,6 +4,7 @@ import { Sprite } from './sprite';
 import './woody_0.png';
 import './woody_1.png';
 import './woody_2.png';
+import { Mechanics } from './mechanics';
 
 const loadImage = (source: string) => {
     const image = new Image();
@@ -26,7 +27,8 @@ class Animator<T extends Record<number, any>> {
 }
 
 interface EntityState<T> {
-    input?: (controller: ControllerState) => keyof T | 999 | undefined;
+    input?: (controller: ControllerState) => keyof T | 999 | void;
+    update?: () => keyof T | 999 | void;
     nextFrame?: () => keyof T;
 }
 
@@ -43,15 +45,14 @@ export class Entity {
         rows: 7,
         columns: 10,
     });
-    x = 0;
-    y = 0;
+    mechanics = new Mechanics();
     directionX = 1;
     directionY = 1;
-    direction = 1;
     frames = woody.frame;
-    frame: CharacterFrame = 60;
+    frame: CharacterFrame = 0;
     wait = 1;
     animator = new Animator<CharacterFrameData>();
+    nextFrame: CharacterFrame | 999 = 0;
     constructor(
         private states: Record<number, EntityState<CharacterFrameData> | undefined> = {
             0: {
@@ -60,60 +61,104 @@ export class Entity {
                     if (controller.stickX) {
                         return 5;
                     }
+                    if (controller.jump) {
+                        return 210;
+                    }
                 },
+                update: () => {
+                    this.mechanics.velocityX = 0;
+                }
             },
             1: {
                 nextFrame: () => this.animator.oscillate(5, 8),
                 input: (controller: ControllerState) => {
-                    if (controller.stickX) {
-                        this.directionX = Math.sign(controller.stickX);
+                    if (controller.jump) {
+                        return 210;
                     } else {
-                        return 999;
+                        if (controller.stickX) {
+                            this.directionX = Math.sign(controller.stickX);
+                        } else {
+                            return 999;
+                        }
                     }
+                },
+                update: () => {
+                    this.mechanics.velocityX = this.directionX * woody.bmp.walking_speed;
                 },
             },
             2: {
                 nextFrame: () => this.animator.oscillate(9, 11),
+                input: (controller: ControllerState) => {
+
+                    if (controller.jump) {
+                        return 213;
+                    } else {
+                        if (controller.stickX) {
+                            this.directionX = Math.sign(controller.stickX);
+                        } else {
+                            return 218;
+                        }
+                    }
+                },
+                update: () => {
+                    this.mechanics.velocityX = this.directionX * woody.bmp.running_speed;
+                },
+            },
+            4: {
+                update: () => {
+                    if (this.frame === 211) {
+                        if (this.mechanics.velocityX) {
+                            this.mechanics.velocityX = this.directionX * woody.bmp.jump_distance
+                        }
+                        this.mechanics.velocityY = woody.bmp.jump_height
+                    }
+                    if (this.frame > 211 && !this.mechanics.velocityY) {
+                        return 215;
+                    }
+                }
             }
         },
     ) { }
     translateFrame(frame: CharacterFrame | 999) {
         return frame === 999 ? 0 : frame;
     }
-    getNextFrame(): CharacterFrame {
-        const frameData = this.frames[this.frame];
-        const state = this.states[frameData.state];
-        if (state?.nextFrame) {
-            return state.nextFrame()
-        } else {
-            return frameData.next as CharacterFrame;
-        }
-    }
+
     processFrame() {
-        const frameData = this.frames[this.frame];
-        const state = this.states[frameData.state];
-        let nextFrame = state?.input?.(keyboardControllers[0].state) as CharacterFrame;
-
-        if (!--this.wait) {
-            nextFrame = this.getNextFrame();
+        if (!this.nextFrame && !--this.wait) {
+            const frameData = this.frames[this.frame];
+            const state = this.states[frameData.state];
+            this.nextFrame = state?.nextFrame ? state.nextFrame() : frameData.next as CharacterFrame;
         }
 
-        if (nextFrame) {
-            const nextFrameData = this.frames[this.translateFrame(nextFrame)];
-            // Simulate 30 fps temporarily with * 2 until I think of better solution
-            this.wait = (1 + nextFrameData.wait) * 2;
-            this.frame = this.translateFrame(nextFrame);
+        if (this.nextFrame) {
+            const translatedFrame = this.translateFrame(this.nextFrame);
+            const nextFrameData = this.frames[translatedFrame];
+            this.wait = (1 + nextFrameData.wait);
+            this.frame = translatedFrame;
             return nextFrameData;
         }
-        return frameData;
     }
     update(_dx: number) {
         keyboardControllers[0].fetch();
-        const frameData = this.processFrame();
+        this.nextFrame = 0;
 
+        const frameData = this.frames[this.frame];
+        const state = this.states[frameData.state];
+
+        let inputFrame = state?.input?.(keyboardControllers[0].state) as CharacterFrame;
+        if (inputFrame) {
+            this.nextFrame = inputFrame;
+        }
+        let updateFrame = state?.update?.() as CharacterFrame;
+        if (updateFrame) {
+            this.nextFrame = updateFrame;
+        }
+        this.processFrame();
+
+        this.mechanics.update();
         this.sprite.setFrame(frameData.pic);
     }
     render(ctx: CanvasRenderingContext2D) {
-        this.sprite.render(ctx, this);
+        this.sprite.render(ctx, this.mechanics.x, this.mechanics.y, this.directionX, this.directionY);
     }
 }

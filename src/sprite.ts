@@ -27,7 +27,7 @@ export class Sprite {
         this.frameOffsetY = Math.floor(relativeFrame / (this.spriteSheet.columns)) * this.spriteSheet.height;
     }
 
-    render(ctx: CanvasRenderingContext2D, { x, y, directionX, directionY }: { x: number, y: number, directionX: number, directionY: number }) {
+    render(ctx: CanvasRenderingContext2D, x: number, y: number, directionX: number, directionY: number) {
         ctx.translate(x, y);
         ctx.scale(directionX, directionY);
         if (this.spriteSheet) {
