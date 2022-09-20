@@ -1,4 +1,4 @@
-import { keyboardControllers, Controller, ControllerState } from './controller';
+import { keyboardControllers, ControllerState, Controller } from './controller';
 import { woody } from './woody';
 import { Sprite } from './sprite';
 import './woody_0.png';
@@ -27,12 +27,20 @@ class Animator<T extends Record<number, any>> {
 }
 
 interface EntityState<T> {
-    input?: (controller: ControllerState) => keyof T | 999 | void;
+    input?: (controller: Controller) => keyof T | 999 | void;
+    combo?: Record<string, keyof T | 999 | void>;
     update?: () => keyof T | 999 | void;
     nextFrame?: () => keyof T;
 }
 
 const testImages = ['./woody_0.png', './woody_1.png', './woody_2.png'].map(loadImage);
+
+const animation = Object.entries(woody.frame).reduce<Record<string, CharacterFrame>>((acc, [frame, data]) => {
+    if (!acc[data.name]) {
+        acc[data.name] = (Number(frame) || 999) as CharacterFrame;
+    }
+    return acc;
+}, {})
 
 type CharacterFrameData = typeof woody.frame
 type CharacterFrame = keyof CharacterFrameData;
@@ -49,20 +57,26 @@ export class Entity {
     directionX = 1;
     directionY = 1;
     frames = woody.frame;
-    frame: CharacterFrame = 0;
+    frame: CharacterFrame = 1;
     wait = 1;
     animator = new Animator<CharacterFrameData>();
     nextFrame: CharacterFrame | 999 = 0;
     constructor(
-        private states: Record<number, EntityState<CharacterFrameData> | undefined> = {
+        private states: Record<number | 'generic', EntityState<CharacterFrameData> | undefined> = {
+            generic: {
+            },
             0: {
-                input: (controller: ControllerState) => {
+                combo: {
+                    hit_a: animation.punch,
+                    hit_d: animation.defend,
+                    hit_j: animation.jump,
+                    hit_F: animation.running,
+                    hit_DF: animation.walking,
+                },
+                input: ({ state: controller }) => {
                     this.directionX = Math.sign(controller.stickX) || this.directionX;
                     if (controller.stickX) {
-                        return 5;
-                    }
-                    if (controller.jump) {
-                        return 210;
+                        return animation.running;
                     }
                 },
                 update: () => {
@@ -70,16 +84,18 @@ export class Entity {
                 }
             },
             1: {
+                combo: {
+                    hit_a: animation.punch,
+                    hit_d: animation.defend,
+                    hit_j: animation.jump,
+                    hit_DF: animation.walking,
+                },
                 nextFrame: () => this.animator.oscillate(5, 8),
-                input: (controller: ControllerState) => {
-                    if (controller.jump) {
-                        return 210;
+                input: ({ state: controller }) => {
+                    if (controller.stickX) {
+                        this.directionX = Math.sign(controller.stickX);
                     } else {
-                        if (controller.stickX) {
-                            this.directionX = Math.sign(controller.stickX);
-                        } else {
-                            return 999;
-                        }
+                        return animation.standing;
                     }
                 },
                 update: () => {
@@ -87,17 +103,17 @@ export class Entity {
                 },
             },
             2: {
+                combo: {
+                    hit_a: 85,
+                    hit_d: 102,
+                    hit_j: animation.dash,
+                },
                 nextFrame: () => this.animator.oscillate(9, 11),
-                input: (controller: ControllerState) => {
-
-                    if (controller.jump) {
-                        return 213;
+                input: ({ state: controller }) => {
+                    if (controller.stickX) {
+                        this.directionX = Math.sign(controller.stickX);
                     } else {
-                        if (controller.stickX) {
-                            this.directionX = Math.sign(controller.stickX);
-                        } else {
-                            return 218;
-                        }
+                        return animation.stop_running;
                     }
                 },
                 update: () => {
@@ -105,16 +121,35 @@ export class Entity {
                 },
             },
             4: {
+                combo: {
+                    hit_a: animation.jump_attack,
+                },
                 update: () => {
-                    if (this.frame === 211) {
-                        if (this.mechanics.velocityX) {
-                            this.mechanics.velocityX = this.directionX * woody.bmp.jump_distance
-                        }
-                        this.mechanics.velocityY = woody.bmp.jump_height
+                    if (this.frame === 212 && !this.mechanics.velocityY) {
+                        return animation.crouch;
                     }
-                    if (this.frame > 211 && !this.mechanics.velocityY) {
-                        return 215;
+                }
+            },
+            5: {
+                combo: {
+                    hit_a: animation.dash_attack,
+                },
+                input: ({ state: controller }) => {
+                    const nextDirectionX = Math.sign(controller.stickX) || this.directionX;
+                    if (nextDirectionX !== this.directionX) {
+                        this.directionX = nextDirectionX;
+                        return 214;
                     }
+                },
+                update: () => {
+                    if (!this.mechanics.velocityY) {
+                        return animation.crouch;
+                    }
+                }
+            },
+            7: {
+                update: () => {
+                    this.mechanics.velocityX = 0;
                 }
             }
         },
@@ -124,28 +159,56 @@ export class Entity {
     }
 
     processFrame() {
+        const frameData = this.frames[this.frame];
+        const state = this.states[frameData.state];
+
+        const combo = keyboardControllers[0].combo || '';
+        const frameFromCombo = frameData[combo] || state?.combo?.[combo]
+        if (combo && frameFromCombo) {
+            this.nextFrame = frameFromCombo;
+            // Reset combo since it was consumed
+            keyboardControllers[0].combo = null;
+        }
+
         if (!this.nextFrame && !--this.wait) {
-            const frameData = this.frames[this.frame];
-            const state = this.states[frameData.state];
             this.nextFrame = state?.nextFrame ? state.nextFrame() : frameData.next as CharacterFrame;
         }
 
         if (this.nextFrame) {
             const translatedFrame = this.translateFrame(this.nextFrame);
             const nextFrameData = this.frames[translatedFrame];
+
+            if (nextFrameData.dvx) {
+                this.mechanics.velocityX = nextFrameData.dvx * this.directionX;
+            }
+            if (nextFrameData.dvy) {
+                this.mechanics.velocityY = nextFrameData.dvy;
+            }
+
+            // Frame specific updates
+            if (this.frame === 211 && this.nextFrame === 212) {
+                this.mechanics.velocityX = woody.bmp.jump_distance * Math.sign(this.mechanics.velocityX);
+                this.mechanics.velocityY = woody.bmp.jump_height
+            }
+            if (this.nextFrame === 213) {
+                this.mechanics.velocityX = woody.bmp.dash_distance * Math.sign(this.mechanics.velocityX);
+                this.mechanics.velocityY = woody.bmp.dash_height
+            }
+
             this.wait = (1 + nextFrameData.wait);
             this.frame = translatedFrame;
-            return nextFrameData;
         }
     }
     update(_dx: number) {
-        keyboardControllers[0].fetch();
+        this.mechanics.update();
+
+        keyboardControllers[0].update();
         this.nextFrame = 0;
 
         const frameData = this.frames[this.frame];
         const state = this.states[frameData.state];
 
-        let inputFrame = state?.input?.(keyboardControllers[0].state) as CharacterFrame;
+        let inputFrame = state?.input?.(keyboardControllers[0]) as CharacterFrame;
         if (inputFrame) {
             this.nextFrame = inputFrame;
         }
@@ -153,9 +216,12 @@ export class Entity {
         if (updateFrame) {
             this.nextFrame = updateFrame;
         }
+        let genericUpdateFrame = this.states['generic']?.update?.() as CharacterFrame;
+        if (genericUpdateFrame) {
+            this.nextFrame = genericUpdateFrame;
+        }
         this.processFrame();
 
-        this.mechanics.update();
         this.sprite.setFrame(frameData.pic);
     }
     render(ctx: CanvasRenderingContext2D) {

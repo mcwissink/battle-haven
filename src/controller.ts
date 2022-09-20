@@ -1,3 +1,48 @@
+const combos = [
+    { sequence: ['up'], name: 'hit_U', },
+    { sequence: ['down'], name: 'hit_D', },
+    { sequence: ['left'], name: 'hit_F', },
+    { sequence: ['right'], name: 'hit_F', },
+    { sequence: ['attack'], name: 'hit_a', },
+    { sequence: ['jump'], name: 'hit_j', },
+    { sequence: ['defend'], name: 'hit_d', },
+    { sequence: ['down', 'right'], name: 'hit_DF', },
+    { sequence: ['down', 'left'], name: 'hit_DF', },
+    { sequence: ['defend', 'right', 'attack'], name: 'hit_Fa', },
+    { sequence: ['defend', 'left', 'attack'], name: 'hit_Fa', },
+    { sequence: ['defend', 'right', 'jump'], name: 'hit_Fj', },
+    { sequence: ['defend', 'left', 'jump'], name: 'hit_Fj', },
+    { sequence: ['defend', 'up', 'attack'], name: 'hit_Ua', },
+    { sequence: ['defend', 'up', 'jump'], name: 'hit_Uj', },
+    { sequence: ['defend', 'down', 'attack'], name: 'hit_Da', },
+    { sequence: ['defend', 'down', 'jump'], name: 'hit_Dj', },
+    { sequence: ['defend', 'jump', 'attack'], name: 'hit_ja', },
+];
+export class CircleBuffer<T> {
+    private buffer: T[];
+    private start = 0;
+    constructor(private size: number, defaultValue: T) {
+        this.buffer = new Array(this.size).fill(defaultValue);
+    }
+    push(item: T) {
+        this.buffer[this.start] = item;
+        this.start = (this.start + 1) % this.size;
+    }
+    at(index: number): T | undefined {
+        if (Math.abs(index) <= this.size) {
+            const offset = index < 0 ? this.size + index : index;
+            return this.buffer[(this.start + offset) % this.size];
+        }
+    }
+    forEach(callback: (item: T, index: number) => void) {
+        for (let i = 0; i < this.size; i++) {
+            callback(this.buffer[(this.start + i) % this.size], i);
+        }
+    }
+}
+
+type ComboInput = 'left' | 'right' | 'up' | 'down' | 'attack' | 'jump' | 'defend' | null;
+
 export interface ControllerState {
     stickX: number;
     stickY: number;
@@ -14,15 +59,62 @@ export class Controller {
         attack: 0,
     }
 
-    buffer: Array<[keyof ControllerState, number]> = [];
+    combo: string | null = null;
 
-    update(control: keyof ControllerState, magnitude: number) {
-        this.buffer.push([control, magnitude]);
+    buffer = new CircleBuffer<ComboInput>(3, null);
+
+    getComboInput(control: keyof ControllerState, magnitude: number): ComboInput | undefined {
+        switch (control) {
+            case 'stickX':
+                if (magnitude > 0 && this.state.stickX <= 0) {
+                    return 'right';
+                }
+                if (magnitude < 0 && this.state.stickX >= 0) {
+                    return 'left'
+                }
+                break;
+            case 'stickY':
+                if (magnitude > 0 && this.state.stickY <= 0) {
+                    return 'up';
+                }
+                if (magnitude < 0 && this.state.stickY >= 0) {
+                    return 'down';
+                }
+                break;
+            case 'attack':
+                if (magnitude && !this.state.attack) {
+                    return 'attack';
+                }
+                break;
+            case 'defend':
+                if (magnitude && !this.state.defend) {
+                    return 'defend'
+                }
+                break;
+            case 'jump':
+                if (magnitude && !this.state.jump) {
+                    return 'jump'
+                }
+                break;
+        }
+    }
+
+    input(control: keyof ControllerState, magnitude: number) {
+        const comboInput = this.getComboInput(control, magnitude);
+        if (comboInput) {
+            this.buffer.push(comboInput);
+            // detect combo
+            combos.forEach((combo) => {
+                const complete = combo.sequence.reduce((acc, input, index) => acc && this.buffer.at(index - combo.sequence.length) === input, true);
+                if (complete) {
+                    this.combo = combo.name;
+                }
+            });
+        }
+        this.state[control] = magnitude;
     };
 
-    fetch() {
-        this.buffer.forEach(([control, magnitude]) => this.state[control] = magnitude);
-        this.buffer.length = 0;
+    update() {
     }
 }
 
@@ -49,34 +141,34 @@ class KeyboardController extends Controller {
             switch (input) {
                 case 'up':
                     if (active) {
-                        this.update('stickY', 1);
+                        this.input('stickY', 1);
                     } else if (!this.keyboardState.down) {
-                        this.update('stickY', 0);
+                        this.input('stickY', 0);
                     }
                     break;
                 case 'down':
                     if (active) {
-                        this.update('stickY', -1);
+                        this.input('stickY', -1);
                     } else if (!this.keyboardState.up) {
-                        this.update('stickY', 0);
+                        this.input('stickY', 0);
                     }
                     break;
                 case 'left':
                     if (active) {
-                        this.update('stickX', -1);
+                        this.input('stickX', -1);
                     } else if (!this.keyboardState.right) {
-                        this.update('stickX', 0);
+                        this.input('stickX', 0);
                     }
                     break;
                 case 'right':
                     if (active) {
-                        this.update('stickX', 1);
+                        this.input('stickX', 1);
                     } else if (!this.keyboardState.left) {
-                        this.update('stickX', 0);
+                        this.input('stickX', 0);
                     }
                     break;
                 default:
-                    this.update(input, active ? 1 : 0);
+                    this.input(input, active ? 1 : 0);
                     break;
             }
         }
@@ -90,9 +182,9 @@ export const keyboardControllers = [
             ArrowDown: 'down',
             ArrowLeft: 'left',
             ArrowRight: 'right',
-            z: 'attack',
+            z: 'defend',
             x: 'jump',
-            c: 'defend',
+            c: 'attack',
         }
     })
 ];

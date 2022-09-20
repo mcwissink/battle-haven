@@ -11,9 +11,10 @@ export class Mechanics {
     update() {
         this.x += this.velocityX;
         this.y += this.velocityY;
-        if (this.y < 50) {
+        if (this.y < 100) {
             this.velocityY += this.mass * gravity;
         } else {
+            this.y = 100;
             this.velocityY = 0;
         }
     }
