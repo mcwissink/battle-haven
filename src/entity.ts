@@ -1,4 +1,4 @@
-import { keyboardControllers, ControllerState, Controller } from './controller';
+import { keyboardControllers, Controller } from './controller';
 import { woody } from './woody';
 import { Sprite } from './sprite';
 import './woody_0.png';
@@ -39,6 +39,8 @@ const animation = Object.entries(woody.frame).reduce<Record<string, CharacterFra
     if (!acc[data.name]) {
         acc[data.name] = (Number(frame) || 999) as CharacterFrame;
     }
+    data.centerx++;
+    data.centery++;
     return acc;
 }, {})
 
@@ -225,6 +227,44 @@ export class Entity {
         this.sprite.setFrame(frameData.pic);
     }
     render(ctx: CanvasRenderingContext2D) {
-        this.sprite.render(ctx, this.mechanics.x, this.mechanics.y, this.directionX, this.directionY);
+        this.sprite.render(ctx, this.mechanics.x - 40, this.mechanics.y - 80, this.directionX, this.directionY);
+        this.debugRender(ctx);
+    }
+
+    get x() {
+        return this.mechanics.x - (40 * this.directionX - 1);
+    }
+    get y() {
+        return this.mechanics.y - 80;
+    }
+
+    debugRender(ctx: CanvasRenderingContext2D) {
+        const frameData = this.frames[this.frame];
+        const body = frameData.bdy as any;
+        const interaction = frameData.itr as any;
+
+        if (body) {
+            ctx.fillStyle = 'rgba(0, 0, 255, 0.4)';
+            if (Array.isArray(body)) {
+                body.forEach((b) => {
+                    ctx.fillRect(this.x + b.x * this.directionX, this.y + b.y, b.w * this.directionX, b.h)
+                });
+            } else {
+                ctx.fillRect(this.x + body.x * this.directionX, this.y + body.y, body.w * this.directionX, body.h);
+            }
+        }
+        if (interaction) {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+            if (Array.isArray(interaction)) {
+                interaction.forEach((i) => ctx.fillRect(this.x + i.x * this.directionX, this.y + i.y, i.w * this.directionX, i.h));
+            } else {
+                ctx.fillRect(this.x + interaction.x * this.directionX, this.y + interaction.y, interaction.w * this.directionX, interaction.h);
+            }
+        }
+        ctx.fillStyle = 'rgba(0, 255, 255)';
+        ctx.fillRect(this.mechanics.x, this.mechanics.y, 3, 3);
+
+        ctx.fillStyle = 'rgba(0, 255, 0)';
+        ctx.fillRect(this.x, this.y, 4, 4);
     }
 }

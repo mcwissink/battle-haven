@@ -64,6 +64,7 @@ export class Controller {
     buffer = new CircleBuffer<ComboInput>(3, null);
 
     getComboInput(control: keyof ControllerState, magnitude: number): ComboInput | undefined {
+        // Prevent repeated key presses
         switch (control) {
             case 'stickX':
                 if (magnitude > 0 && this.state.stickX <= 0) {
