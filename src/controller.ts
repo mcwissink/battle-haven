@@ -75,10 +75,10 @@ export class Controller {
                 }
                 break;
             case 'stickY':
-                if (magnitude > 0 && this.state.stickY <= 0) {
+                if (magnitude < 0 && this.state.stickY >= 0) {
                     return 'up';
                 }
-                if (magnitude < 0 && this.state.stickY >= 0) {
+                if (magnitude > 0 && this.state.stickY <= 0) {
                     return 'down';
                 }
                 break;
@@ -115,8 +115,7 @@ export class Controller {
         this.state[control] = magnitude;
     };
 
-    update() {
-    }
+    update() { }
 }
 
 interface KeyboardControllerConfig {
@@ -142,14 +141,14 @@ class KeyboardController extends Controller {
             switch (input) {
                 case 'up':
                     if (active) {
-                        this.input('stickY', 1);
+                        this.input('stickY', -1);
                     } else if (!this.keyboardState.down) {
                         this.input('stickY', 0);
                     }
                     break;
                 case 'down':
                     if (active) {
-                        this.input('stickY', -1);
+                        this.input('stickY', 1);
                     } else if (!this.keyboardState.up) {
                         this.input('stickY', 0);
                     }
@@ -172,28 +171,91 @@ class KeyboardController extends Controller {
                     this.input(input, active ? 1 : 0);
                     break;
             }
+            return true;
         }
+        return false;
     }
 }
 
-export const keyboardControllers = [
-    new KeyboardController({
-        mapping: {
-            ArrowUp: 'up',
-            ArrowDown: 'down',
-            ArrowLeft: 'left',
-            ArrowRight: 'right',
-            z: 'defend',
-            x: 'jump',
-            c: 'attack',
+class GamepadController extends Controller {
+    constructor(public gamepad: Gamepad) {
+        super();
+    }
+
+    update() {
+        this.input('attack', this.gamepad.buttons[0].value);
+        this.input('defend', this.gamepad.buttons[1].value);
+        this.input('jump', this.gamepad.buttons[2].value);
+        this.input('stickX', Math.round(this.gamepad.axes[0]));
+        this.input('stickY', Math.round(this.gamepad.axes[1]));
+    }
+}
+
+const mappings = [
+    {
+        ArrowUp: 'up',
+        ArrowDown: 'down',
+        ArrowLeft: 'left',
+        ArrowRight: 'right',
+        z: 'defend',
+        x: 'jump',
+        c: 'attack',
+    }
+] as const;
+
+type Port = Controller | null;
+
+class ControllerManager {
+    ports: [Port, Port, Port, Port] = [null, null, null, null];
+    keyboardControllers: KeyboardController[] = [];
+    gamepads: Record<number, number> = {};
+    static dummy = new Controller();
+    constructor() {
+        window.addEventListener('keyup', (e) => {
+            if (!this.keyboardControllers.find((c) => c.key(e.key, false))) {
+                // If the key is not handled by an existing controller, register a new controller if a matching mapping is found
+                const mapping = mappings.find((m) => Object.keys(m).includes(e.key))
+                if (mapping) {
+                    const controller = new KeyboardController({ mapping })
+                    this.keyboardControllers.push(controller);
+                    this.connect(controller);
+                }
+            };
+        });
+
+        window.addEventListener('keydown', (e) => {
+            this.keyboardControllers.find((c) => c.key(e.key, true));
+        });
+
+        window.addEventListener("gamepadconnected", (e) => {
+            const port = this.connect(new GamepadController(e.gamepad));
+            if (port !== -1) {
+                this.gamepads[e.gamepad.index] = port;
+            }
+        });
+
+        window.addEventListener("gamepaddisconnected", (e) => {
+            this.disconnect(this.gamepads[e.gamepad.index]);
+        });
+    }
+
+    get(port: number) {
+        return this.ports[port] ?? ControllerManager.dummy;
+    }
+
+    connect(controller: Controller) {
+        const emptyPort = this.ports.indexOf(null);
+        if (emptyPort !== -1) {
+            this.ports[emptyPort] = controller;
+            return emptyPort;
         }
-    })
-];
+        return -1;
+    }
 
-window.addEventListener('keyup', (e) => {
-    keyboardControllers.forEach((keyboardController) => keyboardController.key(e.key, false));
-});
+    disconnect(port: number) {
+        this.ports[port] = null;
+    }
+}
 
-window.addEventListener('keydown', (e) => {
-    keyboardControllers.forEach((keyboardController) => keyboardController.key(e.key, true));
-});
+export const controllers = new ControllerManager();
+

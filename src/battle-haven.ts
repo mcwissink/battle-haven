@@ -1,7 +1,5 @@
 import { Scene } from './scene';
 import { Entity } from './entity';
-import { keyboardControllers } from './controller';
-console.log(keyboardControllers);
 
 interface BattleHavenConfig {
     gravity: number;

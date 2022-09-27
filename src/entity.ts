@@ -1,4 +1,4 @@
-import { keyboardControllers, Controller } from './controller';
+import { controllers, Controller } from './controller';
 import { woody } from './woody';
 import { Sprite } from './sprite';
 import './woody_0.png';
@@ -164,12 +164,12 @@ export class Entity {
         const frameData = this.frames[this.frame];
         const state = this.states[frameData.state];
 
-        const combo = keyboardControllers[0].combo || '';
+        const combo = controllers.get(0).combo || '';
         const frameFromCombo = frameData[combo] || state?.combo?.[combo]
         if (combo && frameFromCombo) {
             this.nextFrame = frameFromCombo;
             // Reset combo since it was consumed
-            keyboardControllers[0].combo = null;
+            controllers.get(0).combo = null;
         }
 
         if (!this.nextFrame && !--this.wait) {
@@ -204,13 +204,13 @@ export class Entity {
     update(_dx: number) {
         this.mechanics.update();
 
-        keyboardControllers[0].update();
+        controllers.get(0).update();
         this.nextFrame = 0;
 
         const frameData = this.frames[this.frame];
         const state = this.states[frameData.state];
 
-        let inputFrame = state?.input?.(keyboardControllers[0]) as CharacterFrame;
+        let inputFrame = state?.input?.(controllers.get(0)) as CharacterFrame;
         if (inputFrame) {
             this.nextFrame = inputFrame;
         }
