@@ -4,7 +4,7 @@ import { Sprite } from './sprite';
 import './woody_0.png';
 import './woody_1.png';
 import './woody_2.png';
-import { Diamond, Mechanics, Rectangle } from './mechanics';
+import { Diamond, Mechanics, MechanicsEvent, Rectangle } from './mechanics';
 
 const loadImage = (source: string) => {
     const image = new Image();
@@ -26,18 +26,21 @@ class Animator<T extends Record<number, any>> {
     }
 }
 
-interface EntityState<T> {
+type EntityState<T> = {
     input?: (controller: Controller) => keyof T | 999 | void;
     combo?: Record<string, keyof T | 999 | void>;
     update?: () => keyof T | 999 | void;
     nextFrame?: () => keyof T;
-}
+} & Partial<Record<MechanicsEvent, () => keyof T | 999 | void>>;
 
 const testImages = ['./woody_0.png', './woody_1.png', './woody_2.png'].map(loadImage);
 
 const animation = Object.entries(woody.frame).reduce<Record<string, CharacterFrame>>((acc, [frame, data]) => {
     if (!acc[data.name]) {
         acc[data.name] = (Number(frame) || 999) as CharacterFrame;
+    }
+    if (frame === '210' || frame === '211') {
+        data.state = 20;
     }
     data.centerx++;
     data.centery++;
@@ -47,6 +50,18 @@ const animation = Object.entries(woody.frame).reduce<Record<string, CharacterFra
 type CharacterFrameData = typeof woody.frame
 type CharacterFrame = keyof CharacterFrameData;
 
+enum State {
+    standing = 0,
+    walking = 1,
+    running = 2,
+    attacks = 3,
+    jumping = 4,
+    dash = 5,
+    dodging = 6,
+    defend = 7,
+    crouching = 20,
+}
+
 export class Entity {
     sprite = new Sprite({
         images: testImages,
@@ -55,7 +70,8 @@ export class Entity {
         rows: 7,
         columns: 10,
     });
-    mechanics = new Mechanics(new Diamond(10, 20), { position: [100, 100] });
+    mechanics = new Mechanics(new Diamond(30, 60), { position: [100, 100] });
+    environment = new Diamond(31, 61);
     directionX = 1;
     directionY = 1;
     frames = woody.frame;
@@ -66,8 +82,9 @@ export class Entity {
     constructor(
         public states: Record<number | 'generic', EntityState<CharacterFrameData> | undefined> = {
             generic: {
+                landed: () => animation.crouch,
             },
-            0: {
+            [State.standing]: {
                 combo: {
                     hit_a: animation.punch,
                     hit_d: animation.defend,
@@ -82,10 +99,14 @@ export class Entity {
                     }
                 },
                 update: () => {
-                    this.mechanics.velocity[0] = 0;
+                    if (!this.mechanics.isGrounded) {
+                        return 212;
+                    } else {
+                        this.mechanics.velocity[0] = 0;
+                    }
                 }
             },
-            1: {
+            [State.walking]: {
                 combo: {
                     hit_a: animation.punch,
                     hit_d: animation.defend,
@@ -101,10 +122,14 @@ export class Entity {
                     }
                 },
                 update: () => {
-                    this.mechanics.velocity[0] = this.directionX * woody.bmp.walking_speed;
+                    if (!this.mechanics.isGrounded) {
+                        return 212;
+                    } else {
+                        this.mechanics.velocity[0] = this.directionX * woody.bmp.walking_speed;
+                    }
                 },
             },
-            2: {
+            [State.running]: {
                 combo: {
                     hit_a: 85,
                     hit_d: 102,
@@ -119,20 +144,24 @@ export class Entity {
                     }
                 },
                 update: () => {
-                    this.mechanics.velocity[0] = this.directionX * woody.bmp.running_speed;
+                    if (!this.mechanics.isGrounded) {
+                        return 212;
+                    } else {
+                        this.mechanics.velocity[0] = this.directionX * woody.bmp.running_speed;
+                    }
                 },
             },
-            4: {
+            [State.jumping]: {
                 combo: {
                     hit_a: animation.jump_attack,
                 },
-                update: () => {
-                    if (this.frame === 212 && !this.mechanics.velocity[1]) {
-                        return animation.crouch;
+                input: ({ state: controller }) => {
+                    if (controller.stickX) {
+                        this.directionX = Math.sign(controller.stickX);
                     }
-                }
+                },
             },
-            5: {
+            [State.dash]: {
                 combo: {
                     hit_a: animation.dash_attack,
                 },
@@ -143,21 +172,37 @@ export class Entity {
                         return 214;
                     }
                 },
-                update: () => {
-                    if (!this.mechanics.velocity[1]) {
-                        return animation.crouch;
-                    }
-                }
             },
-            7: {
+            [State.defend]: {
+                input: ({ state: controller }) => {
+                    if (controller.stickX) {
+                        this.directionX = Math.sign(controller.stickX);
+                    }
+                },
                 update: () => {
                     this.mechanics.velocity[0] = 0;
                 }
+            },
+            [State.crouching]: {
+                input: ({ state: controller }) => {
+                    if (controller.stickX) {
+                        this.directionX = Math.sign(controller.stickX);
+                    }
+                },
             }
         },
     ) { }
     translateFrame(frame: CharacterFrame | 999) {
         return frame === 999 ? 0 : frame;
+    }
+
+    event(event: MechanicsEvent) {
+        const frameData = this.frames[this.frame];
+        const state = this.states[frameData.state];
+        const frame = (state?.[event] ?? this.states.generic?.[event])?.();
+        if (frame) {
+            this.nextFrame = frame;
+        }
     }
 
     processFrame() {
@@ -189,7 +234,7 @@ export class Entity {
 
             // Frame specific updates
             if (this.frame === 211 && this.nextFrame === 212) {
-                this.mechanics.velocity[0] = woody.bmp.jump_distance * Math.sign(this.mechanics.velocity[0]);
+                this.mechanics.velocity[0] = woody.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || Math.sign(controllers.get(0).state.stickX));
                 this.mechanics.velocity[1] = woody.bmp.jump_height
             }
             if (this.nextFrame === 213) {
@@ -200,13 +245,10 @@ export class Entity {
             this.wait = (1 + nextFrameData.wait);
             this.frame = translatedFrame;
         }
+        this.nextFrame = 0;
     }
     update(_dx: number) {
-        this.mechanics.update();
-        this.mechanics.velocity[1] = 1;
-
         controllers.get(0).update();
-        this.nextFrame = 0;
 
         const frameData = this.frames[this.frame];
         const state = this.states[frameData.state];
@@ -228,16 +270,17 @@ export class Entity {
         this.sprite.setFrame(frameData.pic);
     }
     render(ctx: CanvasRenderingContext2D) {
-        this.sprite.render(ctx, this.mechanics.position[0] - 40, this.mechanics.position[1] - 80, this.directionX, this.directionY);
-        this.debugRender(ctx);
-        this.mechanics.render(ctx);
+        this.sprite.render(ctx, this.mechanics.position[0] - 40, this.mechanics.position[1] - 50, this.directionX, this.directionY);
+        // this.debugRender(ctx);
+        // this.mechanics.render(ctx);
+        // this.environment.render(ctx);
     }
 
     get x() {
         return this.mechanics.position[0] - (40 * this.directionX - 1);
     }
     get y() {
-        return this.mechanics.position[1] - 80;
+        return this.mechanics.position[1] - 50;
     }
 
     debugRender(ctx: CanvasRenderingContext2D) {

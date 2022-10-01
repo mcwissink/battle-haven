@@ -2,14 +2,16 @@ const gravity = 1.7;
 
 type Vector = [number, number];
 
+export const UP_VECTOR: Vector = [0, 1];
+
 const perpendicular = ([x, y]: Vector): Vector => [x, -y];
 
-const normalize = ([x, y]: Vector): Vector => {
+export const normalize = ([x, y]: Vector): Vector => {
     const magnitude = Math.hypot(x, y) || 1;
     return [x / magnitude, y / magnitude];
 }
 
-const dotProduct = (vector1: Vector, vector2: Vector) => vector1[0] * vector2[0] + vector1[1] * vector2[1];
+export const dotProduct = (vector1: Vector, vector2: Vector) => vector1[0] * vector2[0] + vector1[1] * vector2[1];
 
 // TODO: remove duplicate axes
 const getAxes = (corners: Vector[]) => corners.reduce<Vector[]>((axes, corner, index) => {
@@ -42,7 +44,7 @@ export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
         for (const [p1, p2, sign] of overlaps) {
             if (p1 <= p2) {
                 return;
-            } min2
+            }
             const overlap = sign * (p1 - p2);
             if (Math.abs(overlap) < Math.abs(minOverlap)) {
                 minOverlap = overlap;
@@ -117,9 +119,12 @@ export class Rectangle extends Shape {
     }
 }
 
+export type MechanicsEvent = 'landed';
+
 export class Mechanics {
     public position: Vector;
     public velocity = [0, 0];
+    public isGrounded = false;
     public mass;
     constructor(public shape: Shape, { mass = 1, position = [0, 0] }: { mass?: number, position?: Vector } = {}) {
         this.mass = mass;
@@ -129,10 +134,14 @@ export class Mechanics {
     update() {
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
+        if (!this.isGrounded) {
+            this.velocity[1] += this.mass * gravity;
+        }
         this.shape.update(this.position);
     }
 
     render(ctx: CanvasRenderingContext2D) {
+        this.shape.update(this.position);
         this.shape.render(ctx);
     }
 }
