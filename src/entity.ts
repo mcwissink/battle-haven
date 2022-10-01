@@ -4,7 +4,7 @@ import { Sprite } from './sprite';
 import './woody_0.png';
 import './woody_1.png';
 import './woody_2.png';
-import { Mechanics } from './mechanics';
+import { Diamond, Mechanics, Rectangle } from './mechanics';
 
 const loadImage = (source: string) => {
     const image = new Image();
@@ -55,7 +55,7 @@ export class Entity {
         rows: 7,
         columns: 10,
     });
-    mechanics = new Mechanics();
+    mechanics = new Mechanics(new Diamond(10, 20), { position: [100, 100] });
     directionX = 1;
     directionY = 1;
     frames = woody.frame;
@@ -64,7 +64,7 @@ export class Entity {
     animator = new Animator<CharacterFrameData>();
     nextFrame: CharacterFrame | 999 = 0;
     constructor(
-        private states: Record<number | 'generic', EntityState<CharacterFrameData> | undefined> = {
+        public states: Record<number | 'generic', EntityState<CharacterFrameData> | undefined> = {
             generic: {
             },
             0: {
@@ -82,7 +82,7 @@ export class Entity {
                     }
                 },
                 update: () => {
-                    this.mechanics.velocityX = 0;
+                    this.mechanics.velocity[0] = 0;
                 }
             },
             1: {
@@ -101,7 +101,7 @@ export class Entity {
                     }
                 },
                 update: () => {
-                    this.mechanics.velocityX = this.directionX * woody.bmp.walking_speed;
+                    this.mechanics.velocity[0] = this.directionX * woody.bmp.walking_speed;
                 },
             },
             2: {
@@ -119,7 +119,7 @@ export class Entity {
                     }
                 },
                 update: () => {
-                    this.mechanics.velocityX = this.directionX * woody.bmp.running_speed;
+                    this.mechanics.velocity[0] = this.directionX * woody.bmp.running_speed;
                 },
             },
             4: {
@@ -127,7 +127,7 @@ export class Entity {
                     hit_a: animation.jump_attack,
                 },
                 update: () => {
-                    if (this.frame === 212 && !this.mechanics.velocityY) {
+                    if (this.frame === 212 && !this.mechanics.velocity[1]) {
                         return animation.crouch;
                     }
                 }
@@ -144,14 +144,14 @@ export class Entity {
                     }
                 },
                 update: () => {
-                    if (!this.mechanics.velocityY) {
+                    if (!this.mechanics.velocity[1]) {
                         return animation.crouch;
                     }
                 }
             },
             7: {
                 update: () => {
-                    this.mechanics.velocityX = 0;
+                    this.mechanics.velocity[0] = 0;
                 }
             }
         },
@@ -181,20 +181,20 @@ export class Entity {
             const nextFrameData = this.frames[translatedFrame];
 
             if (nextFrameData.dvx) {
-                this.mechanics.velocityX = nextFrameData.dvx * this.directionX;
+                this.mechanics.velocity[0] = nextFrameData.dvx * this.directionX;
             }
             if (nextFrameData.dvy) {
-                this.mechanics.velocityY = nextFrameData.dvy;
+                this.mechanics.velocity[1] = nextFrameData.dvy;
             }
 
             // Frame specific updates
             if (this.frame === 211 && this.nextFrame === 212) {
-                this.mechanics.velocityX = woody.bmp.jump_distance * Math.sign(this.mechanics.velocityX);
-                this.mechanics.velocityY = woody.bmp.jump_height
+                this.mechanics.velocity[0] = woody.bmp.jump_distance * Math.sign(this.mechanics.velocity[0]);
+                this.mechanics.velocity[1] = woody.bmp.jump_height
             }
             if (this.nextFrame === 213) {
-                this.mechanics.velocityX = woody.bmp.dash_distance * Math.sign(this.mechanics.velocityX);
-                this.mechanics.velocityY = woody.bmp.dash_height
+                this.mechanics.velocity[0] = woody.bmp.dash_distance * Math.sign(this.mechanics.velocity[0]);
+                this.mechanics.velocity[1] = woody.bmp.dash_height
             }
 
             this.wait = (1 + nextFrameData.wait);
@@ -203,6 +203,7 @@ export class Entity {
     }
     update(_dx: number) {
         this.mechanics.update();
+        this.mechanics.velocity[1] = 1;
 
         controllers.get(0).update();
         this.nextFrame = 0;
@@ -227,15 +228,16 @@ export class Entity {
         this.sprite.setFrame(frameData.pic);
     }
     render(ctx: CanvasRenderingContext2D) {
-        this.sprite.render(ctx, this.mechanics.x - 40, this.mechanics.y - 80, this.directionX, this.directionY);
+        this.sprite.render(ctx, this.mechanics.position[0] - 40, this.mechanics.position[1] - 80, this.directionX, this.directionY);
         this.debugRender(ctx);
+        this.mechanics.render(ctx);
     }
 
     get x() {
-        return this.mechanics.x - (40 * this.directionX - 1);
+        return this.mechanics.position[0] - (40 * this.directionX - 1);
     }
     get y() {
-        return this.mechanics.y - 80;
+        return this.mechanics.position[1] - 80;
     }
 
     debugRender(ctx: CanvasRenderingContext2D) {
@@ -262,7 +264,6 @@ export class Entity {
             }
         }
         ctx.fillStyle = 'rgba(0, 255, 255)';
-        ctx.fillRect(this.mechanics.x, this.mechanics.y, 3, 3);
 
         ctx.fillStyle = 'rgba(0, 255, 0)';
         ctx.fillRect(this.x, this.y, 4, 4);

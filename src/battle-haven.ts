@@ -1,5 +1,5 @@
+import { Character } from './character';
 import { Scene } from './scene';
-import { Entity } from './entity';
 
 interface BattleHavenConfig {
     gravity: number;
@@ -20,7 +20,7 @@ export class BattleHaven {
     }
 
     initialize() {
-        this.scene.entities.push(new Entity());
+        this.scene.entities.push(new Character());
     }
     start() {
         this.initialize();
