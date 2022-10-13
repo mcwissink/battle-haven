@@ -1,8 +1,8 @@
 const combos = [
-    { sequence: ['up'], name: 'hit_U', },
-    { sequence: ['down'], name: 'hit_D', },
-    { sequence: ['left'], name: 'hit_F', },
-    { sequence: ['right'], name: 'hit_F', },
+    // { sequence: ['up'], name: 'hit_U', },
+    // { sequence: ['down'], name: 'hit_D', },
+    // { sequence: ['left'], name: 'hit_F', },
+    // { sequence: ['right'], name: 'hit_F', },
     { sequence: ['attack'], name: 'hit_a', },
     { sequence: ['jump'], name: 'hit_j', },
     { sequence: ['defend'], name: 'hit_d', },
@@ -18,6 +18,7 @@ const combos = [
     { sequence: ['defend', 'down', 'jump'], name: 'hit_Dj', },
     { sequence: ['defend', 'jump', 'attack'], name: 'hit_ja', },
 ];
+
 export class CircleBuffer<T> {
     private buffer: T[];
     private start = 0;
@@ -185,7 +186,7 @@ class GamepadController extends Controller {
     update() {
         this.input('attack', this.gamepad.buttons[0].value);
         this.input('defend', this.gamepad.buttons[1].value);
-        this.input('jump', this.gamepad.buttons[2].value);
+        this.input('jump', this.gamepad.buttons[3].value);
         this.input('stickX', Math.round(this.gamepad.axes[0]));
         this.input('stickY', Math.round(this.gamepad.axes[1]));
     }

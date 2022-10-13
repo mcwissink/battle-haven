@@ -27,11 +27,10 @@ class Animator<T extends Record<number, any>> {
 }
 
 type EntityState<T> = {
-    input?: (controller: Controller) => keyof T | 999 | void;
     combo?: Record<string, keyof T | 999 | void>;
-    update?: () => keyof T | 999 | void;
+    update?: (controller: Controller) => void;
     nextFrame?: () => keyof T;
-} & Partial<Record<MechanicsEvent, () => keyof T | 999 | void>>;
+} & Partial<Record<MechanicsEvent, () => void>>;
 
 const testImages = ['./woody_0.png', './woody_1.png', './woody_2.png'].map(loadImage);
 
@@ -39,13 +38,13 @@ const animation = Object.entries(woody.frame).reduce<Record<string, CharacterFra
     if (!acc[data.name]) {
         acc[data.name] = (Number(frame) || 999) as CharacterFrame;
     }
-    if (frame === '210' || frame === '211') {
-        data.state = 20;
-    }
     data.centerx++;
     data.centery++;
     return acc;
-}, {})
+}, {
+    airborn: 212,
+});
+
 
 type CharacterFrameData = typeof woody.frame
 type CharacterFrame = keyof CharacterFrameData;
@@ -60,6 +59,36 @@ enum State {
     dodging = 6,
     defend = 7,
     crouching = 20,
+    doubleJumping = 21,
+    other = 15,
+}
+
+class Transition {
+    _frame: keyof CharacterFrameData | 999 = 0;
+    _direction = 0;
+    _priority = 0;
+    get frame() {
+        return this._frame;
+    }
+    setFrame(frame: keyof CharacterFrameData | 999, priority = 0, direction?: number) {
+        if (priority >= this._priority) {
+            this._frame = frame;
+            this._priority = priority;
+            if (direction) {
+                this._direction = direction;
+            }
+        }
+    }
+
+    get direction() {
+        return this._direction;
+    }
+
+    reset() {
+        this._priority = 0;
+        this._frame = 0;
+        this._direction = 0;
+    }
 }
 
 export class Entity {
@@ -71,18 +100,18 @@ export class Entity {
         columns: 10,
     });
     mechanics = new Mechanics(new Diamond(30, 60), { position: [100, 100] });
-    environment = new Diamond(31, 61);
-    directionX = 1;
-    directionY = 1;
+    environment = new Diamond(10, 80);
+    direction = 1;
     frames = woody.frame;
     frame: CharacterFrame = 1;
     wait = 1;
     animator = new Animator<CharacterFrameData>();
     nextFrame: CharacterFrame | 999 = 0;
+    next = new Transition();
     constructor(
-        public states: Record<number | 'generic', EntityState<CharacterFrameData> | undefined> = {
-            generic: {
-                landed: () => animation.crouch,
+        public states: Record<number | 'system', EntityState<CharacterFrameData> | undefined> = {
+            system: {
+                landed: () => this.next.setFrame(animation.crouch, 1),
             },
             [State.standing]: {
                 combo: {
@@ -90,42 +119,38 @@ export class Entity {
                     hit_d: animation.defend,
                     hit_j: animation.jump,
                     hit_F: animation.running,
+                    hit_D: animation.crouch,
                     hit_DF: animation.walking,
                 },
-                input: ({ state: controller }) => {
-                    this.directionX = Math.sign(controller.stickX) || this.directionX;
+                update: ({ state: controller }) => {
+                    this.direction = Math.sign(controller.stickX) || this.direction;
                     if (controller.stickX) {
-                        return animation.running;
+                        this.next.setFrame(animation.running);
+                    }
+                    if (!this.mechanics.isGrounded) {
+                        this.next.setFrame(animation.airborn, 1)
                     }
                 },
-                update: () => {
-                    if (!this.mechanics.isGrounded) {
-                        return 212;
-                    } else {
-                        this.mechanics.velocity[0] = 0;
-                    }
-                }
             },
             [State.walking]: {
                 combo: {
                     hit_a: animation.punch,
                     hit_d: animation.defend,
                     hit_j: animation.jump,
+                    hit_D: animation.crouch,
                     hit_DF: animation.walking,
                 },
                 nextFrame: () => this.animator.oscillate(5, 8),
-                input: ({ state: controller }) => {
+                update: ({ state: controller }) => {
+                    this.mechanics.force(this.direction * woody.bmp.walking_speed);
                     if (controller.stickX) {
-                        this.directionX = Math.sign(controller.stickX);
+                        this.direction = Math.sign(controller.stickX);
                     } else {
-                        return animation.standing;
+                        this.next.setFrame(animation.standing);
                     }
-                },
-                update: () => {
+
                     if (!this.mechanics.isGrounded) {
-                        return 212;
-                    } else {
-                        this.mechanics.velocity[0] = this.directionX * woody.bmp.walking_speed;
+                        this.next.setFrame(animation.airborn, 1)
                     }
                 },
             },
@@ -136,60 +161,70 @@ export class Entity {
                     hit_j: animation.dash,
                 },
                 nextFrame: () => this.animator.oscillate(9, 11),
-                input: ({ state: controller }) => {
+                update: ({ state: controller }) => {
+                    this.mechanics.force(this.direction * woody.bmp.running_speed);
                     if (controller.stickX) {
-                        this.directionX = Math.sign(controller.stickX);
+                        this.direction = Math.sign(controller.stickX);
                     } else {
-                        return animation.stop_running;
+                        this.next.setFrame(animation.stop_running);
                     }
-                },
-                update: () => {
+
                     if (!this.mechanics.isGrounded) {
-                        return 212;
-                    } else {
-                        this.mechanics.velocity[0] = this.directionX * woody.bmp.running_speed;
+                        this.next.setFrame(animation.airborn, 1)
                     }
                 },
             },
             [State.jumping]: {
                 combo: {
+                    hit_j: animation.double_jump,
                     hit_a: animation.jump_attack,
                 },
-                input: ({ state: controller }) => {
+                update: ({ state: controller }) => {
                     if (controller.stickX) {
-                        this.directionX = Math.sign(controller.stickX);
+                        this.direction = Math.sign(controller.stickX);
+                    }
+                },
+            },
+            [State.doubleJumping]: {
+                combo: {
+                    hit_a: animation.jump_attack,
+                },
+                update: ({ state: controller }) => {
+                    if (controller.stickX) {
+                        this.direction = Math.sign(controller.stickX);
                     }
                 },
             },
             [State.dash]: {
                 combo: {
                     hit_a: animation.dash_attack,
+                    hit_j: animation.double_jump,
                 },
-                input: ({ state: controller }) => {
-                    const nextDirectionX = Math.sign(controller.stickX) || this.directionX;
-                    if (nextDirectionX !== this.directionX) {
-                        this.directionX = nextDirectionX;
-                        return 214;
+                update: ({ state: controller }) => {
+                    const nextDirectionX = Math.sign(controller.stickX) || this.direction;
+                    if (nextDirectionX !== this.direction && this.frame !== 214) {
+                        this.next.setFrame(214, 0, nextDirectionX);
                     }
                 },
             },
             [State.defend]: {
-                input: ({ state: controller }) => {
+                update: ({ state: controller }) => {
                     if (controller.stickX) {
-                        this.directionX = Math.sign(controller.stickX);
+                        this.direction = Math.sign(controller.stickX);
                     }
                 },
-                update: () => {
-                    this.mechanics.velocity[0] = 0;
-                }
             },
             [State.crouching]: {
-                input: ({ state: controller }) => {
+                update: ({ state: controller }) => {
+                    this.mechanics.force(-this.mechanics.velocity[0] * 0.3);
                     if (controller.stickX) {
-                        this.directionX = Math.sign(controller.stickX);
+                        this.direction = Math.sign(controller.stickX);
+                    }
+                    if (controller.stickY > 0) {
+                        this.next.setFrame(animation.crouch);
                     }
                 },
-            }
+            },
         },
     ) { }
     translateFrame(frame: CharacterFrame | 999) {
@@ -199,10 +234,7 @@ export class Entity {
     event(event: MechanicsEvent) {
         const frameData = this.frames[this.frame];
         const state = this.states[frameData.state];
-        const frame = (state?.[event] ?? this.states.generic?.[event])?.();
-        if (frame) {
-            this.nextFrame = frame;
-        }
+        (state?.[event] ?? this.states.system?.[event])?.();
     }
 
     processFrame() {
@@ -212,40 +244,50 @@ export class Entity {
         const combo = controllers.get(0).combo || '';
         const frameFromCombo = frameData[combo] || state?.combo?.[combo]
         if (combo && frameFromCombo) {
-            this.nextFrame = frameFromCombo;
+            this.next.setFrame(frameFromCombo);
             // Reset combo since it was consumed
             controllers.get(0).combo = null;
         }
 
-        if (!this.nextFrame && !--this.wait) {
-            this.nextFrame = state?.nextFrame ? state.nextFrame() : frameData.next as CharacterFrame;
+        if (!this.next.frame && !--this.wait) {
+            this.next.setFrame(state?.nextFrame ? state.nextFrame() : frameData.next as CharacterFrame);
         }
 
-        if (this.nextFrame) {
-            const translatedFrame = this.translateFrame(this.nextFrame);
+        if (this.next.frame) {
+            const translatedFrame = this.translateFrame(this.next.frame);
             const nextFrameData = this.frames[translatedFrame];
 
             if (nextFrameData.dvx) {
-                this.mechanics.velocity[0] = nextFrameData.dvx * this.directionX;
+                this.mechanics.force(nextFrameData.dvx * this.direction);
             }
             if (nextFrameData.dvy) {
-                this.mechanics.velocity[1] = nextFrameData.dvy;
+                this.mechanics.force(nextFrameData.dvy, 1);
             }
 
             // Frame specific updates
-            if (this.frame === 211 && this.nextFrame === 212) {
-                this.mechanics.velocity[0] = woody.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || Math.sign(controllers.get(0).state.stickX));
-                this.mechanics.velocity[1] = woody.bmp.jump_height
+            // Jump
+            if (this.frame === 211 && this.next.frame === 212) {
+                this.mechanics.force(woody.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || Math.sign(controllers.get(0).state.stickX)));
+                this.mechanics.velocity[1] = woody.bmp.jump_height;
             }
-            if (this.nextFrame === 213) {
-                this.mechanics.velocity[0] = woody.bmp.dash_distance * Math.sign(this.mechanics.velocity[0]);
-                this.mechanics.velocity[1] = woody.bmp.dash_height
+            // Dash
+            if (this.next.frame === animation.dash) {
+                this.mechanics.force(woody.bmp.dash_distance * Math.sign(this.mechanics.velocity[0]));
+                this.mechanics.velocity[1] = woody.bmp.dash_height;
+            }
+            // Double-jump
+            if (this.next.frame === animation.double_jump) {
+                this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] / 2) * Math.sign(controllers.get(0).state.stickX);
+                this.mechanics.velocity[1] = woody.bmp.jump_height;
             }
 
             this.wait = (1 + nextFrameData.wait);
             this.frame = translatedFrame;
         }
-        this.nextFrame = 0;
+        if (this.next.direction) {
+            this.direction = this.next.direction;
+        }
+        this.next.reset();
     }
     update(_dx: number) {
         controllers.get(0).update();
@@ -253,31 +295,23 @@ export class Entity {
         const frameData = this.frames[this.frame];
         const state = this.states[frameData.state];
 
-        let inputFrame = state?.input?.(controllers.get(0)) as CharacterFrame;
-        if (inputFrame) {
-            this.nextFrame = inputFrame;
-        }
-        let updateFrame = state?.update?.() as CharacterFrame;
-        if (updateFrame) {
-            this.nextFrame = updateFrame;
-        }
-        let genericUpdateFrame = this.states['generic']?.update?.() as CharacterFrame;
-        if (genericUpdateFrame) {
-            this.nextFrame = genericUpdateFrame;
-        }
-        this.processFrame();
+        state?.update?.(controllers.get(0));
 
-        this.sprite.setFrame(frameData.pic);
+        this.states.system?.update?.(controllers.get(0));
+
+        this.sprite.setFrame(frameData.pic, this.direction);
+
+        this.processFrame();
     }
     render(ctx: CanvasRenderingContext2D) {
-        this.sprite.render(ctx, this.mechanics.position[0] - 40, this.mechanics.position[1] - 50, this.directionX, this.directionY);
+        this.sprite.render(ctx, this.mechanics.position[0] - 40, this.mechanics.position[1] - 50);
         // this.debugRender(ctx);
         // this.mechanics.render(ctx);
         // this.environment.render(ctx);
     }
 
     get x() {
-        return this.mechanics.position[0] - (40 * this.directionX - 1);
+        return this.mechanics.position[0] - (40 * this.direction - 1);
     }
     get y() {
         return this.mechanics.position[1] - 50;
@@ -292,18 +326,18 @@ export class Entity {
             ctx.fillStyle = 'rgba(0, 0, 255, 0.4)';
             if (Array.isArray(body)) {
                 body.forEach((b) => {
-                    ctx.fillRect(this.x + b.x * this.directionX, this.y + b.y, b.w * this.directionX, b.h)
+                    ctx.fillRect(this.x + b.x * this.direction, this.y + b.y, b.w * this.direction, b.h)
                 });
             } else {
-                ctx.fillRect(this.x + body.x * this.directionX, this.y + body.y, body.w * this.directionX, body.h);
+                ctx.fillRect(this.x + body.x * this.direction, this.y + body.y, body.w * this.direction, body.h);
             }
         }
         if (interaction) {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
             if (Array.isArray(interaction)) {
-                interaction.forEach((i) => ctx.fillRect(this.x + i.x * this.directionX, this.y + i.y, i.w * this.directionX, i.h));
+                interaction.forEach((i) => ctx.fillRect(this.x + i.x * this.direction, this.y + i.y, i.w * this.direction, i.h));
             } else {
-                ctx.fillRect(this.x + interaction.x * this.directionX, this.y + interaction.y, interaction.w * this.directionX, interaction.h);
+                ctx.fillRect(this.x + interaction.x * this.direction, this.y + interaction.y, interaction.w * this.direction, interaction.h);
             }
         }
         ctx.fillStyle = 'rgba(0, 255, 255)';

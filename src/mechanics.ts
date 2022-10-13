@@ -1,4 +1,5 @@
 const gravity = 1.7;
+const friction = 1;
 
 type Vector = [number, number];
 
@@ -61,7 +62,7 @@ export class Shape {
         return [];
     };
     render(ctx: CanvasRenderingContext2D) {
-        ctx.fillStyle = 'rgba(100, 100, 100, 0.4)';
+        ctx.fillStyle = 'rgba(100, 0, 0, 0.4)';
         ctx.beginPath();
         this.corners.forEach((corner, index) => {
             if (index) {
@@ -119,22 +120,29 @@ export class Rectangle extends Shape {
     }
 }
 
-export type MechanicsEvent = 'landed';
+export type MechanicsEvent = 'landed' | 'falling';
 
 export class Mechanics {
     public position: Vector;
     public velocity = [0, 0];
-    public isGrounded = false;
+    public isGrounded = true;
     public mass;
     constructor(public shape: Shape, { mass = 1, position = [0, 0] }: { mass?: number, position?: Vector } = {}) {
         this.mass = mass;
         this.position = position;
         this.shape.update(this.position);
     }
+
+    force(force: number, axis = 0) {
+        this.velocity[axis] += Math.sign(force) * Math.min(Math.abs(force), Math.abs(force - this.velocity[axis]));
+    }
+
     update() {
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
-        if (!this.isGrounded) {
+        if (this.isGrounded) {
+            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), friction);
+        } else {
             this.velocity[1] += this.mass * gravity;
         }
         this.shape.update(this.position);

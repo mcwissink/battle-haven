@@ -10,6 +10,8 @@ export class Sprite {
     x = 0;
     y = 0;
     spriteSheet: SpriteSheet;
+    directionX = 1;
+    directionY = 1;
     frameOffsetX = 0;
     frameOffsetY = 0;
     frameOffsetImage = 0;
@@ -19,17 +21,18 @@ export class Sprite {
         this.spriteSheet = spriteSheet;
     }
 
-    setFrame(frame: number) {
+    setFrame(frame: number, direction: number) {
         const sheetSize = this.spriteSheet.rows * this.spriteSheet.columns;
         this.frameOffsetImage = Math.floor(frame / sheetSize);
         const relativeFrame = frame - this.frameOffsetImage * sheetSize;
         this.frameOffsetX = (relativeFrame % this.spriteSheet.columns) * this.spriteSheet.width;
         this.frameOffsetY = Math.floor(relativeFrame / (this.spriteSheet.columns)) * this.spriteSheet.height;
+        this.directionX = direction;
     }
 
-    render(ctx: CanvasRenderingContext2D, x: number, y: number, directionX: number, directionY: number) {
+    render(ctx: CanvasRenderingContext2D, x: number, y: number) {
         ctx.translate(x, y);
-        ctx.scale(directionX, directionY);
+        ctx.scale(this.directionX, this.directionY);
         if (this.spriteSheet) {
             ctx.drawImage(
                 this.spriteSheet.images[this.frameOffsetImage],
@@ -37,8 +40,8 @@ export class Sprite {
                 this.frameOffsetY,
                 this.spriteSheet.width,
                 this.spriteSheet.height,
-                directionX === -1 ? -this.spriteSheet.width : 0,
-                directionY === -1 ? -this.spriteSheet.height : 0,
+                this.directionX === -1 ? -this.spriteSheet.width : 0,
+                this.directionY === -1 ? -this.spriteSheet.height : 0,
                 this.spriteSheet.width,
                 this.spriteSheet.height
             );

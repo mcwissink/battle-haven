@@ -881,14 +881,14 @@ export const woody = {
         },
         85: {
             name: "run_attack",
-            pic: 100, state: 3, wait: 3, next: 86, dvx: 6, dvy: 0, dvz: 0, centerx: 35, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
+            pic: 100, state: 3, wait: 3, next: 86, dvx: 2, dvy: 0, dvz: 0, centerx: 35, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
             bdy: {
                 kind: 0, x: 27, y: 6, w: 27, h: 70
             }
         },
         86: {
             name: "run_attack",
-            pic: 101, state: 3, wait: 2, next: 87, dvx: 4, dvy: 0, dvz: 0, centerx: 22, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
+            pic: 101, state: 3, wait: 2, next: 87, dvx: 0, dvy: 0, dvz: 0, centerx: 22, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
             sound: "1/007",
             itr: {
                 kind: 0, x: 25, y: 28, w: 54, h: 23, dvx: 3, fall: 10, arest: 10, bdefend: 16, injury: 35
@@ -1621,7 +1621,7 @@ export const woody = {
         },
         210: {
             name: "jump",
-            pic: 60, state: 4, wait: 1, next: 211, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
+            pic: 60, state: 20, wait: 1, next: 211, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
             wpoint: {
                 kind: 1, x: 43, y: 63, weaponact: 21, attacking: 0, cover: 0, dvx: 0, dvy: 0, dvz: 0
             },
@@ -1631,7 +1631,7 @@ export const woody = {
         },
         211: {
             name: "jump",
-            pic: 61, state: 4, wait: 1, next: 212, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
+            pic: 61, state: 20, wait: 1, next: 212, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
             sound: "1/017",
             wpoint: {
                 kind: 1, x: 43, y: 64, weaponact: 21, attacking: 0, cover: 0, dvx: 0, dvy: 0, dvz: 0
@@ -1694,7 +1694,7 @@ export const woody = {
         },
         215: {
             name: "crouch",
-            pic: 60, state: 15, wait: 2, next: 999, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Fj: 252,
+            pic: 60, state: 20, wait: 2, next: 999, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Fj: 252,
             sound: "1/012",
             bpoint: {
                 x: 42, y: 55
@@ -2591,6 +2591,57 @@ export const woody = {
             },
             bdy: {
                 kind: 0, x: 26, y: 36, w: 29, h: 44
+            }
+        },
+        // Custom
+        304: {
+            name: "double_jump",
+            pic: 58, state: 21, wait: 1, next: 305, dvx: 0, dvy: -17, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
+            wpoint: {
+                kind: 1, x: 38, y: 75, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+            },
+            itr: {
+                kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
+            }
+        },
+        305: {
+            name: "double_jump",
+            pic: 58, state: 21, wait: 1, next: 306, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
+            wpoint: {
+                kind: 1, x: 38, y: 75, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+            },
+            itr: {
+                kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
+            }
+        },
+        306: {
+            name: "double_jump",
+            pic: 59, state: 21, wait: 1, next: 307, dvx: 0, dvy: 0, dvz: 0, centerx: 34, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
+            wpoint: {
+                kind: 1, x: 43, y: 47, weaponact: 31, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+            },
+            itr: {
+                kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
+            }
+        },
+        307: {
+            name: "double_jump",
+            pic: 69, state: 21, wait: 1, next: 308, dvx: 0, dvy: 0, dvz: 0, centerx: 34, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
+            wpoint: {
+                kind: 1, x: 20, y: 61, weaponact: 25, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+            },
+            itr: {
+                kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
+            }
+        },
+        308: {
+            name: "double_jump",
+            pic: 58, state: 21, wait: 1, next: 305, dvx: 0, dvy: 0, dvz: 0, centerx: 38, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
+            wpoint: {
+                kind: 1, x: 35, y: 74, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+            },
+            itr: {
+                kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
             }
         },
         399: {
