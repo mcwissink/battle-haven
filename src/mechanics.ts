@@ -12,7 +12,7 @@ export const normalize = ([x, y]: Vector): Vector => {
     return [x / magnitude, y / magnitude];
 }
 
-export const dotProduct = (vector1: Vector, vector2: Vector) => vector1[0] * vector2[0] + vector1[1] * vector2[1];
+export const dot = (vector1: Vector, vector2: Vector) => vector1[0] * vector2[0] + vector1[1] * vector2[1];
 
 // TODO: remove duplicate axes
 const getAxes = (corners: Vector[]) => corners.reduce<Vector[]>((axes, corner, index) => {
@@ -22,7 +22,7 @@ const getAxes = (corners: Vector[]) => corners.reduce<Vector[]>((axes, corner, i
 }, []);
 
 const project = (axis: Vector, corners: Vector[]) => corners.reduce<Vector>((projection, corner) => {
-    const product = dotProduct(corner, axis);
+    const product = dot(corner, axis);
     if (product < projection[0]) {
         projection[0] = product;
     }
@@ -35,7 +35,7 @@ const project = (axis: Vector, corners: Vector[]) => corners.reduce<Vector>((pro
 export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
     // minimum translation vector
     let mtv: Vector = [0, 0];
-    let minOverlap = Infinity;
+    let minDistance = Infinity;
 
     const axes = getAxes(shape1.corners).concat(getAxes(shape2.corners));
     for (const axis of axes) {
@@ -47,9 +47,18 @@ export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
                 return;
             }
             const overlap = sign * (p1 - p2);
-            if (Math.abs(overlap) < Math.abs(minOverlap)) {
-                minOverlap = overlap;
-                mtv = [axis[0] * minOverlap, axis[1] * minOverlap];
+            // if (Math.abs(overlap) < Math.abs(minOverlap)) {
+            //     minOverlap = overlap;
+            //     mtv = [axis[0] * minOverlap, axis[1] * minOverlap];
+            // }
+            const tv: Vector = [axis[0] * overlap, axis[1] * overlap]
+            const distance = Math.hypot(
+                shape1.previousPosition[0] - (shape1.position[0] - tv[0]),
+                shape1.previousPosition[1] - (shape1.position[1] - tv[1]),
+            );
+            if (distance < minDistance) {
+                minDistance = distance;
+                mtv = tv;
             }
         }
     }
@@ -58,6 +67,8 @@ export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
 
 export class Shape {
     public corners: Vector[] = [];
+    public position: Vector = [0, 0];
+    public previousPosition: Vector = [0, 0];
     update(_position: Vector): Vector[] {
         return [];
     };
@@ -86,6 +97,8 @@ export class Diamond extends Shape {
         this.halfHeight = height / 2;
     }
     update(position: Vector): Vector[] {
+        this.previousPosition = [...this.position];
+        this.position = [...position];
         this.corners[0][0] = position[0] - this.halfWidth;
         this.corners[0][1] = position[1];
         this.corners[1][0] = position[0];
@@ -108,6 +121,8 @@ export class Rectangle extends Shape {
         this.halfHeight = height / 2;
     }
     update(position: Vector): Vector[] {
+        this.previousPosition = [...this.position];
+        this.position = [...position];
         this.corners[0][0] = position[0] - this.halfWidth;
         this.corners[0][1] = position[1] + this.halfHeight;
         this.corners[1][0] = position[0] + this.halfWidth;

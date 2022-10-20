@@ -206,10 +206,19 @@ const mappings = [
 
 type Port = Controller | null;
 
+interface Listeners {
+    connect: Array<(port: number) => void>
+}
+
+type Flat<T> = T extends Array<infer K> ? K : T;
+
 class ControllerManager {
     ports: [Port, Port, Port, Port] = [null, null, null, null];
     keyboardControllers: KeyboardController[] = [];
     gamepads: Record<number, number> = {};
+    listeners: Listeners = {
+        connect: [],
+    }
     static dummy = new Controller();
     constructor() {
         window.addEventListener('keyup', (e) => {
@@ -244,11 +253,16 @@ class ControllerManager {
         return this.ports[port] ?? ControllerManager.dummy;
     }
 
+    on<T extends keyof Listeners>(event: T, callback: Flat<Listeners[T]>) {
+        this.listeners[event].push(callback);
+    }
+
     connect(controller: Controller) {
-        const emptyPort = this.ports.indexOf(null);
-        if (emptyPort !== -1) {
-            this.ports[emptyPort] = controller;
-            return emptyPort;
+        const port = this.ports.indexOf(null);
+        if (port !== -1) {
+            this.ports[port] = controller;
+            this.listeners.connect.forEach((callback) => callback(port));
+            return port;
         }
         return -1;
     }

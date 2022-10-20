@@ -1,4 +1,5 @@
 import { Character } from './character';
+import { controllers } from './controller';
 import { Scene } from './scene';
 
 interface BattleHavenConfig {
@@ -20,7 +21,9 @@ export class BattleHaven {
     }
 
     initialize() {
-        this.scene.entities.push(new Character());
+        controllers.on('connect', (port) => {
+            this.scene.entities.push(new Character(port));
+        });
     }
     start() {
         this.initialize();
