@@ -1,7 +1,7 @@
 const gravity = 1.7;
 const friction = 1;
 
-type Vector = [number, number];
+export type Vector = [number, number];
 
 export const UP_VECTOR: Vector = [0, 1];
 

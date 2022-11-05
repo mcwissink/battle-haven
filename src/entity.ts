@@ -20,6 +20,7 @@ export enum State {
     dash = 5,
     dodging = 6,
     defend = 7,
+    falling = 12,
     crouching = 20,
     doubleJumping = 21,
     other = 15,
@@ -34,9 +35,9 @@ class Transition<Frame extends number> {
     get frame(): Frame | Defaults {
         return this._frame;
     }
-    setFrame(frame: Frame | Defaults, priority = 0, direction?: number) {
+    setFrame(frame: number, priority = 0, direction?: number) {
         if (priority >= this._priority) {
-            this._frame = frame;
+            this._frame = frame as Frame | Defaults;
             this._priority = priority;
             if (direction) {
                 this._direction = direction;
@@ -55,7 +56,45 @@ class Transition<Frame extends number> {
     }
 }
 
-export class Entity<FrameData extends Record<number, any>, Frame extends number> {
+type IInteraction = {
+    kind: 0,
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    dvx?: number;
+    dvy?: number;
+    fall: number;
+    arest: number;
+    bdefend: number;
+    injury: number;
+}
+
+interface IFrameData {
+    name: string;
+    pic: number;
+    state: number;
+    wait: number;
+    next: number;
+    dvx: number;
+    dvy: number;
+    dvz: number;
+    centerx: number;
+    centery: number;
+    hit_a: number;
+    hit_d: number;
+    hit_j: number;
+    bdy?: [{
+        kind: number;
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    }]
+    itr?: IInteraction[]
+}
+
+export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame extends number = 0> {
     direction = 1;
     frame: Frame | Defaults = 0;
     wait = 1;
@@ -77,17 +116,15 @@ export class Entity<FrameData extends Record<number, any>, Frame extends number>
     }
 
     event(event: MechanicsEvent) {
-        const frameData = this.frames[this.frame];
-        const state = this.states[frameData.state];
+        const state = this.states[this.frameData.state];
         (state?.[event] ?? this.states.system?.[event])?.();
     }
 
     processFrame() {
-        const frameData = this.frames[this.frame];
-        const state = this.states[frameData.state];
+        const state = this.states[this.frameData.state];
 
-        const combo = this.controller.combo || '';
-        const frameFromCombo = frameData[combo] || state?.combo?.[combo]
+        const combo = (this.controller.combo || '') as keyof IFrameData;
+        const frameFromCombo = (this.frameData[combo] || state?.combo?.[combo]) as Frame;
         if (combo && frameFromCombo) {
             this.next.setFrame(frameFromCombo);
             // Reset combo since it was consumed
@@ -95,7 +132,7 @@ export class Entity<FrameData extends Record<number, any>, Frame extends number>
         }
 
         if (!this.next.frame && !--this.wait) {
-            this.next.setFrame(state?.nextFrame ? state.nextFrame() : frameData.next as Frame);
+            this.next.setFrame(state?.nextFrame ? state.nextFrame() : this.frameData.next as Frame);
         }
 
         if (this.next.frame) {
@@ -123,20 +160,19 @@ export class Entity<FrameData extends Record<number, any>, Frame extends number>
     update(_dx: number) {
         this.controller.update();
 
-        const frameData = this.frames[this.frame];
-        const state = this.states[frameData.state];
+        const state = this.states[this.frameData.state];
 
         state?.update?.(this.controller);
 
         this.states.system?.update?.(this.controller);
 
-        this.sprite.setFrame(frameData.pic, this.direction);
+        this.sprite.setFrame(this.frameData.pic, this.direction);
 
         this.processFrame();
     }
     render(ctx: CanvasRenderingContext2D) {
         this.sprite.render(ctx, this.mechanics.position[0] - 40, this.mechanics.position[1] - 60);
-        this.debugRender(ctx);
+        // this.debugRender(ctx);
         // this.mechanics.render(ctx);
         // this.environment.render(ctx);
     }
@@ -148,32 +184,23 @@ export class Entity<FrameData extends Record<number, any>, Frame extends number>
         return this.mechanics.position[1] - 60;
     }
 
+    public get frameData(): IFrameData {
+        return this.frames[this.frame];
+    }
+
     debugRender(ctx: CanvasRenderingContext2D) {
-        const frameData = this.frames[this.frame];
-        const body = frameData.bdy as any;
-        const interaction = frameData.itr as any;
+        const body = this.frameData.bdy as any;
+        const interaction = this.frameData.itr as any;
 
         if (body) {
             ctx.fillStyle = 'rgba(0, 0, 255, 0.4)';
-            if (Array.isArray(body)) {
-                body.forEach((b) => {
-                    ctx.fillRect(this.x + b.x * this.direction, this.y + b.y, b.w * this.direction, b.h)
-                });
-            } else {
-                ctx.fillRect(this.x + body.x * this.direction, this.y + body.y, body.w * this.direction, body.h);
-            }
+            body.forEach((b: any) => {
+                ctx.fillRect(this.x + b.x * this.direction, this.y + b.y, b.w * this.direction, b.h)
+            });
         }
         if (interaction) {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
-            if (Array.isArray(interaction)) {
-                interaction.forEach((i) => ctx.fillRect(this.x + i.x * this.direction, this.y + i.y, i.w * this.direction, i.h));
-            } else {
-                ctx.fillRect(this.x + interaction.x * this.direction, this.y + interaction.y, interaction.w * this.direction, interaction.h);
-            }
+            interaction.forEach((i: any) => ctx.fillRect(this.x + i.x * this.direction, this.y + i.y, i.w * this.direction, i.h));
         }
-        ctx.fillStyle = 'rgba(0, 255, 255)';
-
-        ctx.fillStyle = 'rgba(0, 255, 0)';
-        ctx.fillRect(this.x, this.y, 4, 4);
     }
 }

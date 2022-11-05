@@ -4,7 +4,7 @@ import { Sprite } from './sprite';
 import './woody_0.png';
 import './woody_1.png';
 import './woody_2.png';
-import { Mechanics, MechanicsEvent, Rectangle, Shape } from './mechanics';
+import { Mechanics, Rectangle } from './mechanics';
 import { Entity, State } from "./entity";
 import { Animator } from './animator';
 
@@ -16,7 +16,6 @@ const loadImage = (source: string) => {
 
 const testImages = ['./woody_0.png', './woody_1.png', './woody_2.png'].map(loadImage);
 
-
 type CharacterFrameData = typeof woody.frame;
 type CharacterFrame = keyof CharacterFrameData;
 
@@ -24,8 +23,19 @@ const animation = Object.entries(woody.frame).reduce<Record<string, CharacterFra
     if (!acc[data.name]) {
         acc[data.name] = (Number(frame) || 999) as CharacterFrame;
     }
-    data.centerx++;
-    data.centery++;
+    // Unsafely modify frame data
+    // Eventually frames should be pre-processed
+    {
+        const unsafeData = data as any;
+        if ('itr' in unsafeData) {
+            unsafeData.itr = Array.isArray(unsafeData.itr) ? unsafeData.itr : [unsafeData.itr];
+        }
+        if ('bdy' in unsafeData) {
+            unsafeData.bdy = Array.isArray(unsafeData.bdy) ? unsafeData.bdy : [unsafeData.bdy];
+        }
+        unsafeData.centerx++;
+        unsafeData.centery++;
+    }
     return acc;
 }, {
     airborn: 212,
@@ -158,6 +168,24 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         }
                         if (controller.stickY > 0) {
                             this.next.setFrame(animation.crouch);
+                        }
+                    },
+                },
+                [State.falling]: {
+                    nextFrame: () => {
+                        if (this.mechanics.velocity[1] > 6) {
+                            return 183;
+                        } else if (this.mechanics.velocity[1] > 0) {
+                            return 182;
+                        } else if (this.mechanics.velocity[1] > -6) {
+                            return 181;
+                        }
+                        return 180;
+                    },
+                    update: () => {
+                        const direction = Math.sign(this.mechanics.velocity[0]);
+                        if (direction) {
+                            this.direction = -direction;
                         }
                     },
                 },

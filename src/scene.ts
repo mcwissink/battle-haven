@@ -1,12 +1,19 @@
 import { Entity } from './entity';
-import { collide, Diamond, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mechanics';
+import { collide, Diamond, dot, Mechanics, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
+
+interface Body {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+}
 
 export class Scene {
     entities: Entity[] = [];
     platforms = [
         new Mechanics(new Rectangle(1000, 100), { position: [100, 300] }),
-        new Mechanics(new Rectangle(150, 100), { position: [200, 200] }),
-        new Mechanics(new Rectangle(100, 100), { position: [200, 0] }),
+        new Mechanics(new Rectangle(150, 200), { position: [600, 200] }),
+        // new Mechanics(new Rectangle(100, 100), { position: [200, 0] }),
     ];
     update(dx: number) {
         this.entities.forEach(entity => {
@@ -45,7 +52,55 @@ export class Scene {
             }
         });
         this.entities.forEach(entity => entity.update(dx));
+        this.entities.forEach(entityA => {
+            if (entityA.frameData.itr) {
+                this.entities.find(entityB => {
+                    if (
+                        entityB !== entityA &&
+                        entityB.frameData.bdy &&
+                        entityA.frameData.itr
+                    ) {
+                        const itr = this.overlapAABB(
+                            entityA.mechanics.position,
+                            entityA.frameData.itr,
+                            entityB.mechanics.position,
+                            entityB.frameData.bdy
+                        );
+                        if (itr?.kind === 0) {
+                            entityB.mechanics.isGrounded = false;
+                            entityB.next.setFrame(180);
+                            if (itr.dvx) {
+                                entityB.mechanics.force(itr.dvx * entityA.direction);
+                            }
+                            if (itr.dvy) {
+                                entityB.mechanics.force(itr.dvy, 1);
+                            }
+                        }
+                    }
+                });
+            }
+        });
     }
+
+    overlapAABB<BodyA extends Body>(originA: Vector, bodiesA: BodyA[], originB: Vector, bodiesB: Body[]): BodyA | undefined {
+        for (const bodyA of bodiesA) {
+            for (const bodyB of bodiesB) {
+                const bodyAX = originA[0] + bodyA.x;
+                const bodyAY = originA[1] + bodyA.y;
+                const bodyBX = originB[0] + bodyB.x;
+                const bodyBY = originB[1] + bodyB.y;
+                if (
+                    bodyAX <= bodyBX + bodyB.w &&
+                    bodyAX + bodyA.w >= bodyBX &&
+                    bodyAY + bodyA.h >= bodyBY &&
+                    bodyAY <= bodyBY + bodyB.h
+                ) {
+                    return bodyA;
+                }
+            }
+        }
+    }
+
     render(ctx: CanvasRenderingContext2D) {
         this.entities.forEach(entity => entity.render(ctx));
 

@@ -201,6 +201,15 @@ const mappings = [
         z: 'defend',
         x: 'jump',
         c: 'attack',
+    },
+    {
+        i: 'up',
+        k: 'down',
+        j: 'left',
+        l: 'right',
+        a: 'defend',
+        s: 'jump',
+        d: 'attack',
     }
 ] as const;
 
