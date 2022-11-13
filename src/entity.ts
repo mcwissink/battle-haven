@@ -1,15 +1,25 @@
-import { controllers, Controller } from './controller';
+import { Controller, controllers } from './controller';
+import { Mechanics, Shape } from './mechanics';
 import { Sprite } from './sprite';
 import './woody_0.png';
 import './woody_1.png';
 import './woody_2.png';
-import { Mechanics, MechanicsEvent, Shape } from './mechanics';
+
+type Event = {
+    landed: null;
+    falling: null;
+    injured: { dvx?: number; dvy?: number };
+}
+
+type EventHandlers = {
+    [E in keyof Event]?: Event[E] extends null ? () => void : (data: Event[E]) => void;
+}
 
 type EntityState<Frame extends number> = {
     combo?: Record<string, Frame | 999 | void>;
     update?: (controller: Controller) => void;
     nextFrame?: () => Frame;
-} & Partial<Record<MechanicsEvent, () => void>>;
+} & EventHandlers;
 
 export enum State {
     standing = 0,
@@ -20,6 +30,7 @@ export enum State {
     dash = 5,
     dodging = 6,
     defend = 7,
+    injured = 11,
     falling = 12,
     crouching = 20,
     doubleJumping = 21,
@@ -56,7 +67,7 @@ class Transition<Frame extends number> {
     }
 }
 
-type IInteraction = {
+type Interaction = {
     kind: 0,
     x: number;
     y: number;
@@ -65,7 +76,8 @@ type IInteraction = {
     dvx?: number;
     dvy?: number;
     fall: number;
-    arest: number;
+    arest?: number;
+    vrest?: number;
     bdefend: number;
     injury: number;
 }
@@ -91,7 +103,7 @@ interface IFrameData {
         w: number;
         h: number;
     }]
-    itr?: IInteraction[]
+    itr?: Interaction[]
 }
 
 export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame extends number = 0> {
@@ -99,6 +111,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
     frame: Frame | Defaults = 0;
     wait = 1;
     next = new Transition<Frame>();
+    public id: Symbol;
     public port = -1;
     constructor(
         public mechanics: Mechanics,
@@ -106,22 +119,32 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
         public sprite: Sprite,
         public frames: FrameData,
         public states: Record<number | 'system', EntityState<Frame> | undefined>,
-    ) { }
+    ) {
+        this.id = Symbol();
+    }
+
     translateFrame(frame: Frame | Defaults) {
         return frame === 999 ? 0 : frame;
+    }
+
+    get state() {
+        return this.states[this.frameData.state];
     }
 
     get controller() {
         return controllers.get(this.port);
     }
 
-    event(event: MechanicsEvent) {
-        const state = this.states[this.frameData.state];
-        (state?.[event] ?? this.states.system?.[event])?.();
+    event<E extends keyof Event>(
+        event: E,
+        ...data: Event[E] extends null ? [] : [Event[E]]
+    ): void {
+        this.state?.[event]?.(data[0] as any);
+        this.states.system?.[event]?.(data[0] as any);
     }
 
     processFrame() {
-        const state = this.states[this.frameData.state];
+        const state = this.state;
 
         const combo = (this.controller.combo || '') as keyof IFrameData;
         const frameFromCombo = (this.frameData[combo] || state?.combo?.[combo]) as Frame;
@@ -156,13 +179,13 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
         }
         this.next.reset();
     }
+
     public transition(_frame: number, _nextFrame: number) { }
+
     update(_dx: number) {
         this.controller.update();
 
-        const state = this.states[this.frameData.state];
-
-        state?.update?.(this.controller);
+        this.state?.update?.(this.controller);
 
         this.states.system?.update?.(this.controller);
 

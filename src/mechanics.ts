@@ -135,8 +135,6 @@ export class Rectangle extends Shape {
     }
 }
 
-export type MechanicsEvent = 'landed' | 'falling';
-
 export class Mechanics {
     public position: Vector;
     public velocity = [0, 0];
@@ -149,7 +147,12 @@ export class Mechanics {
     }
 
     force(force: number, axis = 0) {
-        this.velocity[axis] += Math.sign(force) * Math.min(Math.abs(force), Math.abs(force - this.velocity[axis]));
+        const applied = Math.sign(force) * Math.min(Math.abs(force), Math.abs(force - this.velocity[axis]))
+        if (applied < 0 && axis) {
+            this.velocity[axis] = 0;
+        }
+        this.velocity[axis] += applied;
+
     }
 
     update() {

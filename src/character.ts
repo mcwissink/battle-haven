@@ -1,12 +1,12 @@
-import { controllers, Controller } from './controller';
-import { woody } from './woody';
+import { Animator } from './animator';
+import { controllers } from './controller';
+import { Entity, State } from "./entity";
+import { Mechanics, Rectangle } from './mechanics';
 import { Sprite } from './sprite';
+import { woody } from './woody';
 import './woody_0.png';
 import './woody_1.png';
 import './woody_2.png';
-import { Mechanics, Rectangle } from './mechanics';
-import { Entity, State } from "./entity";
-import { Animator } from './animator';
 
 const loadImage = (source: string) => {
     const image = new Image();
@@ -41,12 +41,14 @@ const animation = Object.entries(woody.frame).reduce<Record<string, CharacterFra
     airborn: 212,
 });
 
-export class Character extends Entity<CharacterFrameData, CharacterFrame> {
+// Fix types, any should be CharacterFrameData
+export class Character extends Entity<any, CharacterFrame> {
     animator = new Animator<CharacterFrameData>();
+    hitRest: Record<symbol | string, number> = {};
     constructor(public port: number) {
         super(
             new Mechanics(new Rectangle(20, 40), { position: [100, 100] }),
-            new Rectangle(30, 42),
+            new Rectangle(10, 42),
             new Sprite({
                 images: testImages,
                 width: 80,
@@ -57,7 +59,25 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             woody.frame,
             {
                 system: {
-                    landed: () => this.next.setFrame(animation.crouch, 1),
+                    landed: () => {
+                        if (this.frameData.state === State.falling) {
+                            this.next.setFrame(animation.lying, 1)
+                        } else {
+                            this.next.setFrame(animation.crouch, 1)
+                        }
+                    },
+                    injured: ({ dvx, dvy }) => {
+                        if (dvx) {
+                            this.mechanics.force(dvx);
+                        }
+                        if (dvy && (dvy < 0 || !this.mechanics.isGrounded)) {
+                            this.mechanics.isGrounded = false;
+                            this.next.setFrame(180);
+                            this.mechanics.force(dvy, 1);
+                        } else {
+                            this.next.setFrame(animation.injured);
+                        }
+                    }
                 },
                 [State.standing]: {
                     combo: {
@@ -129,6 +149,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         if (controller.stickX) {
                             this.direction = Math.sign(controller.stickX);
                         }
+                        // this.mechanics.force(Math.sign(controller.stickX) * woody.bmp.air_speed);
                     },
                 },
                 [State.doubleJumping]: {
@@ -139,6 +160,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         if (controller.stickX) {
                             this.direction = Math.sign(controller.stickX);
                         }
+                        this.mechanics.force(this.direction * woody.bmp.air_speed);
                     },
                 },
                 [State.dash]: {
@@ -147,9 +169,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         hit_j: animation.double_jump,
                     },
                     update: ({ state: controller }) => {
-                        const nextDirectionX = Math.sign(controller.stickX) || this.direction;
-                        if (nextDirectionX !== this.direction && this.frame !== 214) {
-                            this.next.setFrame(214, 0, nextDirectionX);
+                        const direction = Math.sign(controller.stickX) || this.direction;
+                        if (direction !== this.direction && this.frame !== 214) {
+                            this.next.setFrame(214, 0, direction);
                         }
                     },
                 },
@@ -170,6 +192,17 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             this.next.setFrame(animation.crouch);
                         }
                     },
+                },
+                [State.injured]: {
+                    injured: () => {
+                        if (this.frame < 222) {
+                            this.next.setFrame(222, 1);
+                        } else if (this.frame < 224, 1) {
+                            this.next.setFrame(224, 1);
+                        } else if (this.frame < 226) {
+                            this.next.setFrame(224, 1);
+                        }
+                    }
                 },
                 [State.falling]: {
                     nextFrame: () => {

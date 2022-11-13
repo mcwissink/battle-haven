@@ -27,6 +27,7 @@ export const woody = {
         jump_height: -16.299999,
         jump_distance: 10,
         jump_distancez: 3.75,
+        air_speed: 5,
         dash_height: -10,
         dash_distance: 18,
         dash_distancez: 5,

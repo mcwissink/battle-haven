@@ -1,5 +1,5 @@
 import { Entity } from './entity';
-import { collide, Diamond, dot, Mechanics, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
+import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
 
 interface Body {
     x: number;
@@ -27,8 +27,8 @@ export class Scene {
                 if (mtv) {
                     entity.mechanics.position[0] -= mtv[0];
                     entity.mechanics.position[1] -= mtv[1];
-                    entity.mechanics.velocity[0] -= mtv[0];
-                    entity.mechanics.velocity[1] -= mtv[1];
+                    entity.mechanics.velocity[0] -= mtv[0] / 2;
+                    entity.mechanics.velocity[1] -= mtv[1] / 2;
                     entity.environment.update(entity.mechanics.position);
                 }
                 const mtv2 = collide(entity.environment, platform.shape)
@@ -52,6 +52,7 @@ export class Scene {
             }
         });
         this.entities.forEach(entity => entity.update(dx));
+
         this.entities.forEach(entityA => {
             if (entityA.frameData.itr) {
                 this.entities.find(entityB => {
@@ -67,14 +68,10 @@ export class Scene {
                             entityB.frameData.bdy
                         );
                         if (itr?.kind === 0) {
-                            entityB.mechanics.isGrounded = false;
-                            entityB.next.setFrame(180);
-                            if (itr.dvx) {
-                                entityB.mechanics.force(itr.dvx * entityA.direction);
-                            }
-                            if (itr.dvy) {
-                                entityB.mechanics.force(itr.dvy, 1);
-                            }
+                            entityB.event('injured', {
+                                dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
+                                dvy: itr.dvy
+                            });
                         }
                     }
                 });
