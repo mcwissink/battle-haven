@@ -44,7 +44,6 @@ const animation = Object.entries(woody.frame).reduce<Record<string, CharacterFra
 // Fix types, any should be CharacterFrameData
 export class Character extends Entity<any, CharacterFrame> {
     animator = new Animator<CharacterFrameData>();
-    hitRest: Record<symbol | string, number> = {};
     constructor(public port: number) {
         super(
             new Mechanics(new Rectangle(20, 40), { position: [100, 100] }),
@@ -66,14 +65,16 @@ export class Character extends Entity<any, CharacterFrame> {
                             this.next.setFrame(animation.crouch, 1)
                         }
                     },
-                    injured: ({ dvx, dvy }) => {
+                    hit: ({ dvx, dvy }) => {
                         if (dvx) {
                             this.mechanics.force(dvx);
                         }
-                        if (dvy && (dvy < 0 || !this.mechanics.isGrounded)) {
-                            this.mechanics.isGrounded = false;
-                            this.next.setFrame(180);
+                        if (dvy) {
                             this.mechanics.force(dvy, 1);
+                            if (dvy < 0 || !this.mechanics.isGrounded) {
+                                this.mechanics.isGrounded = false;
+                                this.next.setFrame(180, 2);
+                            }
                         } else {
                             this.next.setFrame(animation.injured);
                         }
@@ -94,7 +95,7 @@ export class Character extends Entity<any, CharacterFrame> {
                             this.next.setFrame(animation.running);
                         }
                         if (!this.mechanics.isGrounded) {
-                            this.next.setFrame(animation.airborn, 1)
+                            this.next.setFrame(animation.airborn)
                         }
                     },
                 },
@@ -194,7 +195,7 @@ export class Character extends Entity<any, CharacterFrame> {
                     },
                 },
                 [State.injured]: {
-                    injured: () => {
+                    hit: () => {
                         if (this.frame < 222) {
                             this.next.setFrame(222, 1);
                         } else if (this.frame < 224, 1) {

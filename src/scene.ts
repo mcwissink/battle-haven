@@ -57,6 +57,7 @@ export class Scene {
             if (entityA.frameData.itr) {
                 this.entities.find(entityB => {
                     if (
+                        entityA.canAttack(entityB) &&
                         entityB !== entityA &&
                         entityB.frameData.bdy &&
                         entityA.frameData.itr
@@ -68,7 +69,8 @@ export class Scene {
                             entityB.frameData.bdy
                         );
                         if (itr?.kind === 0) {
-                            entityB.event('injured', {
+                            entityA.attacked(entityB, itr.arest || itr.vrest || 1);
+                            entityB.event('hit', {
                                 dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
                                 dvy: itr.dvy
                             });

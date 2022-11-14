@@ -8,7 +8,7 @@ import './woody_2.png';
 type Event = {
     landed: null;
     falling: null;
-    injured: { dvx?: number; dvy?: number };
+    hit: { dvx?: number; dvy?: number };
 }
 
 type EventHandlers = {
@@ -111,7 +111,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
     frame: Frame | Defaults = 0;
     wait = 1;
     next = new Transition<Frame>();
-    public id: Symbol;
+    attackRest: Map<Entity, number> = new Map();
     public port = -1;
     constructor(
         public mechanics: Mechanics,
@@ -119,9 +119,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
         public sprite: Sprite,
         public frames: FrameData,
         public states: Record<number | 'system', EntityState<Frame> | undefined>,
-    ) {
-        this.id = Symbol();
-    }
+    ) { }
 
     translateFrame(frame: Frame | Defaults) {
         return frame === 999 ? 0 : frame;
@@ -141,6 +139,14 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
     ): void {
         this.state?.[event]?.(data[0] as any);
         this.states.system?.[event]?.(data[0] as any);
+    }
+
+    canAttack(entity: Entity) {
+        return !this.attackRest.has(entity);
+    }
+
+    attacked(entity: Entity, rest: number) {
+        this.attackRest.set(entity, rest);
     }
 
     processFrame() {
@@ -183,6 +189,14 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
     public transition(_frame: number, _nextFrame: number) { }
 
     update(_dx: number) {
+        this.attackRest.forEach((value, key) => {
+            if (value) {
+                this.attackRest.set(key, value - 1);
+            } else {
+                this.attackRest.delete(key);
+            }
+        });
+
         this.controller.update();
 
         this.state?.update?.(this.controller);
