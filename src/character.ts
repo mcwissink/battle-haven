@@ -1,4 +1,5 @@
 import { Animator } from './animator';
+import { config } from './config';
 import { controllers } from './controller';
 import { Entity, State } from "./entity";
 import { Mechanics, Rectangle } from './mechanics';
@@ -58,14 +59,19 @@ export class Character extends Entity<any, CharacterFrame> {
             woody.frame,
             {
                 system: {
-                    landed: () => {
+                    landed: ({ vy }) => {
                         if (this.frameData.state === State.falling) {
-                            this.next.setFrame(animation.lying, 1)
+                            if (vy > 6) {
+                                this.mechanics.force(-2, 1);
+                            } else {
+                                this.next.setFrame(animation.lying, 1)
+                            }
                         } else {
                             this.next.setFrame(animation.crouch, 1)
                         }
                     },
                     hit: ({ dvx, dvy }) => {
+                        this.hitStop = config.hitStop;
                         if (dvx) {
                             this.mechanics.force(dvx);
                         }

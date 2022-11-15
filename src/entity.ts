@@ -1,3 +1,4 @@
+import { config } from './config';
 import { Controller, controllers } from './controller';
 import { Mechanics, Shape } from './mechanics';
 import { Sprite } from './sprite';
@@ -6,7 +7,7 @@ import './woody_1.png';
 import './woody_2.png';
 
 type Event = {
-    landed: null;
+    landed: { vx: number, vy: number };
     falling: null;
     hit: { dvx?: number; dvy?: number };
 }
@@ -112,6 +113,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
     wait = 1;
     next = new Transition<Frame>();
     attackRest: Map<Entity, number> = new Map();
+    hitStop = 0;
     public port = -1;
     constructor(
         public mechanics: Mechanics,
@@ -146,7 +148,8 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
     }
 
     attacked(entity: Entity, rest: number) {
-        this.attackRest.set(entity, rest);
+        this.hitStop = config.hitStop;
+        this.attackRest.set(entity, Math.floor(rest / 2));
     }
 
     processFrame() {
@@ -160,7 +163,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
             this.controller.combo = null;
         }
 
-        if (!this.next.frame && !--this.wait) {
+        if (!this.hitStop && !this.next.frame && !--this.wait) {
             this.next.setFrame(state?.nextFrame ? state.nextFrame() : this.frameData.next as Frame);
         }
 
@@ -189,15 +192,19 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
     public transition(_frame: number, _nextFrame: number) { }
 
     update(_dx: number) {
-        this.attackRest.forEach((value, key) => {
-            if (value) {
-                this.attackRest.set(key, value - 1);
-            } else {
-                this.attackRest.delete(key);
-            }
-        });
-
         this.controller.update();
+
+        if (this.hitStop) {
+            this.hitStop--;
+        } else {
+            this.attackRest.forEach((value, key) => {
+                if (value) {
+                    this.attackRest.set(key, value - 1);
+                } else {
+                    this.attackRest.delete(key);
+                }
+            });
+        }
 
         this.state?.update?.(this.controller);
 
@@ -208,7 +215,12 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
         this.processFrame();
     }
     render(ctx: CanvasRenderingContext2D) {
-        this.sprite.render(ctx, this.mechanics.position[0] - 40, this.mechanics.position[1] - 60);
+        const modX = this.hitStop && (this.frameData.state === State.injured || this.frameData.state === State.falling) ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * 10 : 0;
+        this.sprite.render(
+            ctx,
+            this.mechanics.position[0] - 40 + modX,
+            this.mechanics.position[1] - 60,
+        );
         // this.debugRender(ctx);
         // this.mechanics.render(ctx);
         // this.environment.render(ctx);

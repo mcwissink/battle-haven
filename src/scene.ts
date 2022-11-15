@@ -17,8 +17,10 @@ export class Scene {
     ];
     update(dx: number) {
         this.entities.forEach(entity => {
-            entity.mechanics.update()
-            entity.environment.update(entity.mechanics.position);
+            if (!entity.hitStop) {
+                entity.mechanics.update()
+                entity.environment.update(entity.mechanics.position);
+            }
         });
         this.entities.forEach(entity => {
             let collided = false;
@@ -38,9 +40,10 @@ export class Scene {
                         collided = true;
                     }
                     if (product === 1 && !entity.mechanics.isGrounded && mtv) {
-                        entity.event('landed');
+                        const [vx, vy] = entity.mechanics.velocity;
                         entity.mechanics.velocity[1] = 0;
                         entity.mechanics.isGrounded = true;
+                        entity.event('landed', { vx, vy });
                     }
                 }
             });
@@ -51,7 +54,6 @@ export class Scene {
                 entity.mechanics.isGrounded = false;
             }
         });
-        this.entities.forEach(entity => entity.update(dx));
 
         this.entities.forEach(entityA => {
             if (entityA.frameData.itr) {
@@ -79,6 +81,8 @@ export class Scene {
                 });
             }
         });
+
+        this.entities.forEach(entity => entity.update(dx));
     }
 
     overlapAABB<BodyA extends Body>(originA: Vector, bodiesA: BodyA[], originB: Vector, bodiesB: Body[]): BodyA | undefined {

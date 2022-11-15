@@ -1,5 +1,4 @@
-const gravity = 1.7;
-const friction = 1;
+import { config } from "./config";
 
 export type Vector = [number, number];
 
@@ -159,9 +158,9 @@ export class Mechanics {
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
         if (this.isGrounded) {
-            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), friction);
+            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), config.friction);
         } else {
-            this.velocity[1] += this.mass * gravity;
+            this.velocity[1] += this.mass * config.gravity;
         }
         this.shape.update(this.position);
     }
