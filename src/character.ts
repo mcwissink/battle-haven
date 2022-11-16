@@ -1,6 +1,5 @@
 import { Animator } from './animator';
 import { config } from './config';
-import { controllers } from './controller';
 import { Entity, State } from "./entity";
 import { Mechanics, Rectangle } from './mechanics';
 import { Sprite } from './sprite';
@@ -47,7 +46,7 @@ export class Character extends Entity<any, CharacterFrame> {
     animator = new Animator<CharacterFrameData>();
     constructor(public port: number) {
         super(
-            new Mechanics(new Rectangle(20, 40), { position: [100, 100] }),
+            new Mechanics(new Rectangle(20, 40), { position: [300, 100] }),
             new Rectangle(10, 42),
             new Sprite({
                 images: testImages,
@@ -71,7 +70,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         }
                     },
                     hit: ({ dvx, dvy }) => {
-                        this.hitStop = config.hitStop;
+                        this.hitStop = config.hitStop * 2;
                         if (dvx) {
                             this.mechanics.force(dvx);
                         }
@@ -153,10 +152,11 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_a: animation.jump_attack,
                     },
                     update: ({ state: controller }) => {
-                        if (controller.stickX) {
-                            this.direction = Math.sign(controller.stickX);
+                        const direction = Math.sign(controller.stickX);
+                        if (direction) {
+                            this.direction = direction;
                         }
-                        // this.mechanics.force(Math.sign(controller.stickX) * woody.bmp.air_speed);
+                        this.mechanics.force(direction * woody.bmp.air_speed, 0, 1);
                     },
                 },
                 [State.doubleJumping]: {
@@ -164,10 +164,11 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_a: animation.jump_attack,
                     },
                     update: ({ state: controller }) => {
-                        if (controller.stickX) {
-                            this.direction = Math.sign(controller.stickX);
+                        const direction = Math.sign(controller.stickX);
+                        if (direction) {
+                            this.direction = direction;
                         }
-                        this.mechanics.force(this.direction * woody.bmp.air_speed);
+                        this.mechanics.force(direction * woody.bmp.air_speed, 0, 1);
                     },
                 },
                 [State.dash]: {
@@ -237,7 +238,7 @@ export class Character extends Entity<any, CharacterFrame> {
         // Frame specific updates
         // Jump
         if (frame === 211 && nextFrame === 212) {
-            this.mechanics.force(woody.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || Math.sign(controllers.get(this.port).state.stickX)));
+            this.mechanics.force(woody.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || Math.sign(this.controller.state.stickX)));
             this.mechanics.velocity[1] = woody.bmp.jump_height;
         }
         // Dash
@@ -247,7 +248,9 @@ export class Character extends Entity<any, CharacterFrame> {
         }
         // Double-jump
         if (nextFrame === animation.double_jump) {
-            this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] / 2) * Math.sign(controllers.get(this.port).state.stickX);
+            const direction = Math.sign(this.controller.state.stickX);
+            const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
+            this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
             this.mechanics.velocity[1] = woody.bmp.jump_height;
         }
     }

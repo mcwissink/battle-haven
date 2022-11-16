@@ -33,9 +33,9 @@ export enum State {
     defend = 7,
     injured = 11,
     falling = 12,
+    other = 15,
     crouching = 20,
     doubleJumping = 21,
-    other = 15,
 }
 
 type Defaults = 999 | 0;

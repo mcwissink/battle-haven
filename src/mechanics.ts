@@ -145,13 +145,17 @@ export class Mechanics {
         this.shape.update(this.position);
     }
 
-    force(force: number, axis = 0) {
-        const applied = Math.sign(force) * Math.min(Math.abs(force), Math.abs(force - this.velocity[axis]))
+    force(force: number, axis = 0, acceleration = force * Math.sign(force)) {
+        const direction = Math.sign(force);
+        const diff = force * direction - this.velocity[axis] * direction;
+        const applied = direction * Math.min(
+            diff > 0 ? diff : 0,
+            acceleration
+        )
         if (applied < 0 && axis) {
             this.velocity[axis] = 0;
         }
         this.velocity[axis] += applied;
-
     }
 
     update() {

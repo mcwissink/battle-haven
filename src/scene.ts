@@ -9,11 +9,12 @@ interface Body {
 }
 
 export class Scene {
-    entities: Entity[] = [];
+    entities: Entity<any, any>[] = [];
     platforms = [
-        new Mechanics(new Rectangle(1000, 100), { position: [100, 300] }),
-        new Mechanics(new Rectangle(150, 200), { position: [600, 200] }),
-        // new Mechanics(new Rectangle(100, 100), { position: [200, 0] }),
+        new Mechanics(new Rectangle(1000, 100), { position: [800, 300] }),
+        new Mechanics(new Rectangle(150, 500), { position: [5, 200] }),
+        new Mechanics(new Rectangle(1500, 100), { position: [800, 800] }),
+        new Mechanics(new Rectangle(150, 500), { position: [1600, 200] }),
     ];
     update(dx: number) {
         this.entities.forEach(entity => {
@@ -29,8 +30,8 @@ export class Scene {
                 if (mtv) {
                     entity.mechanics.position[0] -= mtv[0];
                     entity.mechanics.position[1] -= mtv[1];
-                    entity.mechanics.velocity[0] -= mtv[0] / 2;
-                    entity.mechanics.velocity[1] -= mtv[1] / 2;
+                    entity.mechanics.velocity[0] -= mtv[0] * 0.5;
+                    entity.mechanics.velocity[1] -= mtv[1] * 0.5;
                     entity.environment.update(entity.mechanics.position);
                 }
                 const mtv2 = collide(entity.environment, platform.shape)
