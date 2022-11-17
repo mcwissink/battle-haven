@@ -4,6 +4,8 @@ import { Scene } from './scene';
 
 interface BattleHavenConfig {
     gravity: number;
+    hitStop: number;
+    friction: number;
 }
 export class BattleHaven {
     previousTime = 0;
@@ -11,7 +13,7 @@ export class BattleHaven {
     scene = new Scene();
     constructor(
         private canvas: HTMLCanvasElement,
-        private config: BattleHavenConfig
+        public config: BattleHavenConfig
     ) {
         const ctx = canvas.getContext('2d');
         if (!ctx) {

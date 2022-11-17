@@ -1,12 +1,15 @@
 import { Animator } from './animator';
-import { config } from './config';
 import { Entity, State } from "./entity";
+import { BH } from './main';
 import { Mechanics, Rectangle } from './mechanics';
+import { modifyData } from './modify-data';
 import { Sprite } from './sprite';
 import { woody } from './woody';
 import './woody_0.png';
 import './woody_1.png';
 import './woody_2.png';
+
+const character = woody;
 
 const loadImage = (source: string) => {
     const image = new Image();
@@ -16,25 +19,15 @@ const loadImage = (source: string) => {
 
 const testImages = ['./woody_0.png', './woody_1.png', './woody_2.png'].map(loadImage);
 
-type CharacterFrameData = typeof woody.frame;
+type CharacterFrameData = typeof character.frame;
 type CharacterFrame = keyof CharacterFrameData;
 
-const animation = Object.entries(woody.frame).reduce<Record<string, CharacterFrame>>((acc, [frame, data]) => {
+console.log('testing');
+modifyData(character);
+
+const animation = Object.entries(character.frame).reduce<Record<string, CharacterFrame>>((acc, [frame, data]) => {
     if (!acc[data.name]) {
         acc[data.name] = (Number(frame) || 999) as CharacterFrame;
-    }
-    // Unsafely modify frame data
-    // Eventually frames should be pre-processed
-    {
-        const unsafeData = data as any;
-        if ('itr' in unsafeData) {
-            unsafeData.itr = Array.isArray(unsafeData.itr) ? unsafeData.itr : [unsafeData.itr];
-        }
-        if ('bdy' in unsafeData) {
-            unsafeData.bdy = Array.isArray(unsafeData.bdy) ? unsafeData.bdy : [unsafeData.bdy];
-        }
-        unsafeData.centerx++;
-        unsafeData.centery++;
     }
     return acc;
 }, {
@@ -55,7 +48,7 @@ export class Character extends Entity<any, CharacterFrame> {
                 rows: 7,
                 columns: 10,
             }),
-            woody.frame,
+            character.frame,
             {
                 system: {
                     landed: ({ vy }) => {
@@ -70,7 +63,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         }
                     },
                     hit: ({ dvx, dvy }) => {
-                        this.hitStop = config.hitStop * 2;
+                        this.hitStop = BH.config.hitStop * 2;
                         if (dvx) {
                             this.mechanics.force(dvx);
                         }
@@ -114,7 +107,7 @@ export class Character extends Entity<any, CharacterFrame> {
                     },
                     nextFrame: () => this.animator.oscillate(5, 8),
                     update: ({ state: controller }) => {
-                        this.mechanics.force(this.direction * woody.bmp.walking_speed);
+                        this.mechanics.force(this.direction * character.bmp.walking_speed);
                         if (controller.stickX) {
                             this.direction = Math.sign(controller.stickX);
                         } else {
@@ -134,7 +127,7 @@ export class Character extends Entity<any, CharacterFrame> {
                     },
                     nextFrame: () => this.animator.oscillate(9, 11),
                     update: ({ state: controller }) => {
-                        this.mechanics.force(this.direction * woody.bmp.running_speed);
+                        this.mechanics.force(this.direction * character.bmp.running_speed);
                         if (controller.stickX) {
                             this.direction = Math.sign(controller.stickX);
                         } else {
@@ -156,7 +149,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         if (direction) {
                             this.direction = direction;
                         }
-                        this.mechanics.force(direction * woody.bmp.air_speed, 0, 1);
+                        this.mechanics.force(direction * character.bmp.walking_speedz, 0, 1);
                     },
                 },
                 [State.doubleJumping]: {
@@ -168,7 +161,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         if (direction) {
                             this.direction = direction;
                         }
-                        this.mechanics.force(direction * woody.bmp.air_speed, 0, 1);
+                        this.mechanics.force(direction * character.bmp.walking_speedz, 0, 1);
                     },
                 },
                 [State.dash]: {
@@ -238,20 +231,20 @@ export class Character extends Entity<any, CharacterFrame> {
         // Frame specific updates
         // Jump
         if (frame === 211 && nextFrame === 212) {
-            this.mechanics.force(woody.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || Math.sign(this.controller.state.stickX)));
-            this.mechanics.velocity[1] = woody.bmp.jump_height;
+            this.mechanics.force(character.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || Math.sign(this.controller.state.stickX)));
+            this.mechanics.velocity[1] = character.bmp.jump_height;
         }
         // Dash
         if (nextFrame === animation.dash) {
-            this.mechanics.force(woody.bmp.dash_distance * Math.sign(this.mechanics.velocity[0]));
-            this.mechanics.velocity[1] = woody.bmp.dash_height;
+            this.mechanics.force(character.bmp.dash_distance * Math.sign(this.mechanics.velocity[0]));
+            this.mechanics.velocity[1] = character.bmp.dash_height;
         }
         // Double-jump
         if (nextFrame === animation.double_jump) {
             const direction = Math.sign(this.controller.state.stickX);
             const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
             this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
-            this.mechanics.velocity[1] = woody.bmp.jump_height;
+            this.mechanics.velocity[1] = character.bmp.jump_height;
         }
     }
 }

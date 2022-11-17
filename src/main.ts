@@ -1,6 +1,11 @@
 import { BattleHaven } from './battle-haven';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-const battleHaven = new BattleHaven(canvas, { gravity: 1 });
-battleHaven.start();
+export const BH = new BattleHaven(canvas, {
+    hitStop: 3,
+    gravity: 1.7,
+    friction: 1,
+});
+
+BH.start();
 

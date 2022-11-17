@@ -1,5 +1,5 @@
-import { config } from './config';
 import { Controller, controllers } from './controller';
+import { BH } from './main';
 import { Mechanics, Shape } from './mechanics';
 import { Sprite } from './sprite';
 import './woody_0.png';
@@ -148,7 +148,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
     }
 
     attacked(entity: Entity, rest: number) {
-        this.hitStop = config.hitStop;
+        this.hitStop = BH.config.hitStop;
         this.attackRest.set(entity, Math.floor(rest / 2));
     }
 

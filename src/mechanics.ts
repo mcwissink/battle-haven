@@ -1,4 +1,4 @@
-import { config } from "./config";
+import { BH } from "./main";
 
 export type Vector = [number, number];
 
@@ -162,9 +162,9 @@ export class Mechanics {
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
         if (this.isGrounded) {
-            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), config.friction);
+            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), BH.config.friction);
         } else {
-            this.velocity[1] += this.mass * config.gravity;
+            this.velocity[1] += this.mass * BH.config.gravity;
         }
         this.shape.update(this.position);
     }
