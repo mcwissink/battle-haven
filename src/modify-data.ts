@@ -1,7 +1,7 @@
 const customFrames = {
-    304: {
+    394: {
         name: "double_jump",
-        pic: 58, state: 21, wait: 1, next: 305, dvx: 0, dvy: -17, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
+        pic: 58, state: 21, wait: 1, next: 395, dvx: 0, dvy: -17, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
         wpoint: {
             kind: 1, x: 38, y: 75, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
         },
@@ -9,9 +9,9 @@ const customFrames = {
             kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
         }
     },
-    305: {
+    395: {
         name: "double_jump",
-        pic: 58, state: 21, wait: 1, next: 306, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
+        pic: 58, state: 21, wait: 1, next: 396, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
         wpoint: {
             kind: 1, x: 38, y: 75, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
         },
@@ -19,9 +19,9 @@ const customFrames = {
             kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
         }
     },
-    306: {
+    396: {
         name: "double_jump",
-        pic: 59, state: 21, wait: 1, next: 307, dvx: 0, dvy: 0, dvz: 0, centerx: 34, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
+        pic: 59, state: 21, wait: 1, next: 397, dvx: 0, dvy: 0, dvz: 0, centerx: 34, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
         wpoint: {
             kind: 1, x: 43, y: 47, weaponact: 31, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
         },
@@ -29,9 +29,9 @@ const customFrames = {
             kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
         }
     },
-    307: {
+    397: {
         name: "double_jump",
-        pic: 69, state: 21, wait: 1, next: 308, dvx: 0, dvy: 0, dvz: 0, centerx: 34, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
+        pic: 69, state: 21, wait: 1, next: 398, dvx: 0, dvy: 0, dvz: 0, centerx: 34, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
         wpoint: {
             kind: 1, x: 20, y: 61, weaponact: 25, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
         },
@@ -39,9 +39,9 @@ const customFrames = {
             kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
         }
     },
-    308: {
+    398: {
         name: "double_jump",
-        pic: 58, state: 21, wait: 1, next: 305, dvx: 0, dvy: 0, dvz: 0, centerx: 38, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
+        pic: 58, state: 21, wait: 1, next: 395, dvx: 0, dvy: 0, dvz: 0, centerx: 38, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260,
         wpoint: {
             kind: 1, x: 35, y: 74, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
         },
