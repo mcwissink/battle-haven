@@ -22,7 +22,6 @@ const testImages = ['./woody_0.png', './woody_1.png', './woody_2.png'].map(loadI
 type CharacterFrameData = typeof character.frame;
 type CharacterFrame = keyof CharacterFrameData;
 
-console.log('testing');
 modifyData(character);
 
 const animation = Object.entries(character.frame).reduce<Record<string, CharacterFrame>>((acc, [frame, data]) => {
