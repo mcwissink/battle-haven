@@ -11,10 +11,13 @@ interface Body {
 export class Scene {
     entities: Entity[] = [];
     platforms = [
-        new Mechanics(new Rectangle(1000, 100), { position: [800, 300] }),
-        new Mechanics(new Rectangle(150, 500), { position: [5, 200] }),
-        new Mechanics(new Rectangle(1500, 100), { position: [800, 800] }),
-        new Mechanics(new Rectangle(150, 500), { position: [1600, 200] }),
+        new Mechanics(new Rectangle(200, 1), { position: [500, 245], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 1), { position: [800, 150], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 1), { position: [1100, 250], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(1000, 100), { position: [800, 400] }),
+        new Mechanics(new Rectangle(150, 500), { position: [5, 210] }),
+        new Mechanics(new Rectangle(1500, 100), { position: [800, 810] }),
+        new Mechanics(new Rectangle(150, 500), { position: [1600, 210] }),
     ];
     update(dx: number) {
         this.entities.forEach(entity => {
@@ -27,7 +30,16 @@ export class Scene {
             let isGrounded = false;
             let isOverlapping = false;
             this.platforms.forEach((platform) => {
-                const mtv = collide(entity.mechanics.shape, platform.shape)
+                let mtv = collide(entity.mechanics.shape, platform.shape)
+                // One-way platforms
+                if (mtv && platform.passThrough) {
+                    if (
+                        dot(platform.passThrough, normalize(mtv)) !== 1 ||
+                        dot(platform.passThrough, normalize(entity.mechanics.velocity)) <= 0
+                    ) {
+                        mtv = undefined;
+                    }
+                }
                 if (mtv) {
                     entity.mechanics.position[0] -= mtv[0];
                     entity.mechanics.position[1] -= mtv[1];
@@ -43,11 +55,8 @@ export class Scene {
                         entity.event('collide');
                     }
 
-                    const product = dot(UP_VECTOR, normalize(mtv2));
-                    if (product === 1) {
-                        isGrounded = true;
-                    }
-                    if (product === 1 && !entity.mechanics.isGrounded && mtv) {
+                    isGrounded = dot(UP_VECTOR, normalize(mtv2)) === 1;
+                    if (isGrounded && !entity.mechanics.isGrounded && mtv) {
                         const [vx, vy] = entity.mechanics.velocity;
                         entity.mechanics.velocity[1] = 0;
                         entity.mechanics.isGrounded = true;

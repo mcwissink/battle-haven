@@ -38,7 +38,7 @@ export class Character extends Entity<any, CharacterFrame> {
     animator = new Animator<CharacterFrameData>();
     constructor(public port: number) {
         super(
-            new Mechanics(new Rectangle(20, 40), { position: [300, 100] }),
+            new Mechanics(new Rectangle(20, 40), { position: [350, 100] }),
             new Rectangle(10, 42),
             new Sprite({
                 images: testImages,

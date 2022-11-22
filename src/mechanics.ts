@@ -73,6 +73,8 @@ export class Shape {
     };
     render(ctx: CanvasRenderingContext2D) {
         ctx.fillStyle = 'rgba(100, 0, 0, 0.4)';
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
         ctx.beginPath();
         this.corners.forEach((corner, index) => {
             if (index) {
@@ -82,7 +84,7 @@ export class Shape {
             }
         });
         ctx.closePath();
-        ctx.fill();
+        ctx.stroke();
     };
 }
 
@@ -136,13 +138,26 @@ export class Rectangle extends Shape {
 
 export class Mechanics {
     public position: Vector;
-    public velocity = [0, 0];
+    public passThrough?: Vector;
+    public velocity: Vector = [0, 0];
     public isGrounded = false;
     public isOverlapping = false;
     public mass;
-    constructor(public shape: Shape, { mass = 1, position = [0, 0] }: { mass?: number, position?: Vector } = {}) {
+    constructor(
+        public shape: Shape,
+        {
+            mass = 1,
+            position = [0, 0],
+            passThrough,
+        }: {
+            mass?: number,
+            passThrough?: Vector,
+            position?: Vector
+        } = {}
+    ) {
         this.mass = mass;
         this.position = position;
+        this.passThrough = passThrough;
         this.shape.update(this.position);
     }
 
