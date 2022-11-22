@@ -7,8 +7,9 @@ import './woody_1.png';
 import './woody_2.png';
 
 type Event = {
-    landed: { vx: number, vy: number };
-    falling: null;
+    land: { vx: number, vy: number };
+    collide: null;
+    fall: null;
     hit: { dvx?: number; dvy?: number };
 }
 
@@ -69,7 +70,7 @@ class Transition<Frame extends number> {
 }
 
 type Interaction = {
-    kind: 0,
+    kind: 0;
     x: number;
     y: number;
     w: number;
@@ -104,10 +105,12 @@ interface IFrameData {
         w: number;
         h: number;
     }]
+    opoint: any;
     itr?: Interaction[]
 }
 
-export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame extends number = 0> {
+export class Entity<FrameData extends Record<number, IFrameData> = any, Frame extends number = any> {
+    parent?: Entity;
     direction = 1;
     frame: Frame | Defaults = 0;
     wait = 1;
@@ -144,7 +147,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
     }
 
     canAttack(entity: Entity) {
-        return !this.attackRest.has(entity);
+        return this.parent !== entity && !this.attackRest.has(entity);
     }
 
     attacked(entity: Entity, rest: number) {
@@ -169,6 +172,10 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
 
         if (this.next.frame) {
             const translatedFrame = this.translateFrame(this.next.frame);
+            if (translatedFrame === 1000) {
+                BH.destroy(this);
+                return;
+            }
             const nextFrameData = this.frames[translatedFrame];
 
             if (nextFrameData.dvx) {
@@ -176,6 +183,10 @@ export class Entity<FrameData extends Record<number, IFrameData> = {}, Frame ext
             }
             if (nextFrameData.dvy) {
                 this.mechanics.force(nextFrameData.dvy, 1);
+            }
+
+            if (nextFrameData.opoint) {
+                BH.spawn(nextFrameData.opoint, this);
             }
 
             this.transition(this.frame, this.next.frame);

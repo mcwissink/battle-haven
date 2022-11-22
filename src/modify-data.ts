@@ -51,20 +51,22 @@ const customFrames = {
     },
 };
 export const modifyData = (data: any) => {
-    data.frame = {
-        ...data.frame,
-        ...customFrames,
+    if (data.bmp.name) {
+        data.frame = {
+            ...data.frame,
+            ...customFrames,
+        }
+
+        data.bmp.walking_speedz = 7;
+
+        const modifyFrames = (frames: number[], mod: (frameData: any) => void) => {
+            frames.forEach((frame) => mod(data.frame[frame]));
+        }
+
+        modifyFrames([215], (frameData) => frameData.state = 20);
+        modifyFrames([210, 211], (frameData) => frameData.state = 20);
+        modifyFrames([86], (frameData) => frameData.dvx = 0);
     }
-
-    data.bmp.walking_speedz = 7;
-
-    const modifyFrames = (frames: number[], mod: (frameData: any) => void) => {
-        frames.forEach((frame) => mod(data.frame[frame]));
-    }
-
-    modifyFrames([215], (frameData) => frameData.state = 20);
-    modifyFrames([210, 211], (frameData) => frameData.state = 20);
-    modifyFrames([86], (frameData) => frameData.dvx = 0);
 
     Object.entries(data.frame).forEach(([, frameData]: any) => {
         if ('itr' in frameData) {

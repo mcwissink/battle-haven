@@ -137,7 +137,8 @@ export class Rectangle extends Shape {
 export class Mechanics {
     public position: Vector;
     public velocity = [0, 0];
-    public isGrounded = true;
+    public isGrounded = false;
+    public isOverlapping = false;
     public mass;
     constructor(public shape: Shape, { mass = 1, position = [0, 0] }: { mass?: number, position?: Vector } = {}) {
         this.mass = mass;

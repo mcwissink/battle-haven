@@ -9,7 +9,7 @@ interface Body {
 }
 
 export class Scene {
-    entities: Entity<any, any>[] = [];
+    entities: Entity[] = [];
     platforms = [
         new Mechanics(new Rectangle(1000, 100), { position: [800, 300] }),
         new Mechanics(new Rectangle(150, 500), { position: [5, 200] }),
@@ -24,7 +24,8 @@ export class Scene {
             }
         });
         this.entities.forEach(entity => {
-            let collided = false;
+            let isGrounded = false;
+            let isOverlapping = false;
             this.platforms.forEach((platform) => {
                 const mtv = collide(entity.mechanics.shape, platform.shape)
                 if (mtv) {
@@ -36,23 +37,32 @@ export class Scene {
                 }
                 const mtv2 = collide(entity.environment, platform.shape)
                 if (mtv2) {
+                    isOverlapping = true;
+                    if (!entity.mechanics.isOverlapping) {
+                        entity.mechanics.isOverlapping = true;
+                        entity.event('collide');
+                    }
+
                     const product = dot(UP_VECTOR, normalize(mtv2));
                     if (product === 1) {
-                        collided = true;
+                        isGrounded = true;
                     }
                     if (product === 1 && !entity.mechanics.isGrounded && mtv) {
                         const [vx, vy] = entity.mechanics.velocity;
                         entity.mechanics.velocity[1] = 0;
                         entity.mechanics.isGrounded = true;
-                        entity.event('landed', { vx, vy });
+                        entity.event('land', { vx, vy });
                     }
                 }
             });
-            if (!collided) {
-                if (entity.mechanics.isGrounded) {
-                    entity.event('falling');
-                }
+            if (!isOverlapping) {
+                entity.mechanics.isOverlapping = false;
+            }
+            if (!isGrounded) {
                 entity.mechanics.isGrounded = false;
+                if (entity.mechanics.isGrounded) {
+                    entity.event('fall');
+                }
             }
         });
 

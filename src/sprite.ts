@@ -36,14 +36,14 @@ export class Sprite {
         if (this.spriteSheet) {
             ctx.drawImage(
                 this.spriteSheet.images[this.frameOffsetImage],
-                this.frameOffsetX,
-                this.frameOffsetY,
-                this.spriteSheet.width,
-                this.spriteSheet.height,
-                this.directionX === -1 ? -this.spriteSheet.width : 0,
-                this.directionY === -1 ? -this.spriteSheet.height : 0,
-                this.spriteSheet.width,
-                this.spriteSheet.height
+                this.frameOffsetX + 1,
+                this.frameOffsetY + 1,
+                this.spriteSheet.width - 2,
+                this.spriteSheet.height - 2,
+                this.directionX === -1 ? -(this.spriteSheet.width - 2) : 0,
+                this.directionY === -1 ? -(this.spriteSheet.height - 2) : 0,
+                this.spriteSheet.width - 2,
+                this.spriteSheet.height - 2
             );
         }
         ctx.setTransform(1, 0, 0, 1, 0, 0);

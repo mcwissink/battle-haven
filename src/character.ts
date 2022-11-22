@@ -50,7 +50,7 @@ export class Character extends Entity<any, CharacterFrame> {
             character.frame,
             {
                 system: {
-                    landed: ({ vy }) => {
+                    land: ({ vy }) => {
                         if (this.frameData.state === State.falling) {
                             if (vy > 6) {
                                 this.mechanics.force(-2, 1);
@@ -144,11 +144,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_a: animation.jump_attack,
                     },
                     update: ({ state: controller }) => {
-                        const direction = Math.sign(controller.stickX);
-                        if (direction) {
-                            this.direction = direction;
-                        }
-                        this.mechanics.force(direction * character.bmp.walking_speedz, 0, 1);
+                        this.mechanics.force(Math.sign(controller.stickX) * character.bmp.walking_speedz, 0, 1);
                     },
                 },
                 [State.doubleJumping]: {
@@ -156,11 +152,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_a: animation.jump_attack,
                     },
                     update: ({ state: controller }) => {
-                        const direction = Math.sign(controller.stickX);
-                        if (direction) {
-                            this.direction = direction;
-                        }
-                        this.mechanics.force(direction * character.bmp.walking_speedz, 0, 1);
+                        this.mechanics.force(Math.sign(controller.stickX) * character.bmp.walking_speedz, 0, 1);
                     },
                 },
                 [State.dash]: {
