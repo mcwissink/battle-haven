@@ -1,5 +1,5 @@
 import { Entity } from './entity';
-import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
+import { collide, Diamond, dot, Mechanics, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
 
 interface Body {
     x: number;
@@ -11,9 +11,10 @@ interface Body {
 export class Scene {
     entities: Entity[] = [];
     platforms = [
-        new Mechanics(new Rectangle(200, 1), { position: [500, 245], passThrough: UP_VECTOR }),
-        new Mechanics(new Rectangle(200, 1), { position: [800, 150], passThrough: UP_VECTOR }),
-        new Mechanics(new Rectangle(200, 1), { position: [1100, 250], passThrough: UP_VECTOR }),
+        new Mechanics(new Diamond(200, 150), { position: [800, 360] }),
+        new Mechanics(new Rectangle(200, 10), { position: [500, 245], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 10), { position: [800, 150], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 10), { position: [1100, 250], passThrough: UP_VECTOR }),
         new Mechanics(new Rectangle(1000, 100), { position: [800, 400] }),
         new Mechanics(new Rectangle(150, 500), { position: [5, 210] }),
         new Mechanics(new Rectangle(1500, 100), { position: [800, 810] }),
@@ -34,17 +35,17 @@ export class Scene {
                 // One-way platforms
                 if (mtv && platform.passThrough) {
                     if (
-                        dot(platform.passThrough, normalize(mtv)) !== 1 ||
-                        dot(platform.passThrough, normalize(entity.mechanics.velocity)) <= 0
+                        dot(platform.passThrough, normalize(mtv)) < 0.5 ||
+                        dot(platform.passThrough, normalize(entity.mechanics.velocity)) >= 0
                     ) {
                         mtv = undefined;
                     }
                 }
                 if (mtv) {
-                    entity.mechanics.position[0] -= mtv[0];
-                    entity.mechanics.position[1] -= mtv[1];
-                    entity.mechanics.velocity[0] -= mtv[0] * 0.5;
-                    entity.mechanics.velocity[1] -= mtv[1] * 0.5;
+                    entity.mechanics.position[0] += mtv[0];
+                    entity.mechanics.position[1] += mtv[1];
+                    entity.mechanics.velocity[0] += mtv[0] * 0.5;
+                    entity.mechanics.velocity[1] += mtv[1] * 0.5;
                     entity.environment.update(entity.mechanics.position);
                 }
                 const mtv2 = collide(entity.environment, platform.shape)

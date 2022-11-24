@@ -1,7 +1,7 @@
 import { Animator } from './animator';
 import { Entity, State } from "./entity";
 import { BH } from './main';
-import { Mechanics, Rectangle } from './mechanics';
+import { Diamond, Mechanics } from './mechanics';
 import { modifyData } from './modify-data';
 import { Sprite } from './sprite';
 import { woody } from './woody';
@@ -38,8 +38,8 @@ export class Character extends Entity<any, CharacterFrame> {
     animator = new Animator<CharacterFrameData>();
     constructor(public port: number) {
         super(
-            new Mechanics(new Rectangle(20, 40), { position: [350, 100] }),
-            new Rectangle(10, 42),
+            new Mechanics(new Diamond(20, 40), { position: [350, 100] }),
+            new Diamond(10, 42),
             new Sprite({
                 images: testImages,
                 width: 80,

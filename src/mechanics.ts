@@ -2,9 +2,9 @@ import { BH } from "./main";
 
 export type Vector = [number, number];
 
-export const UP_VECTOR: Vector = [0, 1];
+export const UP_VECTOR: Vector = [0, -1];
 
-const perpendicular = ([x, y]: Vector): Vector => [x, -y];
+const perpendicular = ([x, y]: Vector): Vector => [y, -x];
 
 export const normalize = ([x, y]: Vector): Vector => {
     const magnitude = Math.hypot(x, y) || 1;
@@ -14,46 +14,50 @@ export const normalize = ([x, y]: Vector): Vector => {
 export const dot = (vector1: Vector, vector2: Vector) => vector1[0] * vector2[0] + vector1[1] * vector2[1];
 
 // TODO: remove duplicate axes
-const getAxes = (corners: Vector[]) => corners.reduce<Vector[]>((axes, corner, index) => {
+const getNormals = (corners: Vector[]) => corners.reduce<Vector[]>((normals, corner, index) => {
     const previousCorner = index === 0 ? corners[corners.length - 1] : corners[index - 1];
-    axes.push(normalize(perpendicular([corner[0] - previousCorner[0], corner[1] - previousCorner[1]])));
-    return axes;
+    normals.push(normalize(perpendicular([corner[0] - previousCorner[0], corner[1] - previousCorner[1]])));
+    return normals;
 }, []);
 
-const project = (axis: Vector, corners: Vector[]) => corners.reduce<Vector>((projection, corner) => {
-    const product = dot(corner, axis);
-    if (product < projection[0]) {
-        projection[0] = product;
+const project = (axis: Vector, corners: Vector[]): Vector => {
+    const cornerProjections = corners.map(corner => dot(corner, axis));
+    return [
+        Math.min(...cornerProjections),
+        Math.max(...cornerProjections),
+    ];
+};
+
+const overlap = ([min1, max1]: Vector, [min2, max2]: Vector) => {
+    if (!(max1 > min2 && max2 > min1)) {
+        return 0;
     }
-    if (product > projection[1]) {
-        projection[1] = product;
-    }
-    return projection;
-}, [Infinity, -Infinity]);
+    return max1 > max2 ? max2 - min1 : max1 - min2;
+}
 
 export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
     // minimum translation vector
     let mtv: Vector = [0, 0];
     let minDistance = Infinity;
 
-    const axes = getAxes(shape1.corners).concat(getAxes(shape2.corners));
-    for (const axis of axes) {
+    const normals = getNormals(shape1.corners).concat(getNormals(shape2.corners));
+    for (const axis of normals) {
         const [min1, max1] = project(axis, shape1.corners);
         const [min2, max2] = project(axis, shape2.corners);
-        const overlaps = [[max1, min2, 1], [max2, min1, -1]];
+        const overlaps = [[max1, min2, -1], [max2, min1, 1]];
         for (const [p1, p2, sign] of overlaps) {
             if (p1 <= p2) {
                 return;
             }
-            const overlap = sign * (p1 - p2);
+            const ov = sign * (p1 - p2);
             // if (Math.abs(overlap) < Math.abs(minOverlap)) {
             //     minOverlap = overlap;
             //     mtv = [axis[0] * minOverlap, axis[1] * minOverlap];
             // }
-            const tv: Vector = [axis[0] * overlap, axis[1] * overlap]
+            const tv: Vector = [axis[0] * ov, axis[1] * ov]
             const distance = Math.hypot(
-                shape1.previousPosition[0] - (shape1.position[0] - tv[0]),
-                shape1.previousPosition[1] - (shape1.position[1] - tv[1]),
+                shape1.previousPosition[0] - (shape1.position[0] + tv[0]),
+                shape1.previousPosition[1] - (shape1.position[1] + tv[1]),
             );
             if (distance < minDistance) {
                 minDistance = distance;
