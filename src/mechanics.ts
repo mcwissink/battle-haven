@@ -32,7 +32,7 @@ const overlap = ([min1, max1]: Vector, [min2, max2]: Vector) => {
     if (!(max1 > min2 && max2 > min1)) {
         return 0;
     }
-    return max1 > max2 ? max2 - min1 : max1 - min2;
+    return max1 > max2 ? max2 - min1 : min2 - max1;
 }
 
 export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
@@ -42,27 +42,14 @@ export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
 
     const normals = getNormals(shape1.corners).concat(getNormals(shape2.corners));
     for (const axis of normals) {
-        const [min1, max1] = project(axis, shape1.corners);
-        const [min2, max2] = project(axis, shape2.corners);
-        const overlaps = [[max1, min2, -1], [max2, min1, 1]];
-        for (const [p1, p2, sign] of overlaps) {
-            if (p1 <= p2) {
-                return;
-            }
-            const ov = sign * (p1 - p2);
-            // if (Math.abs(overlap) < Math.abs(minOverlap)) {
-            //     minOverlap = overlap;
-            //     mtv = [axis[0] * minOverlap, axis[1] * minOverlap];
-            // }
-            const tv: Vector = [axis[0] * ov, axis[1] * ov]
-            const distance = Math.hypot(
-                shape1.previousPosition[0] - (shape1.position[0] + tv[0]),
-                shape1.previousPosition[1] - (shape1.position[1] + tv[1]),
-            );
-            if (distance < minDistance) {
-                minDistance = distance;
-                mtv = tv;
-            }
+        const ov = overlap(project(axis, shape1.corners), project(axis, shape2.corners));
+        if (!ov) {
+            return;
+        }
+        const tv: Vector = [axis[0] * ov, axis[1] * ov]
+        if (Math.abs(ov) < minDistance) {
+            minDistance = Math.abs(ov);
+            mtv = tv;
         }
     }
     return mtv;
