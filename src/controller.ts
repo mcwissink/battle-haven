@@ -67,7 +67,10 @@ export class Controller {
         return Math.sign(this.stickY);
     }
 
-    combo: string | null = null;
+    combo: {
+        name: string
+        direction: number
+    } | null = null;
 
     buffer = new CircleBuffer<ComboInput>(3, null);
 
@@ -114,9 +117,21 @@ export class Controller {
             this.buffer.push(comboInput);
             // detect combo
             combos.forEach((combo) => {
-                const complete = combo.sequence.reduce((acc, input, index) => acc && this.buffer.at(index - combo.sequence.length) === input, true);
+                let direction = 0;
+                const complete = combo.sequence.reduce((acc, input, index) => {
+                    if (input === 'right') {
+                        direction = 1;
+                    }
+                    if (input === 'left') {
+                        direction = -1;
+                    }
+                    return acc && this.buffer.at(index - combo.sequence.length) === input
+                }, true);
                 if (complete) {
-                    this.combo = combo.name;
+                    this.combo = {
+                        name: combo.name,
+                        direction,
+                    };
                 }
             });
         }

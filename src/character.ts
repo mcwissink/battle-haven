@@ -79,7 +79,7 @@ export class Character extends Entity<any, CharacterFrame> {
                 },
                 [State.standing]: {
                     combo: {
-                        hit_a: animation.punch,
+                        hit_a: () => Math.random() > 0.5 ? animation.punch : 65,
                         hit_d: animation.defend,
                         hit_j: animation.jump,
                         hit_F: animation.running,

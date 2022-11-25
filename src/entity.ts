@@ -18,7 +18,7 @@ type EventHandlers = {
 }
 
 type EntityState<Frame extends number> = {
-    combo?: Record<string, Frame | 999 | void>;
+    combo?: Record<string, Frame | 999 | void | (() => Frame | 999 | void)>;
     update?: () => void;
     nextFrame?: () => Frame;
 } & EventHandlers;
@@ -166,12 +166,16 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
     processFrame() {
         const state = this.state;
 
-        const combo = (this.controller.combo || '') as keyof IFrameData;
-        const frameFromCombo = (this.frameData[combo] || state?.combo?.[combo]) as Frame;
-        if (combo && frameFromCombo) {
-            this.next.setFrame(frameFromCombo);
-            // Reset combo since it was consumed
-            this.controller.combo = null;
+        const combo = this.controller.combo;
+        if (combo) {
+            const comboName = combo.name as keyof IFrameData;
+            const comboHandler = (this.frameData[comboName] || state?.combo?.[comboName]);
+            const frameFromCombo = typeof comboHandler === 'function' ? comboHandler() : comboHandler;
+            if (frameFromCombo) {
+                this.next.setFrame(frameFromCombo, 0, combo.direction);
+                // Reset combo since it was consumed
+                this.controller.combo = null;
+            }
         }
 
         if (!this.hitStop && !this.next.frame && !--this.wait) {

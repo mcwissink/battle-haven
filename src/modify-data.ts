@@ -60,8 +60,20 @@ export const modifyData = (data: any) => {
         data.bmp.walking_speedz = 7;
 
         const modifyFrames = (frames: number[], mod: (frameData: any) => void) => {
-            frames.forEach((frame) => mod(data.frame[frame]));
+            frames.forEach((frame) => {
+                if (data.frame[frame]) {
+                    mod(data.frame[frame])
+                }
+            });
         }
+
+
+
+        // Mod woody teleport to see animation
+        modifyFrames(new Array(28).fill(275).map((v, i) => v + i), (frameData) => {
+            frameData.dvx = 0;
+            frameData.dvy = 0;
+        });
 
         modifyFrames([215], (frameData) => frameData.state = 20);
         modifyFrames([210, 211], (frameData) => frameData.state = 20);
