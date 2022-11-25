@@ -1,5 +1,5 @@
 import { Entity } from './entity';
-import { collide, Diamond, dot, Mechanics, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
+import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
 
 interface Body {
     x: number;
@@ -11,7 +11,6 @@ interface Body {
 export class Scene {
     entities: Entity[] = [];
     platforms = [
-        new Mechanics(new Diamond(200, 150), { position: [800, 360] }),
         new Mechanics(new Rectangle(200, 10), { position: [500, 245], passThrough: UP_VECTOR }),
         new Mechanics(new Rectangle(200, 10), { position: [800, 150], passThrough: UP_VECTOR }),
         new Mechanics(new Rectangle(200, 10), { position: [1100, 250], passThrough: UP_VECTOR }),

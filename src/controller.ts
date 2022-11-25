@@ -51,13 +51,20 @@ export interface ControllerState {
     defend: number;
     attack: number;
 }
+
 export class Controller {
-    state: ControllerState = {
-        stickX: 0,
-        stickY: 0,
-        jump: 0,
-        defend: 0,
-        attack: 0,
+    stickX = 0;
+    stickY = 0;
+    jump = 0;
+    defend = 0;
+    attack = 0;
+
+    get stickDirectionX() {
+        return Math.sign(this.stickX);
+    }
+
+    get stickDirectionY() {
+        return Math.sign(this.stickY);
     }
 
     combo: string | null = null;
@@ -68,33 +75,33 @@ export class Controller {
         // Prevent repeated key presses
         switch (control) {
             case 'stickX':
-                if (magnitude > 0 && this.state.stickX <= 0) {
+                if (magnitude > 0 && this.stickX <= 0) {
                     return 'right';
                 }
-                if (magnitude < 0 && this.state.stickX >= 0) {
+                if (magnitude < 0 && this.stickX >= 0) {
                     return 'left'
                 }
                 break;
             case 'stickY':
-                if (magnitude < 0 && this.state.stickY >= 0) {
+                if (magnitude < 0 && this.stickY >= 0) {
                     return 'up';
                 }
-                if (magnitude > 0 && this.state.stickY <= 0) {
+                if (magnitude > 0 && this.stickY <= 0) {
                     return 'down';
                 }
                 break;
             case 'attack':
-                if (magnitude && !this.state.attack) {
+                if (magnitude && !this.attack) {
                     return 'attack';
                 }
                 break;
             case 'defend':
-                if (magnitude && !this.state.defend) {
+                if (magnitude && !this.defend) {
                     return 'defend'
                 }
                 break;
             case 'jump':
-                if (magnitude && !this.state.jump) {
+                if (magnitude && !this.jump) {
                     return 'jump'
                 }
                 break;
@@ -113,7 +120,7 @@ export class Controller {
                 }
             });
         }
-        this.state[control] = magnitude;
+        this[control] = magnitude;
     };
 
     update() { }

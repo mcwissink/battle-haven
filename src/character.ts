@@ -55,7 +55,7 @@ export class Character extends Entity<any, CharacterFrame> {
                             if (vy > 6) {
                                 this.mechanics.force(-2, 1);
                             } else {
-                                this.next.setFrame(animation.lying, 1)
+                                this.next.setFrame(this.direction !== Math.sign(this.mechanics.velocity[0]) ? 230 : 231, 1);
                             }
                         } else {
                             this.next.setFrame(animation.crouch, 1)
@@ -70,7 +70,7 @@ export class Character extends Entity<any, CharacterFrame> {
                             this.mechanics.force(dvy, 1);
                             if (dvy < 0 || !this.mechanics.isGrounded) {
                                 this.mechanics.isGrounded = false;
-                                this.next.setFrame(180, 2);
+                                this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2);
                             }
                         } else {
                             this.next.setFrame(animation.injured);
@@ -86,9 +86,9 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_D: animation.crouch,
                         hit_DF: animation.walking,
                     },
-                    update: ({ state: controller }) => {
-                        this.direction = Math.sign(controller.stickX) || this.direction;
-                        if (controller.stickX) {
+                    update: () => {
+                        this.direction = this.controller.stickDirectionX;
+                        if (this.controller.stickX) {
                             this.next.setFrame(animation.running);
                         }
                         if (!this.mechanics.isGrounded) {
@@ -105,11 +105,10 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_DF: animation.walking,
                     },
                     nextFrame: () => this.animator.oscillate(5, 8),
-                    update: ({ state: controller }) => {
+                    update: () => {
                         this.mechanics.force(this.direction * character.bmp.walking_speed);
-                        if (controller.stickX) {
-                            this.direction = Math.sign(controller.stickX);
-                        } else {
+                        this.direction = this.controller.stickDirectionX;
+                        if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.standing);
                         }
 
@@ -125,11 +124,10 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_j: animation.dash,
                     },
                     nextFrame: () => this.animator.oscillate(9, 11),
-                    update: ({ state: controller }) => {
+                    update: () => {
                         this.mechanics.force(this.direction * character.bmp.running_speed);
-                        if (controller.stickX) {
-                            this.direction = Math.sign(controller.stickX);
-                        } else {
+                        this.direction = this.controller.stickDirectionX;
+                        if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.stop_running);
                         }
 
@@ -143,16 +141,16 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_j: animation.double_jump,
                         hit_a: animation.jump_attack,
                     },
-                    update: ({ state: controller }) => {
-                        this.mechanics.force(Math.sign(controller.stickX) * character.bmp.walking_speedz, 0, 1);
+                    update: () => {
+                        this.mechanics.force(this.controller.stickDirectionX * character.bmp.walking_speedz, 0, 1);
                     },
                 },
                 [State.doubleJumping]: {
                     combo: {
                         hit_a: animation.jump_attack,
                     },
-                    update: ({ state: controller }) => {
-                        this.mechanics.force(Math.sign(controller.stickX) * character.bmp.walking_speedz, 0, 1);
+                    update: () => {
+                        this.mechanics.force(this.controller.stickDirectionX * character.bmp.walking_speedz, 0, 1);
                     },
                 },
                 [State.dash]: {
@@ -160,29 +158,25 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_a: animation.dash_attack,
                         hit_j: animation.double_jump,
                     },
-                    update: ({ state: controller }) => {
-                        const direction = Math.sign(controller.stickX) || this.direction;
+                    update: () => {
+                        const direction = this.controller.stickDirectionX || this.direction;
                         if (direction !== this.direction && this.frame !== 214) {
                             this.next.setFrame(214, 0, direction);
                         }
                     },
                 },
                 [State.defend]: {
-                    update: ({ state: controller }) => {
-                        if (controller.stickX) {
-                            this.direction = Math.sign(controller.stickX);
-                        }
+                    update: () => {
+                        this.direction = this.controller.stickDirectionX;
                     },
                 },
                 [State.crouching]: {
-                    update: ({ state: controller }) => {
+                    update: () => {
                         this.mechanics.force(-this.mechanics.velocity[0] * 0.3);
-                        if (controller.stickX) {
-                            this.direction = Math.sign(controller.stickX);
-                        }
-                        if (controller.stickY > 0) {
-                            this.next.setFrame(animation.crouch);
-                        }
+                        this.direction = this.controller.stickDirectionX;
+                        // if (controller.stickY > 0) {
+                        //     this.next.setFrame(animation.crouch);
+                        // }
                     },
                 },
                 [State.injured]: {
@@ -198,19 +192,24 @@ export class Character extends Entity<any, CharacterFrame> {
                 },
                 [State.falling]: {
                     nextFrame: () => {
-                        if (this.mechanics.velocity[1] > 6) {
-                            return 183;
-                        } else if (this.mechanics.velocity[1] > 0) {
-                            return 182;
-                        } else if (this.mechanics.velocity[1] > -6) {
-                            return 181;
-                        }
-                        return 180;
-                    },
-                    update: () => {
-                        const direction = Math.sign(this.mechanics.velocity[0]);
-                        if (direction) {
-                            this.direction = -direction;
+                        if (this.direction !== Math.sign(this.mechanics.velocity[0])) {
+                            if (this.mechanics.velocity[1] > 6) {
+                                return 183;
+                            } else if (this.mechanics.velocity[1] > 0) {
+                                return 182;
+                            } else if (this.mechanics.velocity[1] > -6) {
+                                return 181;
+                            }
+                            return 180;
+                        } else {
+                            if (this.mechanics.velocity[1] > 6) {
+                                return 189;
+                            } else if (this.mechanics.velocity[1] > 0) {
+                                return 188;
+                            } else if (this.mechanics.velocity[1] > -6) {
+                                return 187;
+                            }
+                            return 186;
                         }
                     },
                 },
@@ -222,7 +221,7 @@ export class Character extends Entity<any, CharacterFrame> {
         // Frame specific updates
         // Jump
         if (frame === 211 && nextFrame === 212) {
-            this.mechanics.force(character.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || Math.sign(this.controller.state.stickX)));
+            this.mechanics.force(character.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || this.controller.stickDirectionX));
             this.mechanics.velocity[1] = character.bmp.jump_height;
         }
         // Dash
@@ -232,7 +231,7 @@ export class Character extends Entity<any, CharacterFrame> {
         }
         // Double-jump
         if (nextFrame === animation.double_jump) {
-            const direction = Math.sign(this.controller.state.stickX);
+            const direction = this.controller.stickDirectionX;
             const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
             this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
             this.mechanics.velocity[1] = character.bmp.jump_height;

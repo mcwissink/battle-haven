@@ -1,4 +1,4 @@
-import { Controller, controllers } from './controller';
+import { controllers } from './controller';
 import { BH } from './main';
 import { Mechanics, Shape } from './mechanics';
 import { Sprite } from './sprite';
@@ -19,7 +19,7 @@ type EventHandlers = {
 
 type EntityState<Frame extends number> = {
     combo?: Record<string, Frame | 999 | void>;
-    update?: (controller: Controller) => void;
+    update?: () => void;
     nextFrame?: () => Frame;
 } & EventHandlers;
 
@@ -111,7 +111,7 @@ interface IFrameData {
 
 export class Entity<FrameData extends Record<number, IFrameData> = any, Frame extends number = any> {
     parent?: Entity;
-    direction = 1;
+    _direction = 1;
     frame: Frame | Defaults = 0;
     wait = 1;
     next = new Transition<Frame>();
@@ -128,6 +128,14 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
 
     translateFrame(frame: Frame | Defaults) {
         return frame === 999 ? 0 : frame;
+    }
+
+    get direction() {
+        return this._direction;
+    }
+
+    set direction(direction: number) {
+        this._direction = Math.sign(direction) || this._direction;
     }
 
     get state() {
@@ -233,7 +241,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
             this.mechanics.position[1] - 60,
         );
         // this.debugRender(ctx);
-        // this.mechanics.render(ctx);
+        this.mechanics.render(ctx);
         // this.environment.render(ctx);
     }
 
