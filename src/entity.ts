@@ -32,6 +32,7 @@ export enum State {
     dash = 5,
     dodging = 6,
     defend = 7,
+    brokenDefend = 8,
     injured = 11,
     falling = 12,
     other = 15,

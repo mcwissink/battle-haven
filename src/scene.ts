@@ -13,11 +13,11 @@ export class Scene {
     platforms = [
         new Mechanics(new Rectangle(200, 10), { position: [500, 245], passThrough: UP_VECTOR }),
         new Mechanics(new Rectangle(200, 10), { position: [800, 150], passThrough: UP_VECTOR }),
-        new Mechanics(new Rectangle(200, 10), { position: [1100, 250], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 10), { position: [1100, 245], passThrough: UP_VECTOR }),
         new Mechanics(new Rectangle(1000, 100), { position: [800, 400] }),
-        new Mechanics(new Rectangle(150, 500), { position: [5, 210] }),
-        new Mechanics(new Rectangle(1500, 100), { position: [800, 810] }),
-        new Mechanics(new Rectangle(150, 500), { position: [1600, 210] }),
+        new Mechanics(new Rectangle(150, 600), { position: [5, 210] }),
+        new Mechanics(new Rectangle(1500, 100), { position: [800, 510] }),
+        new Mechanics(new Rectangle(150, 600), { position: [1600, 210] }),
     ];
     update(dx: number) {
         this.entities.forEach(entity => {
