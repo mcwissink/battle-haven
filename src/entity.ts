@@ -110,6 +110,13 @@ interface IFrameData {
     itr?: Interaction[]
 }
 
+const hitShiver: Record<number, number> = {
+    [State.injured]: 10,
+    [State.falling]: 10,
+    [State.defend]: 5,
+    [State.brokenDefend]: 20,
+}
+
 export class Entity<FrameData extends Record<number, IFrameData> = any, Frame extends number = any> {
     parent?: Entity;
     _direction = 1;
@@ -230,16 +237,17 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
             });
         }
 
-        this.state?.update?.(this.controller);
+        this.state?.update?.();
 
-        this.states.system?.update?.(this.controller);
+        this.states.system?.update?.();
 
         this.sprite.setFrame(this.frameData.pic, this.direction);
 
         this.processFrame();
     }
     render(ctx: CanvasRenderingContext2D) {
-        const modX = this.hitStop && (this.frameData.state === State.injured || this.frameData.state === State.falling) ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * 10 : 0;
+        const shiver = hitShiver[this.frameData.state] ?? 0;
+        const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
         this.sprite.render(
             ctx,
             this.mechanics.position[0] - 40 + modX,

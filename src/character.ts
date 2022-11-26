@@ -67,10 +67,8 @@ export class Character extends Entity<any, CharacterFrame> {
                         if (dvx) {
                             this.mechanics.force(dvx * (isDefending ? 0.4 : 1));
                         }
-                        if (dvy && !isDefending) {
-                            this.mechanics.force(dvy, 1);
-                        }
-                        if (dvy || !this.mechanics.isGrounded) {
+                        if ((dvy && !isDefending) || !this.mechanics.isGrounded) {
+                            this.mechanics.force(dvy ?? 0, 1);
                             this.mechanics.isGrounded = false;
                             this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2);
                         } else {
@@ -168,6 +166,7 @@ export class Character extends Entity<any, CharacterFrame> {
                 },
                 [State.defend]: {
                     hit: ({ dvy }) => {
+                        this.hitStop = BH.config.hitStop * 2;
                         if (dvy && dvy < 0) {
                             this.next.setFrame(animation.broken_defend, 3);
                         } else {
