@@ -92,9 +92,10 @@ export class Scene {
                         );
                         if (itr?.kind === 0) {
                             entityA.attacked(entityB, itr.arest || itr.vrest || 1);
+                            const isThirdHit = entityB.frame >= 223 && entityB.frame <= 226;
                             entityB.event('hit', {
                                 dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
-                                dvy: itr.dvy
+                                dvy: itr.dvy || (isThirdHit ? -10 : 0),
                             });
                         }
                     }
