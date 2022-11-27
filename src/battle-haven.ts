@@ -16,7 +16,7 @@ interface ObjectPoint {
     dvx: number;
     dvy: number;
     oid: number;
-    facigin: number;
+    facing: number;
 }
 
 export interface SpawnTask {
