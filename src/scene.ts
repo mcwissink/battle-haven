@@ -84,11 +84,13 @@ export class Scene {
                         entityB.frameData.bdy &&
                         entityA.frameData.itr
                     ) {
-                        const itr = this.overlapAABB(
+                        const itr = itrOverlap(
                             entityA.mechanics.position,
                             entityA.frameData.itr,
+                            entityA.direction,
                             entityB.mechanics.position,
-                            entityB.frameData.bdy
+                            entityB.frameData.bdy,
+                            entityB.direction,
                         );
                         if (itr?.kind === 0) {
                             entityA.attacked(entityB, itr.arest || itr.vrest || 1);
@@ -106,28 +108,45 @@ export class Scene {
         this.entities.forEach(entity => entity.update(dx));
     }
 
-    overlapAABB<BodyA extends Body>(originA: Vector, bodiesA: BodyA[], originB: Vector, bodiesB: Body[]): BodyA | undefined {
-        for (const bodyA of bodiesA) {
-            for (const bodyB of bodiesB) {
-                const bodyAX = originA[0] + bodyA.x;
-                const bodyAY = originA[1] + bodyA.y;
-                const bodyBX = originB[0] + bodyB.x;
-                const bodyBY = originB[1] + bodyB.y;
-                if (
-                    bodyAX <= bodyBX + bodyB.w &&
-                    bodyAX + bodyA.w >= bodyBX &&
-                    bodyAY + bodyA.h >= bodyBY &&
-                    bodyAY <= bodyBY + bodyB.h
-                ) {
-                    return bodyA;
-                }
-            }
-        }
-    }
-
     render(ctx: CanvasRenderingContext2D) {
         this.entities.forEach(entity => entity.render(ctx));
 
         this.platforms.forEach((platform) => platform.render(ctx));
+    }
+}
+
+
+export const getOffsetX = (body: Body, direction: number) => {
+    const x = body.x - 40;
+    return x * direction + (direction === 1 ? 0 : -body.w);
+};
+
+export const getOffsetY = (body: Body) => {
+    return body.y - 60;
+};
+
+const itrOverlap = <BodyA extends Body>(
+    originA: Vector,
+    bodiesA: BodyA[],
+    directionA: number,
+    originB: Vector,
+    bodiesB: Body[],
+    directionB: number,
+): BodyA | undefined => {
+    for (const bodyA of bodiesA) {
+        for (const bodyB of bodiesB) {
+            const bodyAX = originA[0] + getOffsetX(bodyA, directionA)
+            const bodyAY = originA[1] + getOffsetY(bodyA);
+            const bodyBX = originB[0] + getOffsetX(bodyB, directionB);
+            const bodyBY = originB[1] + getOffsetY(bodyB);
+            if (
+                bodyAX <= bodyBX + bodyB.w &&
+                bodyAY <= bodyBY + bodyB.h &&
+                bodyBX <= bodyAX + bodyA.w &&
+                bodyBY <= bodyAY + bodyA.h
+            ) {
+                return bodyA;
+            }
+        }
     }
 }

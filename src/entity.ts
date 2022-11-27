@@ -1,6 +1,7 @@
 import { controllers } from './controller';
 import { BH } from './main';
 import { Mechanics, Shape } from './mechanics';
+import { getOffsetX, getOffsetY } from './scene';
 import { Sprite } from './sprite';
 import './woody_0.png';
 import './woody_1.png';
@@ -246,23 +247,16 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
         this.processFrame();
     }
     render(ctx: CanvasRenderingContext2D) {
-        const shiver = hitShiver[this.frameData.state] ?? 0;
-        const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
-        this.sprite.render(
-            ctx,
-            this.mechanics.position[0] - 40 + modX,
-            this.mechanics.position[1] - 60,
-        );
-        // this.debugRender(ctx);
+        // const shiver = hitShiver[this.frameData.state] ?? 0;
+        // const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
+        // this.sprite.render(
+        //     ctx,
+        //     this.mechanics.position[0] - 40 + modX,
+        //     this.mechanics.position[1] - 60,
+        // );
+        this.debugRender(ctx);
         this.mechanics.render(ctx);
         // this.environment.render(ctx);
-    }
-
-    get x() {
-        return this.mechanics.position[0] - (40 * this.direction - 1);
-    }
-    get y() {
-        return this.mechanics.position[1] - 60;
     }
 
     public get frameData(): IFrameData {
@@ -276,12 +270,25 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
         if (body) {
             ctx.fillStyle = 'rgba(0, 0, 255, 0.4)';
             body.forEach((b: any) => {
-                ctx.fillRect(this.x + b.x * this.direction, this.y + b.y, b.w * this.direction, b.h)
+                ctx.fillRect(
+                    this.mechanics.position[0] + getOffsetX(b, this.direction),
+                    this.mechanics.position[1] + getOffsetY(b),
+                    b.w,
+                    b.h
+                )
             });
         }
         if (interaction) {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
-            interaction.forEach((i: any) => ctx.fillRect(this.x + i.x * this.direction, this.y + i.y, i.w * this.direction, i.h));
+            interaction.forEach((i: any) => {
+                ctx.fillRect(
+                    this.mechanics.position[0] + getOffsetX(i, this.direction),
+                    this.mechanics.position[1] + getOffsetY(i),
+                    i.w,
+                    i.h
+                )
+            });
         }
     }
 }
+
