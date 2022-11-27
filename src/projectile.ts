@@ -26,7 +26,7 @@ export class Projectile extends Entity {
                 {
                     position: [
                         data.parent.mechanics.position[0] + 30 * data.parent.direction,
-                        data.parent.mechanics.position[1],
+                        data.parent.mechanics.position[1] - 20,
                     ],
                     mass: 0,
                 }

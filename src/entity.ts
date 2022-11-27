@@ -1,7 +1,6 @@
 import { controllers } from './controller';
 import { BH } from './main';
 import { Mechanics, Shape } from './mechanics';
-import { getOffsetX, getOffsetY } from './scene';
 import { Sprite } from './sprite';
 import './woody_0.png';
 import './woody_1.png';
@@ -16,6 +15,13 @@ type Event = {
 
 type EventHandlers = {
     [E in keyof Event]?: Event[E] extends null ? () => void : (data: Event[E]) => void;
+}
+
+interface Body {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
 }
 
 type EntityState<Frame extends number> = {
@@ -86,7 +92,7 @@ type Interaction = {
     injury: number;
 }
 
-interface IFrameData {
+interface FrameData {
     name: string;
     pic: number;
     state: number;
@@ -118,7 +124,7 @@ const hitShiver: Record<number, number> = {
     [State.brokenDefend]: 20,
 }
 
-export class Entity<FrameData extends Record<number, IFrameData> = any, Frame extends number = any> {
+export class Entity<Frames extends Record<number, FrameData> = any, Frame extends number = any> {
     parent?: Entity;
     _direction = 1;
     frame: Frame | Defaults = 0;
@@ -131,7 +137,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
         public mechanics: Mechanics,
         public environment: Shape,
         public sprite: Sprite,
-        public frames: FrameData,
+        public frames: Frames,
         public states: Record<number | 'system', EntityState<Frame> | undefined>,
     ) { }
 
@@ -153,6 +159,13 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
 
     get controller() {
         return controllers.get(this.port);
+    }
+
+    getFrameElementPosition(body: Body) {
+        return [
+            (body.x - this.frameData.centerx) * this.direction + (this.direction === 1 ? 0 : -body.w),
+            body.y - this.frameData.centery + 20,
+        ];
     }
 
     event<E extends keyof Event>(
@@ -177,7 +190,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
 
         const combo = this.controller.combo;
         if (combo) {
-            const comboName = combo.name as keyof IFrameData;
+            const comboName = combo.name as keyof FrameData;
             const comboHandler = (this.frameData[comboName] || state?.combo?.[comboName]);
             const frameFromCombo = typeof comboHandler === 'function' ? comboHandler() : comboHandler;
             if (frameFromCombo) {
@@ -259,7 +272,7 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
         // this.environment.render(ctx);
     }
 
-    public get frameData(): IFrameData {
+    public get frameData(): FrameData {
         return this.frames[this.frame];
     }
 
@@ -270,9 +283,10 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
         if (body) {
             ctx.fillStyle = 'rgba(0, 0, 255, 0.4)';
             body.forEach((b: any) => {
+                const [x, y] = this.getFrameElementPosition(b);
                 ctx.fillRect(
-                    this.mechanics.position[0] + getOffsetX(b, this.direction),
-                    this.mechanics.position[1] + getOffsetY(b),
+                    this.mechanics.position[0] + x,
+                    this.mechanics.position[1] + y,
                     b.w,
                     b.h
                 )
@@ -281,9 +295,10 @@ export class Entity<FrameData extends Record<number, IFrameData> = any, Frame ex
         if (interaction) {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
             interaction.forEach((i: any) => {
+                const [x, y] = this.getFrameElementPosition(i);
                 ctx.fillRect(
-                    this.mechanics.position[0] + getOffsetX(i, this.direction),
-                    this.mechanics.position[1] + getOffsetY(i),
+                    this.mechanics.position[0] + x,
+                    this.mechanics.position[1] + y,
                     i.w,
                     i.h
                 )

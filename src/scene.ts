@@ -1,12 +1,5 @@
 import { Entity } from './entity';
-import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
-
-interface Body {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-}
+import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mechanics';
 
 export class Scene {
     entities: Entity[] = [];
@@ -78,28 +71,14 @@ export class Scene {
         this.entities.forEach(entityA => {
             if (entityA.frameData.itr) {
                 this.entities.find(entityB => {
-                    if (
-                        entityA.canAttack(entityB) &&
-                        entityB !== entityA &&
-                        entityB.frameData.bdy &&
-                        entityA.frameData.itr
-                    ) {
-                        const itr = itrOverlap(
-                            entityA.mechanics.position,
-                            entityA.frameData.itr,
-                            entityA.direction,
-                            entityB.mechanics.position,
-                            entityB.frameData.bdy,
-                            entityB.direction,
-                        );
-                        if (itr?.kind === 0) {
-                            entityA.attacked(entityB, itr.arest || itr.vrest || 1);
-                            const isThirdHit = entityB.frame >= 223 && entityB.frame <= 226;
-                            entityB.event('hit', {
-                                dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
-                                dvy: itr.dvy || (isThirdHit ? -10 : 0),
-                            });
-                        }
+                    const itr = itrOverlap(entityA, entityB);
+                    if (itr?.kind === 0) {
+                        entityA.attacked(entityB, itr.arest || itr.vrest || 1);
+                        const isThirdHit = entityB.frame >= 223 && entityB.frame <= 226;
+                        entityB.event('hit', {
+                            dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
+                            dvy: itr.dvy || (isThirdHit ? -10 : 0),
+                        });
                     }
                 });
             }
@@ -115,38 +94,38 @@ export class Scene {
     }
 }
 
-
-export const getOffsetX = (body: Body, direction: number) => {
-    const x = body.x - 40;
-    return x * direction + (direction === 1 ? 0 : -body.w);
-};
-
-export const getOffsetY = (body: Body) => {
-    return body.y - 60;
-};
-
-const itrOverlap = <BodyA extends Body>(
-    originA: Vector,
-    bodiesA: BodyA[],
-    directionA: number,
-    originB: Vector,
-    bodiesB: Body[],
-    directionB: number,
-): BodyA | undefined => {
-    for (const bodyA of bodiesA) {
-        for (const bodyB of bodiesB) {
-            const bodyAX = originA[0] + getOffsetX(bodyA, directionA)
-            const bodyAY = originA[1] + getOffsetY(bodyA);
-            const bodyBX = originB[0] + getOffsetX(bodyB, directionB);
-            const bodyBY = originB[1] + getOffsetY(bodyB);
-            if (
-                bodyAX <= bodyBX + bodyB.w &&
-                bodyAY <= bodyBY + bodyB.h &&
-                bodyBX <= bodyAX + bodyA.w &&
-                bodyBY <= bodyAY + bodyA.h
-            ) {
-                return bodyA;
+const itrOverlap = (
+    entityA: Entity,
+    entityB: Entity,
+): any => {
+    const originA = entityA.mechanics.position;
+    const originB = entityB.mechanics.position;
+    const bodiesA = entityA.frameData.itr;
+    const bodiesB = entityB.frameData.bdy;
+    if (
+        entityA.canAttack(entityB) &&
+        entityB !== entityA &&
+        bodiesA &&
+        bodiesB
+    ) {
+        for (const bodyA of bodiesA) {
+            for (const bodyB of bodiesB) {
+                const [ax, ay] = entityA.getFrameElementPosition(bodyA);
+                const [bx, by] = entityB.getFrameElementPosition(bodyB);
+                const bodyAX = originA[0] + ax;
+                const bodyAY = originA[1] + ay;
+                const bodyBX = originB[0] + bx;
+                const bodyBY = originB[1] + by;
+                if (
+                    bodyAX <= bodyBX + bodyB.w &&
+                    bodyAY <= bodyBY + bodyB.h &&
+                    bodyBX <= bodyAX + bodyA.w &&
+                    bodyBY <= bodyAY + bodyA.h
+                ) {
+                    return bodyA;
+                }
             }
         }
     }
 }
+
