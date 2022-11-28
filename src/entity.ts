@@ -163,8 +163,8 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
 
     getFrameElementPosition(body: Body) {
         return [
-            (body.x - this.frameData.centerx) * this.direction + (this.direction === 1 ? 0 : -body.w),
-            body.y - this.frameData.centery + 20,
+            (body.x - 40) * this.direction + (this.direction === 1 ? 0 : -body.w),
+            body.y - 60,
         ];
     }
 
@@ -260,15 +260,15 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         this.processFrame();
     }
     render(ctx: CanvasRenderingContext2D) {
-        // const shiver = hitShiver[this.frameData.state] ?? 0;
-        // const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
-        // this.sprite.render(
-        //     ctx,
-        //     this.mechanics.position[0] - 40 + modX,
-        //     this.mechanics.position[1] - 60,
-        // );
+        const shiver = hitShiver[this.frameData.state] ?? 0;
+        const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
+        this.sprite.render(
+            ctx,
+            this.mechanics.position[0] - 40 + modX,
+            this.mechanics.position[1] - 60,
+        );
         this.debugRender(ctx);
-        this.mechanics.render(ctx);
+        // this.mechanics.render(ctx);
         // this.environment.render(ctx);
     }
 
