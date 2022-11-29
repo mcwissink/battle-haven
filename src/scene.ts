@@ -61,10 +61,10 @@ export class Scene {
                 entity.mechanics.isOverlapping = false;
             }
             if (!isGrounded) {
-                entity.mechanics.isGrounded = false;
                 if (entity.mechanics.isGrounded) {
                     entity.event('fall');
                 }
+                entity.mechanics.isGrounded = false;
             }
         });
 

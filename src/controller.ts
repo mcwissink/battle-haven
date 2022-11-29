@@ -6,8 +6,8 @@ const combos = [
     { sequence: ['attack'], name: 'hit_a', },
     { sequence: ['jump'], name: 'hit_j', },
     { sequence: ['defend'], name: 'hit_d', },
-    { sequence: ['down', 'right'], name: 'hit_DF', },
-    { sequence: ['down', 'left'], name: 'hit_DF', },
+    // { sequence: ['down', 'right'], name: 'hit_DF', },
+    // { sequence: ['down', 'left'], name: 'hit_DF', },
     { sequence: ['defend', 'right', 'attack'], name: 'hit_Fa', },
     { sequence: ['defend', 'left', 'attack'], name: 'hit_Fa', },
     { sequence: ['defend', 'right', 'jump'], name: 'hit_Fj', },
@@ -39,6 +39,9 @@ export class CircleBuffer<T> {
         for (let i = 0; i < this.size; i++) {
             callback(this.buffer[(this.start + i) % this.size], i);
         }
+    }
+    reset() {
+        this.buffer.length = 0;
     }
 }
 
@@ -73,6 +76,10 @@ export class Controller {
     } | null = null;
 
     buffer = new CircleBuffer<ComboInput>(3, null);
+
+    clearComboBuffer() {
+        this.buffer.reset();
+    }
 
     getComboInput(control: keyof ControllerState, magnitude: number): ComboInput | undefined {
         // Prevent repeated key presses
@@ -206,11 +213,11 @@ class GamepadController extends Controller {
     }
 
     update() {
-        this.input('attack', this.gamepad.buttons[0].value);
-        this.input('defend', this.gamepad.buttons[1].value);
+        this.input('attack', this.gamepad.buttons[1].value);
+        this.input('defend', this.gamepad.buttons[5].value);
         this.input('jump', this.gamepad.buttons[3].value);
-        this.input('stickX', Math.round(this.gamepad.axes[0]));
-        this.input('stickY', Math.round(this.gamepad.axes[1]));
+        this.input('stickX', this.gamepad.axes[0]);
+        this.input('stickY', this.gamepad.axes[1]);
     }
 }
 

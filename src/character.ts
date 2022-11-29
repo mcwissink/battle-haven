@@ -37,6 +37,15 @@ const animation = Object.entries(character.frame).reduce<Record<string, Characte
 export class Character extends Entity<any, CharacterFrame> {
     animator = new Animator<CharacterFrameData>();
     constructor(public port: number) {
+        const doubleJump = () => {
+            if (this.controller.stickY > 0 || this.frameData.state === State.doubleJumping) {
+                this.mechanics.velocity[0] = this.controller.stickDirectionX * 20;
+                this.mechanics.velocity[1] = 20;
+                return animation.drop;
+            } else {
+                return animation.double_jump;
+            }
+        };
         super(
             new Mechanics(new Diamond(20, 40), { position: [350, 100] }),
             new Diamond(10, 42),
@@ -77,6 +86,7 @@ export class Character extends Entity<any, CharacterFrame> {
                     }
                 },
                 [State.standing]: {
+                    fall: () => this.next.setFrame(animation.airborn),
                     combo: {
                         hit_a: () => Math.random() > 0.5 ? animation.punch : 65,
                         hit_d: animation.defend,
@@ -90,12 +100,10 @@ export class Character extends Entity<any, CharacterFrame> {
                         if (this.controller.stickX) {
                             this.next.setFrame(animation.running);
                         }
-                        if (!this.mechanics.isGrounded) {
-                            this.next.setFrame(animation.airborn)
-                        }
                     },
                 },
                 [State.walking]: {
+                    fall: () => this.next.setFrame(animation.airborn, 1),
                     combo: {
                         hit_a: animation.punch,
                         hit_d: animation.defend,
@@ -110,13 +118,11 @@ export class Character extends Entity<any, CharacterFrame> {
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.standing);
                         }
-
-                        if (!this.mechanics.isGrounded) {
-                            this.next.setFrame(animation.airborn, 1)
-                        }
                     },
                 },
                 [State.running]: {
+                    resetComboBuffer: true,
+                    fall: () => this.next.setFrame(animation.airborn, 1),
                     combo: {
                         hit_a: 85,
                         hit_d: 102,
@@ -129,15 +135,11 @@ export class Character extends Entity<any, CharacterFrame> {
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.stop_running);
                         }
-
-                        if (!this.mechanics.isGrounded) {
-                            this.next.setFrame(animation.airborn, 1)
-                        }
                     },
                 },
                 [State.jumping]: {
                     combo: {
-                        hit_j: animation.double_jump,
+                        hit_j: doubleJump,
                         hit_a: animation.jump_attack,
                     },
                     update: () => {
@@ -147,21 +149,33 @@ export class Character extends Entity<any, CharacterFrame> {
                 [State.doubleJumping]: {
                     combo: {
                         hit_a: animation.jump_attack,
+                        hit_j: doubleJump,
                     },
                     update: () => {
                         this.mechanics.force(this.controller.stickDirectionX * character.bmp.walking_speedz, 0, 1);
                     },
                 },
+                [State.drop]: {
+                    combo: {
+                        hit_a: animation.dash_attack,
+                    },
+                    update: () => {
+                        this.direction = Math.sign(this.mechanics.velocity[0]);
+                        this.mechanics.force(this.controller.stickDirectionX * character.bmp.walking_speedz, 0, 1);
+                        this.mechanics.velocity[0] *= 0.9;
+                    },
+                },
                 [State.dash]: {
                     combo: {
                         hit_a: animation.dash_attack,
-                        hit_j: animation.double_jump,
+                        hit_j: doubleJump,
                     },
                     update: () => {
                         const direction = this.controller.stickDirectionX || this.direction;
                         if (direction !== this.direction && this.frame !== 214) {
                             this.next.setFrame(214, 0, direction);
                         }
+                        this.mechanics.force(this.controller.stickDirectionX * character.bmp.walking_speedz, 0, 1);
                     },
                 },
                 [State.defend]: {
@@ -178,15 +192,17 @@ export class Character extends Entity<any, CharacterFrame> {
                     },
                 },
                 [State.crouching]: {
+                    fall: () => this.next.setFrame(animation.airborn),
                     update: () => {
                         this.mechanics.force(-this.mechanics.velocity[0] * 0.3);
                         this.direction = this.controller.stickDirectionX;
-                        // if (controller.stickY > 0) {
-                        //     this.next.setFrame(animation.crouch);
-                        // }
                     },
                 },
+                [State.lying]: {
+                    fall: () => this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2),
+                },
                 [State.injured]: {
+                    fall: () => this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2),
                     hit: () => {
                         if (this.frame < 222) {
                             this.next.setFrame(222, 1);
@@ -241,7 +257,7 @@ export class Character extends Entity<any, CharacterFrame> {
             const direction = this.controller.stickDirectionX;
             const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
             this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
-            this.mechanics.velocity[1] = character.bmp.jump_height;
+            this.mechanics.velocity[1] = character.bmp.jump_height * 1.1;
         }
     }
 }

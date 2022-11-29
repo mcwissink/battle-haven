@@ -1,7 +1,25 @@
 const customFrames = {
+    392: {
+        name: "drop",
+        pic: 64, state: 22, wait: 0, next: 0, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
+        bpoint: {
+            x: 36, y: 30
+        },
+        wpoint: {
+            kind: 1, x: 25, y: 37, weaponact: 35, attacking: 0, cover: 0, dvx: 0, dvy: 0, dvz: 0
+        },
+        bdy: [
+            {
+                kind: 0, x: 20, y: 5, w: 27, h: 38
+            },
+            {
+                kind: 0, x: 16, y: 37, w: 36, h: 22
+            }
+        ]
+    },
     394: {
         name: "double_jump",
-        pic: 58, state: 21, wait: 1, next: 395, dvx: 0, dvy: -17, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260, hit_Ua: 70,
+        pic: 58, state: 21, wait: 1, next: 395, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260, hit_Ua: 70,
         wpoint: {
             kind: 1, x: 38, y: 75, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
         },
@@ -81,6 +99,8 @@ export const modifyData = (data: any) => {
         });
 
         modifyFrames([215], (frameData) => frameData.state = 20);
+        // Allow action out of stop_running
+        modifyFrames([218], (frameData) => frameData.state = 0);
         modifyFrames([210, 211], (frameData) => frameData.state = 20);
         modifyFrames([86], (frameData) => frameData.dvx = 0);
     }

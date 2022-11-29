@@ -28,6 +28,7 @@ type EntityState<Frame extends number> = {
     combo?: Record<string, Frame | 999 | void | (() => Frame | 999 | void)>;
     update?: () => void;
     nextFrame?: () => Frame;
+    resetComboBuffer?: boolean;
 } & EventHandlers;
 
 export enum State {
@@ -42,9 +43,11 @@ export enum State {
     brokenDefend = 8,
     injured = 11,
     falling = 12,
+    lying = 14,
     other = 15,
     crouching = 20,
     doubleJumping = 21,
+    drop = 22,
 }
 
 type Defaults = 999 | 0;
@@ -223,6 +226,13 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
                 BH.spawn(nextFrameData.opoint, this);
             }
 
+            if (
+                nextFrameData.state !== this.frameData.state &&
+                this.states[nextFrameData.state]?.resetComboBuffer
+            ) {
+                this.controller.clearComboBuffer();
+            }
+
             this.transition(this.frame, this.next.frame);
 
             this.wait = (1 + nextFrameData.wait);
@@ -267,7 +277,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             this.mechanics.position[0] - 40 + modX,
             this.mechanics.position[1] - 60,
         );
-        this.debugRender(ctx);
+        // this.debugRender(ctx);
         // this.mechanics.render(ctx);
         // this.environment.render(ctx);
     }
