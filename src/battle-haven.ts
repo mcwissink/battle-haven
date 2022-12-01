@@ -62,6 +62,9 @@ export class BattleHaven {
 
     wait = 2;
     update: FrameRequestCallback = (time) => {
+        controllers.ports.forEach((port) => {
+            port?.update();
+        });
         const dx = time - this.previousTime;
         if (!--this.wait) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);

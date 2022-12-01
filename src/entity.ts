@@ -69,6 +69,10 @@ class Transition<Frame extends number> {
         }
     }
 
+    set direction(direction: number) {
+        this._direction = Math.sign(direction) || this._direction;
+    }
+
     get direction() {
         return this._direction;
     }
@@ -247,8 +251,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     public transition(_frame: number, _nextFrame: number) { }
 
     update(_dx: number) {
-        this.controller.update();
-
         if (this.hitStop) {
             this.hitStop--;
         } else {

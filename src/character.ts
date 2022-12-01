@@ -39,7 +39,7 @@ export class Character extends Entity<any, CharacterFrame> {
     constructor(public port: number) {
         const doubleJump = () => {
             if (this.controller.stickY > 0 || this.frameData.state === State.doubleJumping) {
-                this.mechanics.velocity[0] = this.controller.stickDirectionX * 20;
+                this.mechanics.velocity[0] = (this.controller.stickDirectionX || this.direction) * 20;
                 this.mechanics.velocity[1] = 20;
                 return animation.drop;
             } else {
@@ -96,7 +96,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_DF: animation.walking,
                     },
                     update: () => {
-                        this.direction = this.controller.stickDirectionX;
+                        this.next.direction = this.controller.stickDirectionX;
                         if (this.controller.stickX) {
                             this.next.setFrame(animation.running);
                         }
@@ -114,7 +114,7 @@ export class Character extends Entity<any, CharacterFrame> {
                     nextFrame: () => this.animator.oscillate(5, 8),
                     update: () => {
                         this.mechanics.force(this.direction * character.bmp.walking_speed);
-                        this.direction = this.controller.stickDirectionX;
+                        this.next.direction = this.controller.stickDirectionX;
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.standing);
                         }
@@ -131,7 +131,7 @@ export class Character extends Entity<any, CharacterFrame> {
                     nextFrame: () => this.animator.oscillate(9, 11),
                     update: () => {
                         this.mechanics.force(this.direction * character.bmp.running_speed);
-                        this.direction = this.controller.stickDirectionX;
+                        this.next.direction = this.controller.stickDirectionX;
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.stop_running);
                         }
@@ -160,7 +160,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_a: animation.dash_attack,
                     },
                     update: () => {
-                        this.direction = Math.sign(this.mechanics.velocity[0]);
+                        this.next.direction = Math.sign(this.mechanics.velocity[0]);
                         this.mechanics.force(this.controller.stickDirectionX * character.bmp.walking_speedz, 0, 1);
                         this.mechanics.velocity[0] *= 0.9;
                     },
@@ -188,14 +188,14 @@ export class Character extends Entity<any, CharacterFrame> {
                         }
                     },
                     update: () => {
-                        this.direction = this.controller.stickDirectionX;
+                        this.next.direction = this.controller.stickDirectionX;
                     },
                 },
                 [State.crouching]: {
                     fall: () => this.next.setFrame(animation.airborn),
                     update: () => {
                         this.mechanics.force(-this.mechanics.velocity[0] * 0.3);
-                        this.direction = this.controller.stickDirectionX;
+                        this.next.direction = this.controller.stickDirectionX;
                     },
                 },
                 [State.lying]: {
@@ -249,8 +249,10 @@ export class Character extends Entity<any, CharacterFrame> {
         }
         // Dash
         if (nextFrame === animation.dash) {
-            this.mechanics.force(character.bmp.dash_distance * Math.sign(this.mechanics.velocity[0]));
+            const direction = Math.sign(this.mechanics.velocity[0]);
+            this.mechanics.force(character.bmp.dash_distance * direction);
             this.mechanics.velocity[1] = character.bmp.dash_height;
+            this.next.direction = direction;
         }
         // Double-jump
         if (nextFrame === animation.double_jump) {
