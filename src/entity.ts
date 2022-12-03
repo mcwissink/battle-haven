@@ -8,6 +8,7 @@ type Event = {
     collide: null;
     fall: null;
     hit: { entity: Entity, dvx?: number; dvy?: number };
+    attacked: { entity: Entity };
 }
 
 type EventHandlers = {
@@ -19,6 +20,13 @@ interface Body {
     y: number;
     w: number;
     h: number;
+}
+
+interface Point {
+    x: number;
+    y: number;
+    w?: never;
+    h?: never;
 }
 
 type EntityState<Frame extends number> = {
@@ -167,10 +175,10 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         return controllers.get(this.port);
     }
 
-    getFrameElementPosition(body: Body) {
+    getFrameElementPosition({ x, y, w = 0 }: Body | Point) {
         return [
-            (body.x - 40) * this.direction + (this.direction === 1 ? 0 : -body.w),
-            body.y - 60,
+            (x - (this.sprite.spriteSheet.width / 2)) * this.direction + (this.direction === 1 ? 0 : -w),
+            y - (this.sprite.spriteSheet.height / 2),
         ];
     }
 
@@ -282,8 +290,8 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
         this.sprite.render(
             ctx,
-            this.mechanics.position[0] - 40 + modX,
-            this.mechanics.position[1] - 60,
+            this.mechanics.position[0] - (this.sprite.spriteSheet.width / 2) + modX,
+            this.mechanics.position[1] - (this.sprite.spriteSheet.height / 2),
         );
         if (BH.debug.hitbox) {
             this.debugRender(ctx);

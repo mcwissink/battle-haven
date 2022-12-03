@@ -9,7 +9,6 @@ export interface SpriteSheet {
 export class Sprite {
     x = 0;
     y = 0;
-    spriteSheet: SpriteSheet;
     directionX = 1;
     directionY = 1;
     frameOffsetX = 0;
@@ -17,9 +16,7 @@ export class Sprite {
     frameOffsetImage = 0;
     isFlippedX = false;
     isFlippedY = false;
-    constructor(spriteSheet: SpriteSheet) {
-        this.spriteSheet = spriteSheet;
-    }
+    constructor(public spriteSheet: SpriteSheet) { }
 
     setFrame(frame: number, direction: number) {
         const sheetSize = this.spriteSheet.rows * this.spriteSheet.columns;

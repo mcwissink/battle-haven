@@ -4,9 +4,9 @@ import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mech
 export class Scene {
     entities: Entity[] = [];
     platforms = [
-        new Mechanics(new Rectangle(200, 10), { position: [500, 245], passThrough: UP_VECTOR }),
-        new Mechanics(new Rectangle(200, 10), { position: [800, 150], passThrough: UP_VECTOR }),
-        new Mechanics(new Rectangle(200, 10), { position: [1100, 245], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 30), { position: [500, 245], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 30), { position: [800, 150], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 30), { position: [1100, 245], passThrough: UP_VECTOR }),
         new Mechanics(new Rectangle(1000, 100), { position: [800, 400] }),
         new Mechanics(new Rectangle(150, 600), { position: [5, 210] }),
         new Mechanics(new Rectangle(1500, 100), { position: [800, 510] }),
@@ -68,6 +68,7 @@ export class Scene {
                     const itr = itrOverlap(entityA, entityB);
                     if (itr?.kind === 0) {
                         entityA.attacked(entityB, itr.arest || itr.vrest || 1);
+                        entityA.event('attacked', { entity: entityB });
                         const isThirdHit = entityB.frame >= 223 && entityB.frame <= 226;
                         entityB.event('hit', {
                             entity: entityA,
@@ -81,9 +82,8 @@ export class Scene {
     }
 
     render(ctx: CanvasRenderingContext2D) {
-        this.entities.forEach(entity => entity.render(ctx));
-
         this.platforms.forEach((platform) => platform.render(ctx));
+        this.entities.forEach(entity => entity.render(ctx));
     }
 }
 
