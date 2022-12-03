@@ -1,42 +1,16 @@
 import { Animator } from './animator';
+import { animation, EntityData } from './data-loader';
 import { Entity, State } from "./entity";
 import { BH } from './main';
 import { Diamond, Mechanics } from './mechanics';
-import { modifyData } from './modify-data';
 import { Sprite } from './sprite';
-import { woody } from './woody';
-import './woody_0.png';
-import './woody_1.png';
-import './woody_2.png';
 
-const character = woody;
+type CharacterFrameData = any;
+type CharacterFrame = number;
 
-const loadImage = (source: string) => {
-    const image = new Image();
-    image.src = source;
-    return image;
-};
-
-const testImages = ['./woody_0.png', './woody_1.png', './woody_2.png'].map(loadImage);
-
-type CharacterFrameData = typeof character.frame;
-type CharacterFrame = keyof CharacterFrameData;
-
-modifyData(character);
-
-const animation = Object.entries(character.frame).reduce<Record<string, CharacterFrame>>((acc, [frame, data]) => {
-    if (!acc[data.name]) {
-        acc[data.name] = (Number(frame) || 999) as CharacterFrame;
-    }
-    return acc;
-}, {
-    airborn: 212,
-});
-
-// Fix types, any should be CharacterFrameData
-export class Character extends Entity<any, CharacterFrame> {
+export class Character extends Entity<CharacterFrameData, CharacterFrame> {
     animator = new Animator<CharacterFrameData>();
-    constructor(public port: number) {
+    constructor(public port: number, private data: EntityData) {
         const doubleJump = () => {
             if (this.controller.stickY > 0 || this.frameData.state === State.doubleJumping) {
                 this.mechanics.velocity[0] = (this.controller.stickDirectionX || this.direction) * 20;
@@ -49,14 +23,8 @@ export class Character extends Entity<any, CharacterFrame> {
         super(
             new Mechanics(new Diamond(20, 40), { position: [350, 100] }),
             new Diamond(10, 42),
-            new Sprite({
-                images: testImages,
-                width: 80,
-                height: 80,
-                rows: 7,
-                columns: 10,
-            }),
-            character.frame,
+            new Sprite(data.spriteSheet),
+            data.data.frame,
             {
                 system: {
                     land: ({ vy }) => {
@@ -100,6 +68,9 @@ export class Character extends Entity<any, CharacterFrame> {
                         if (this.controller.stickX) {
                             this.next.setFrame(animation.running);
                         }
+                        if (!this.mechanics.isGrounded) {
+                            this.next.setFrame(animation.airborn);
+                        }
                     },
                 },
                 [State.walking]: {
@@ -113,7 +84,7 @@ export class Character extends Entity<any, CharacterFrame> {
                     },
                     nextFrame: () => this.animator.oscillate(5, 8),
                     update: () => {
-                        this.mechanics.force(this.direction * character.bmp.walking_speed);
+                        this.mechanics.force(this.direction * this.data.data.bmp.walking_speed);
                         this.next.direction = this.controller.stickDirectionX;
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.standing);
@@ -130,7 +101,7 @@ export class Character extends Entity<any, CharacterFrame> {
                     },
                     nextFrame: () => this.animator.oscillate(9, 11),
                     update: () => {
-                        this.mechanics.force(this.direction * character.bmp.running_speed);
+                        this.mechanics.force(this.direction * this.data.data.bmp.running_speed);
                         this.next.direction = this.controller.stickDirectionX;
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.stop_running);
@@ -143,7 +114,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_a: animation.jump_attack,
                     },
                     update: () => {
-                        this.mechanics.force(this.controller.stickDirectionX * character.bmp.walking_speedz, 0, 1);
+                        this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.walking_speedz, 0, 1);
                     },
                 },
                 [State.doubleJumping]: {
@@ -152,7 +123,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         hit_j: doubleJump,
                     },
                     update: () => {
-                        this.mechanics.force(this.controller.stickDirectionX * character.bmp.walking_speedz, 0, 1);
+                        this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.walking_speedz, 0, 1);
                     },
                 },
                 [State.drop]: {
@@ -161,7 +132,7 @@ export class Character extends Entity<any, CharacterFrame> {
                     },
                     update: () => {
                         this.next.direction = Math.sign(this.mechanics.velocity[0]);
-                        this.mechanics.force(this.controller.stickDirectionX * character.bmp.walking_speedz, 0, 1);
+                        this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.walking_speedz, 0, 1);
                         this.mechanics.velocity[0] *= 0.9;
                     },
                 },
@@ -175,7 +146,7 @@ export class Character extends Entity<any, CharacterFrame> {
                         if (direction !== this.direction && this.frame !== 214) {
                             this.next.setFrame(214, 0, direction);
                         }
-                        this.mechanics.force(this.controller.stickDirectionX * character.bmp.walking_speedz, 0, 1);
+                        this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.walking_speedz, 0, 1);
                     },
                 },
                 [State.defend]: {
@@ -244,14 +215,14 @@ export class Character extends Entity<any, CharacterFrame> {
         // Frame specific updates
         // Jump
         if (frame === 211 && nextFrame === 212) {
-            this.mechanics.force(character.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || this.controller.stickDirectionX));
-            this.mechanics.velocity[1] = character.bmp.jump_height;
+            this.mechanics.force(this.data.data.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || this.controller.stickDirectionX));
+            this.mechanics.velocity[1] = this.data.data.bmp.jump_height;
         }
         // Dash
         if (nextFrame === animation.dash) {
             const direction = Math.sign(this.mechanics.velocity[0]);
-            this.mechanics.force(character.bmp.dash_distance * direction);
-            this.mechanics.velocity[1] = character.bmp.dash_height;
+            this.mechanics.force(this.data.data.bmp.dash_distance * direction);
+            this.mechanics.velocity[1] = this.data.data.bmp.dash_height;
             this.next.direction = direction;
         }
         // Double-jump
@@ -259,7 +230,7 @@ export class Character extends Entity<any, CharacterFrame> {
             const direction = this.controller.stickDirectionX;
             const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
             this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
-            this.mechanics.velocity[1] = character.bmp.jump_height * 1.1;
+            this.mechanics.velocity[1] = this.data.data.bmp.jump_height * 1.1;
         }
     }
 }

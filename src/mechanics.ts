@@ -56,18 +56,30 @@ export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
 };
 
 export class Shape {
-    public corners: Vector[] = [];
+    public _corners: Vector[] = [];
     public position: Vector = [0, 0];
     public previousPosition: Vector = [0, 0];
-    update(_position: Vector): Vector[] {
-        return [];
-    };
+    constructor(position?: Vector) {
+        if (position) {
+            this.position = position;
+        }
+    }
+
+    follow(position: Vector) {
+        this.position = position;
+        this.corners;
+    }
+
+    get corners() {
+        return this._corners;
+    }
+
     render(ctx: CanvasRenderingContext2D) {
         ctx.fillStyle = 'rgba(100, 0, 0, 0.4)';
         ctx.strokeStyle = 'blue';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        this.corners.forEach((corner, index) => {
+        this._corners.forEach((corner, index) => {
             if (index) {
                 ctx.lineTo(corner[0], corner[1]);
             } else {
@@ -80,7 +92,7 @@ export class Shape {
 }
 
 export class Diamond extends Shape {
-    public corners: Vector[] = new Array(4).fill(null).map(() => [0, 0]);
+    _corners: Vector[] = new Array(4).fill(null).map(() => [0, 0]);
     public halfWidth;
     public halfHeight;
     constructor(width: number, height: number) {
@@ -88,23 +100,22 @@ export class Diamond extends Shape {
         this.halfWidth = width / 2;
         this.halfHeight = height / 2;
     }
-    update(position: Vector): Vector[] {
+    get corners(): Vector[] {
         this.previousPosition = [...this.position];
-        this.position = [...position];
-        this.corners[0][0] = position[0] - this.halfWidth;
-        this.corners[0][1] = position[1];
-        this.corners[1][0] = position[0];
-        this.corners[1][1] = position[1] + this.halfHeight;
-        this.corners[2][0] = position[0] + this.halfWidth;
-        this.corners[2][1] = position[1];
-        this.corners[3][0] = position[0];
-        this.corners[3][1] = position[1] - this.halfHeight;
-        return this.corners;
+        this._corners[0][0] = this.position[0] - this.halfWidth;
+        this._corners[0][1] = this.position[1];
+        this._corners[1][0] = this.position[0];
+        this._corners[1][1] = this.position[1] + this.halfHeight;
+        this._corners[2][0] = this.position[0] + this.halfWidth;
+        this._corners[2][1] = this.position[1];
+        this._corners[3][0] = this.position[0];
+        this._corners[3][1] = this.position[1] - this.halfHeight;
+        return this._corners;
     }
 }
 
 export class Rectangle extends Shape {
-    public corners: Vector[] = new Array(4).fill(null).map(() => [0, 0]);
+    _corners: Vector[] = new Array(4).fill(null).map(() => [0, 0]);
     public halfWidth;
     public halfHeight;
     constructor(width: number, height: number) {
@@ -112,18 +123,17 @@ export class Rectangle extends Shape {
         this.halfWidth = width / 2;
         this.halfHeight = height / 2;
     }
-    update(position: Vector): Vector[] {
+    get corners(): Vector[] {
         this.previousPosition = [...this.position];
-        this.position = [...position];
-        this.corners[0][0] = position[0] - this.halfWidth;
-        this.corners[0][1] = position[1] + this.halfHeight;
-        this.corners[1][0] = position[0] + this.halfWidth;
-        this.corners[1][1] = position[1] + this.halfHeight;
-        this.corners[2][0] = position[0] + this.halfWidth;
-        this.corners[2][1] = position[1] - this.halfHeight;
-        this.corners[3][0] = position[0] - this.halfWidth;
-        this.corners[3][1] = position[1] - this.halfHeight;
-        return this.corners;
+        this._corners[0][0] = this.position[0] - this.halfWidth;
+        this._corners[0][1] = this.position[1] + this.halfHeight;
+        this._corners[1][0] = this.position[0] + this.halfWidth;
+        this._corners[1][1] = this.position[1] + this.halfHeight;
+        this._corners[2][0] = this.position[0] + this.halfWidth;
+        this._corners[2][1] = this.position[1] - this.halfHeight;
+        this._corners[3][0] = this.position[0] - this.halfWidth;
+        this._corners[3][1] = this.position[1] - this.halfHeight;
+        return this._corners;
     }
 }
 
@@ -149,7 +159,7 @@ export class Mechanics {
         this.mass = mass;
         this.position = position;
         this.passThrough = passThrough;
-        this.shape.update(this.position);
+        this.shape.follow(this.position);
     }
 
     force(force: number, axis = 0, acceleration = force * Math.sign(force)) {
@@ -173,11 +183,9 @@ export class Mechanics {
         } else {
             this.velocity[1] += this.mass * BH.config.gravity;
         }
-        this.shape.update(this.position);
     }
 
     render(ctx: CanvasRenderingContext2D) {
-        this.shape.update(this.position);
         this.shape.render(ctx);
     }
 }

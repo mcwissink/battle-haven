@@ -1,4 +1,4 @@
-interface SpriteSheet {
+export interface SpriteSheet {
     images: HTMLImageElement[];
     rows: number;
     columns: number;

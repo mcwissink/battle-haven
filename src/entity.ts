@@ -2,15 +2,12 @@ import { controllers } from './controller';
 import { BH } from './main';
 import { Mechanics, Shape } from './mechanics';
 import { Sprite } from './sprite';
-import './woody_0.png';
-import './woody_1.png';
-import './woody_2.png';
 
 type Event = {
     land: { vx: number, vy: number };
     collide: null;
     fall: null;
-    hit: { dvx?: number; dvy?: number };
+    hit: { entity: Entity, dvx?: number; dvy?: number };
 }
 
 type EventHandlers = {
@@ -146,7 +143,9 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         public sprite: Sprite,
         public frames: Frames,
         public states: Record<number | 'system', EntityState<Frame> | undefined>,
-    ) { }
+    ) {
+        this.environment.follow(this.mechanics.position);
+    }
 
     translateFrame(frame: Frame | Defaults) {
         return frame === 999 ? 0 : frame;
@@ -183,8 +182,8 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         this.states.system?.[event]?.(data[0] as any);
     }
 
-    canAttack(entity: Entity) {
-        return this.parent !== entity && !this.attackRest.has(entity);
+    canAttack(entity: Entity): boolean {
+        return this.parent !== entity && entity.parent !== this && !this.attackRest.has(entity);
     }
 
     attacked(entity: Entity, rest: number) {
@@ -203,6 +202,11 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             if (frameFromCombo) {
                 this.next.setFrame(frameFromCombo, 0, combo.direction);
                 // Reset combo since it was consumed
+                this.controller.combo = null;
+            }
+            const systemCombo = BH.combo[comboName];
+            if (systemCombo) {
+                systemCombo();
                 this.controller.combo = null;
             }
         }
@@ -251,9 +255,12 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     public transition(_frame: number, _nextFrame: number) { }
 
     update(_dx: number) {
+        this.processFrame();
+
         if (this.hitStop) {
             this.hitStop--;
         } else {
+            this.mechanics.update();
             this.attackRest.forEach((value, key) => {
                 if (value) {
                     this.attackRest.set(key, value - 1);
@@ -269,7 +276,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
 
         this.sprite.setFrame(this.frameData.pic, this.direction);
 
-        this.processFrame();
     }
     render(ctx: CanvasRenderingContext2D) {
         const shiver = hitShiver[this.frameData.state] ?? 0;
@@ -279,9 +285,13 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             this.mechanics.position[0] - 40 + modX,
             this.mechanics.position[1] - 60,
         );
-        // this.debugRender(ctx);
-        // this.mechanics.render(ctx);
-        // this.environment.render(ctx);
+        if (BH.debug.hitbox) {
+            this.debugRender(ctx);
+        }
+        if (BH.debug.mechanics) {
+            this.mechanics.render(ctx);
+            this.environment.render(ctx);
+        }
     }
 
     public get frameData(): FrameData {

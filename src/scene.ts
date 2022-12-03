@@ -13,12 +13,7 @@ export class Scene {
         new Mechanics(new Rectangle(150, 600), { position: [1600, 210] }),
     ];
     update(dx: number) {
-        this.entities.forEach(entity => {
-            if (!entity.hitStop) {
-                entity.mechanics.update()
-                entity.environment.update(entity.mechanics.position);
-            }
-        });
+        this.entities.forEach(entity => entity.update(dx));
         this.entities.forEach(entity => {
             let isGrounded = false;
             let isOverlapping = false;
@@ -38,7 +33,6 @@ export class Scene {
                     entity.mechanics.position[1] += mtv[1];
                     entity.mechanics.velocity[0] += mtv[0] * 0.5;
                     entity.mechanics.velocity[1] += mtv[1] * 0.5;
-                    entity.environment.update(entity.mechanics.position);
                 }
                 const mtv2 = collide(entity.environment, platform.shape)
                 if (mtv2) {
@@ -76,6 +70,7 @@ export class Scene {
                         entityA.attacked(entityB, itr.arest || itr.vrest || 1);
                         const isThirdHit = entityB.frame >= 223 && entityB.frame <= 226;
                         entityB.event('hit', {
+                            entity: entityA,
                             dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
                             dvy: itr.dvy || (isThirdHit ? -10 : 0),
                         });
@@ -83,8 +78,6 @@ export class Scene {
                 });
             }
         });
-
-        this.entities.forEach(entity => entity.update(dx));
     }
 
     render(ctx: CanvasRenderingContext2D) {

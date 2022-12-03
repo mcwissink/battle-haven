@@ -1,12 +1,9 @@
 import { Character } from './character';
 import { controllers } from './controller';
+import { entityData } from './data-loader';
 import { Entity } from './entity';
 import { Projectile } from './projectile';
 import { Scene } from './scene';
-
-const objectIds: Record<number, any> = {
-    206: (data: SpawnTask) => new Projectile(data),
-}
 
 interface ObjectPoint {
     kind: 1;
@@ -39,6 +36,14 @@ export class BattleHaven {
     ctx: CanvasRenderingContext2D;
     scene = new Scene();
     tasks: Task[] = [];
+    debug = {
+        hitbox: false,
+        mechanics: false,
+    }
+    combo: Record<string, (() => void) | undefined> = {
+        debug_hitbox: () => this.debug.hitbox = !this.debug.hitbox,
+        debug_mechanics: () => this.debug.mechanics = !this.debug.mechanics,
+    }
     constructor(
         private canvas: HTMLCanvasElement,
         public config: BattleHavenConfig
@@ -52,8 +57,8 @@ export class BattleHaven {
 
     initialize() {
         controllers.on('connect', (port) => {
-            this.scene.entities.push(new Character(port));
-        });
+            this.scene.entities.push(new Character(port, entityData[1]));
+        })
     }
     start() {
         this.initialize();
@@ -82,9 +87,9 @@ export class BattleHaven {
         this.tasks.forEach(({ type, data }) => {
             switch (type) {
                 case 'spawn': {
-                    const factory = objectIds[data.opoint.oid];
-                    if (factory) {
-                        this.scene.entities.push(factory(data))
+                    const entity = entityData[data.opoint.oid];
+                    if (entity) {
+                        this.scene.entities.push(new Projectile(data, entity))
                     }
                 }
             }
