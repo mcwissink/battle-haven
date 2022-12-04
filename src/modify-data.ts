@@ -87,8 +87,6 @@ export const modifyData = (data: any) => {
             });
         }
 
-
-
         // Mod woody teleport to see animation
         // modifyFrames(new Array(28).fill(275).map((v, i) => v + i), (frameData) => {
         //     frameData.dvx = 0;
@@ -116,6 +114,7 @@ export const modifyData = (data: any) => {
         }
         frameData.centerx++;
         frameData.centery++;
+        frameData.dvy *= 1.4;
     });
 
 };
