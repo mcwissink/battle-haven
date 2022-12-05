@@ -1,6 +1,6 @@
 import { Animator } from './animator';
 import { animation, EntityData } from './data-loader';
-import { Entity, State } from "./entity";
+import { Effect, Entity, State } from "./entity";
 import { BH } from './main';
 import { Diamond, Mechanics } from './mechanics';
 import { Sprite } from './sprite';
@@ -9,7 +9,7 @@ type CharacterFrameData = any;
 type CharacterFrame = number;
 
 export class Character extends Entity<CharacterFrameData, CharacterFrame> {
-    animator = new Animator<CharacterFrameData>();
+    animator = new Animator();
     constructor(public port: number, private data: EntityData) {
         const doubleJump = () => {
             if (this.controller.stickY > 0 || this.frameData.state === State.doubleJumping) {
@@ -20,6 +20,10 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 return animation.double_jump;
             }
         };
+        const fall = () => {
+            this.mechanics.isGrounded = false;
+            this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2);
+        };
         super(
             new Mechanics(new Diamond(20, 40), { position: [350, 100] }),
             new Diamond(10, 42),
@@ -28,7 +32,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             {
                 system: {
                     land: ({ vy }) => {
-                        if (this.frameData.state === State.falling) {
+                        if (this.frameData.state === State.falling || this.frameData.state === State.burning) {
                             if (vy > 6) {
                                 this.mechanics.force(-2, 1);
                             } else {
@@ -38,7 +42,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             this.next.setFrame(animation.crouch, 1)
                         }
                     },
-                    hit: ({ dvx, dvy }) => {
+                    hit: ({ dvx, dvy, effect }) => {
                         const isDefending = this.frameData.state === State.defend;
                         this.hitStop = BH.config.hitStop * 2;
                         if (dvx) {
@@ -46,12 +50,31 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         }
                         if ((dvy && !isDefending) || !this.mechanics.isGrounded) {
                             this.mechanics.force(dvy ?? 0, 1);
-                            this.mechanics.isGrounded = false;
-                            this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2);
+                            fall();
                         } else {
                             this.next.setFrame(animation.injured);
                         }
+                        if (effect) {
+                            switch (effect) {
+                                case Effect.ice:
+                                    this.next.setFrame(animation.ice, 3);
+                                    break;
+                                case Effect.fire:
+                                    this.next.setFrame(animation.fire, 3);
+                                    break;
+                            }
+                        }
                     }
+                },
+                [State.attacks]: {
+                    combo: {
+                        hit_j: animation.dash,
+                    },
+                },
+                [State.ice]: {
+                    hit: () => {
+                        fall();
+                    },
                 },
                 [State.standing]: {
                     fall: () => this.next.setFrame(animation.airborn),
@@ -207,6 +230,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         }
                     },
                 },
+                [State.burning]: {
+                    nextFrame: () => {
+                        return this.animator.oscillate(203, 204);
+                    },
+                },
             },
         );
     }
@@ -220,7 +248,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         }
         // Dash
         if (nextFrame === animation.dash) {
-            const direction = Math.sign(this.mechanics.velocity[0]);
+            const direction = Math.sign(this.mechanics.velocity[0]) || this.direction;
             this.mechanics.force(this.data.data.bmp.dash_distance * direction);
             this.mechanics.velocity[1] = this.data.data.bmp.dash_height;
             this.next.direction = direction;

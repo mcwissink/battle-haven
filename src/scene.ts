@@ -74,6 +74,7 @@ export class Scene {
                             entity: entityA,
                             dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
                             dvy: itr.dvy || (isThirdHit ? -10 : 0),
+                            effect: itr.effect,
                         });
                     }
                 });

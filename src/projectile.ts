@@ -56,6 +56,9 @@ export class Projectile extends Entity {
                         this.next.setFrame(1000);
                     }
                 },
+                3005: {
+                    collide: () => this.next.setFrame(1000),
+                }
             }
         );
         this.frame = spawnTask.opoint.action;

@@ -7,7 +7,7 @@ type Event = {
     land: { vx: number, vy: number };
     collide: null;
     fall: null;
-    hit: { entity: Entity, dvx?: number; dvy?: number };
+    hit: { entity: Entity, dvx?: number; dvy?: number, effect: number };
     attacked: { entity: Entity };
 }
 
@@ -36,6 +36,13 @@ type EntityState<Frame extends number> = {
     resetComboBuffer?: boolean;
 } & EventHandlers;
 
+export enum Effect {
+    normal = 0,
+    blood = 1,
+    fire = 2,
+    ice = 3,
+}
+
 export enum State {
     standing = 0,
     walking = 1,
@@ -48,8 +55,10 @@ export enum State {
     brokenDefend = 8,
     injured = 11,
     falling = 12,
+    ice = 13,
     lying = 14,
     other = 15,
+    burning = 18,
     crouching = 20,
     doubleJumping = 21,
     drop = 22,

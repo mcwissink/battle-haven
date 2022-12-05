@@ -2,6 +2,12 @@ import { davis } from './data/davis';
 import { davisBall } from './data/davis-ball';
 import { deep } from './data/deep';
 import { deepBall } from './data/deep-ball';
+import { firen } from './data/firen';
+import { firenBall } from './data/firen-ball';
+import { firenFlame } from './data/firen-flame';
+import { freeze } from './data/freeze';
+import { freezeBall } from './data/freeze-ball';
+import { freezeColumn } from './data/freeze-column';
 import { wind } from './data/henry_louis_rudolf_wind';
 import { louis } from './data/louis';
 import { woody } from './data/woody';
@@ -14,10 +20,16 @@ const entityDataMapping: Record<string, any> = {
     1: davis,
     2: louis,
     3: deep,
+    4: freeze,
+    5: firen,
     203: deepBall,
     204: wind,
     206: woodyBall,
     207: davisBall,
+    209: freezeBall,
+    210: firenBall,
+    211: firenFlame,
+    212: freezeColumn,
 }
 
 export interface EntityData {
