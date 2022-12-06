@@ -9,6 +9,8 @@ type Event = {
     fall: null;
     hit: { entity: Entity, dvx?: number; dvy?: number, effect: number };
     attacked: { entity: Entity };
+    caught: { entity: Entity };
+    catching: { entity: Entity };
 }
 
 type EventHandlers = {
@@ -30,7 +32,7 @@ interface Point {
 }
 
 type EntityState<Frame extends number> = {
-    combo?: Record<string, Frame | 999 | void | (() => Frame | 999 | void)>;
+    combo?: Record<string, Frame | 999 | (() => Frame | 999)>;
     update?: () => void;
     nextFrame?: () => Frame;
     resetComboBuffer?: boolean;
@@ -53,6 +55,8 @@ export enum State {
     dodging = 6,
     defend = 7,
     brokenDefend = 8,
+    catching = 9,
+    caught = 10,
     injured = 11,
     falling = 12,
     ice = 13,
@@ -136,6 +140,7 @@ interface FrameData {
     }]
     opoint: any;
     itr?: Interaction[]
+    cpoint: any;
 }
 
 const hitShiver: Record<number, number> = {
@@ -165,7 +170,11 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     }
 
     translateFrame(frame: Frame | Defaults) {
-        return frame === 999 ? 0 : frame;
+        const frameAbs = Math.abs(frame) as Frame;
+        if (frame < 0) {
+            this.next.direction = this.direction * -1;
+        }
+        return frameAbs === 999 ? 0 : frameAbs;
     }
 
     get direction() {
@@ -271,13 +280,18 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
 
     public transition(_frame: number, _nextFrame: number) { }
 
+    mechanicsUpdate(_dx: number) {
+        if (!this.hitStop && this.frameData.state !== State.caught) {
+            this.mechanics.update();
+        }
+    }
+
     update(_dx: number) {
         this.processFrame();
 
         if (this.hitStop) {
             this.hitStop--;
         } else {
-            this.mechanics.update();
             this.attackRest.forEach((value, key) => {
                 if (value) {
                     this.attackRest.set(key, value - 1);

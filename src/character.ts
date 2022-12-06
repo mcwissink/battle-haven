@@ -10,6 +10,7 @@ type CharacterFrame = number;
 
 export class Character extends Entity<CharacterFrameData, CharacterFrame> {
     animator = new Animator();
+    catching: Entity | null = null;
     constructor(public port: number, private data: EntityData) {
         const doubleJump = () => {
             if (this.controller.stickY > 0 || this.frameData.state === State.doubleJumping) {
@@ -41,6 +42,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         } else {
                             this.next.setFrame(animation.crouch, 1)
                         }
+                    },
+                    catching: ({ entity }) => {
+                        this.catching = entity;
                     },
                     hit: ({ dvx, dvy, effect }) => {
                         const isDefending = this.frameData.state === State.defend;
@@ -85,6 +89,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         hit_F: animation.running,
                         hit_D: animation.crouch,
                         hit_DF: animation.walking,
+                        hit_ja: animation.walking,
                     },
                     update: () => {
                         this.next.direction = this.controller.stickDirectionX;
@@ -235,6 +240,29 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         return this.animator.oscillate(203, 204);
                     },
                 },
+                [State.catching]: {
+                    combo: {
+                        hit_a: () => {
+                            this.next.direction = this.controller.stickDirectionX;
+                            return 232;
+                        },
+                    },
+                    update: () => {
+                        if (this.catching && this.frameData.cpoint) {
+                            const [x, y] = this.getFrameElementPosition(this.frameData.cpoint);
+                            this.catching.mechanics.position[0] = this.mechanics.position[0] + x;
+                            this.catching.mechanics.position[1] = this.mechanics.position[1] + y;
+                            this.catching.next.direction = this.direction * -1;
+                            if (this.frameData.cpoint.throwvx) {
+                                this.catching.mechanics.force(this.frameData.cpoint.throwvx * this.direction, 0, Infinity);
+                            }
+                            if (this.frameData.cpoint.throwvy) {
+                                this.catching.mechanics.force(this.frameData.cpoint.throwvy, 1, Infinity);
+                            }
+                            this.catching.next.setFrame(this.frameData.cpoint.vaction, 5);
+                        }
+                    }
+                }
             },
         );
     }

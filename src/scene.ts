@@ -13,6 +13,7 @@ export class Scene {
         new Mechanics(new Rectangle(150, 600), { position: [1600, 210] }),
     ];
     update(dx: number) {
+        this.entities.forEach(entity => entity.mechanicsUpdate(dx));
         this.entities.forEach(entity => entity.update(dx));
         this.entities.forEach(entity => {
             let isGrounded = false;
@@ -66,16 +67,30 @@ export class Scene {
             if (entityA.frameData.itr) {
                 this.entities.find(entityB => {
                     const itr = itrOverlap(entityA, entityB);
-                    if (itr?.kind === 0) {
-                        entityA.attacked(entityB, itr.arest || itr.vrest || 1);
-                        entityA.event('attacked', { entity: entityB });
-                        const isThirdHit = entityB.frame >= 223 && entityB.frame <= 226;
-                        entityB.event('hit', {
-                            entity: entityA,
-                            dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
-                            dvy: itr.dvy || (isThirdHit ? -10 : 0),
-                            effect: itr.effect,
-                        });
+                    if (itr) {
+                        switch (itr.kind) {
+                            case 0: {
+                                entityA.attacked(entityB, itr.arest || itr.vrest || 1);
+                                entityA.event('attacked', { entity: entityB });
+                                const isThirdHit = entityB.frame >= 223 && entityB.frame <= 226;
+                                entityB.event('hit', {
+                                    entity: entityA,
+                                    dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
+                                    dvy: itr.dvy || (isThirdHit ? -10 : 0),
+                                    effect: itr.effect,
+                                });
+                                break;
+                            }
+                            case 1:
+                            case 3: {
+                                entityA.next.setFrame(itr.catchingact[0]);
+                                entityB.next.setFrame(itr.caughtact[0]);
+                                entityA.event('catching', {
+                                    entity: entityB
+                                });
+                                break;
+                            }
+                        }
                     }
                 });
             }
