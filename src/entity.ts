@@ -33,6 +33,8 @@ interface Point {
 
 type EntityState<Frame extends number> = {
     combo?: Record<string, Frame | 999 | (() => Frame | 999)>;
+    enter?: () => void;
+    leave?: () => void;
     update?: () => void;
     nextFrame?: () => Frame;
     resetComboBuffer?: boolean;
@@ -248,6 +250,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
                 return;
             }
             const nextFrameData = this.frames[translatedFrame];
+            const changedState = nextFrameData.state !== this.frameData.state;
 
             if (nextFrameData.dvx) {
                 this.mechanics.force(nextFrameData.dvx * this.direction, 0, Infinity);
@@ -260,17 +263,18 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
                 BH.spawn(nextFrameData.opoint, this);
             }
 
-            if (
-                nextFrameData.state !== this.frameData.state &&
-                this.states[nextFrameData.state]?.resetComboBuffer
-            ) {
-                this.controller.clearComboBuffer();
+            if (changedState) {
+                this.state?.leave?.();
             }
 
             this.transition(this.frame, this.next.frame);
 
             this.wait = (1 + nextFrameData.wait);
             this.frame = translatedFrame;
+
+            if (changedState) {
+                this.state?.enter?.();
+            }
         }
         if (this.next.direction) {
             this.direction = this.next.direction;
@@ -281,17 +285,12 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     public transition(_frame: number, _nextFrame: number) { }
 
     mechanicsUpdate(_dx: number) {
-        if (!this.hitStop && this.frameData.state !== State.caught) {
-            this.mechanics.update();
-        }
-    }
-
-    update(_dx: number) {
-        this.processFrame();
-
         if (this.hitStop) {
             this.hitStop--;
         } else {
+            if (this.frameData.state !== State.caught) {
+                this.mechanics.update();
+            }
             this.attackRest.forEach((value, key) => {
                 if (value) {
                     this.attackRest.set(key, value - 1);
@@ -300,6 +299,10 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
                 }
             });
         }
+    }
+
+    update(_dx: number) {
+        this.processFrame();
 
         this.state?.update?.();
 

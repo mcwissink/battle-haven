@@ -9,4 +9,8 @@ export class Animator {
         this.current = (this.current + 1) % (range * 2);
         return min + offset;
     }
+    alternate(a: number, b: number): number {
+        this.current = ++this.current % 2;
+        return this.current ? a : b;
+    }
 }
