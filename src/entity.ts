@@ -13,6 +13,10 @@ type Event = {
     catching: { entity: Entity };
 }
 
+type EventQueue = {
+    [E in keyof Event]: Array<Event[E]>;
+}
+
 type EventHandlers = {
     [E in keyof Event]?: Event[E] extends null ? () => void : (data: Event[E]) => void;
 }
@@ -33,8 +37,8 @@ interface Point {
 
 type EntityState<Frame extends number> = {
     combo?: Record<string, Frame | 999 | (() => Frame | 999)>;
-    enter?: () => void;
-    leave?: () => void;
+    enter?: (previousFrame: Frame | 0) => void;
+    leave?: (nextFrame: Frame | 0) => void;
     update?: () => void;
     nextFrame?: () => Frame;
     resetComboBuffer?: boolean;
@@ -155,11 +159,20 @@ const hitShiver: Record<number, number> = {
 export class Entity<Frames extends Record<number, FrameData> = any, Frame extends number = any> {
     parent?: Entity;
     _direction = 1;
-    frame: Frame | Defaults = 0;
+    frame: Frame | 0 = 0;
     wait = 1;
     next = new Transition<Frame>();
     attackRest: Map<Entity, number> = new Map();
     hitStop = 0;
+    events: EventQueue = {
+        collide: [],
+        fall: [],
+        land: [],
+        caught: [],
+        catching: [],
+        attacked: [],
+        hit: [],
+    }
     public port = -1;
     constructor(
         public mechanics: Mechanics,
@@ -206,8 +219,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         event: E,
         ...data: Event[E] extends null ? [] : [Event[E]]
     ): void {
-        this.state?.[event]?.(data[0] as any);
-        this.states.system?.[event]?.(data[0] as any);
+        this.events[event].push(data[0] as any);
     }
 
     canAttack(entity: Entity): boolean {
@@ -217,6 +229,16 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     attacked(entity: Entity, rest: number) {
         this.hitStop = BH.config.hitStop;
         this.attackRest.set(entity, Math.floor(rest / 2));
+    }
+
+    processEvents() {
+        (Object.keys(this.events) as Array<keyof Event>).forEach((event) => {
+            this.events[event].forEach((data) => {
+                this.state?.[event]?.(data as any);
+                this.states.system?.[event]?.(data as any);
+            });
+            this.events[event].length = 0;
+        });
     }
 
     processFrame() {
@@ -243,14 +265,21 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             this.next.setFrame(state?.nextFrame ? state.nextFrame() : this.frameData.next as Frame);
         }
 
-        if (this.next.frame) {
+        this.processEvents();
+
+        // TODO: care about infinite loops
+        while (this.next.frame) {
             const translatedFrame = this.translateFrame(this.next.frame);
+            this.next._frame = 0;
+
             if (translatedFrame === 1000) {
                 BH.destroy(this);
                 return;
             }
+            const previousFrame = this.frame;
+            const previousFrameData = this.frameData;
             const nextFrameData = this.frames[translatedFrame];
-            const changedState = nextFrameData.state !== this.frameData.state;
+            const changedState = nextFrameData.state !== previousFrameData.state;
 
             if (nextFrameData.dvx) {
                 this.mechanics.force(nextFrameData.dvx * this.direction, 0, Infinity);
@@ -264,16 +293,14 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             }
 
             if (changedState) {
-                this.state?.leave?.();
+                this.state?.leave?.(translatedFrame);
             }
-
-            this.transition(this.frame, this.next.frame);
 
             this.wait = (1 + nextFrameData.wait);
             this.frame = translatedFrame;
 
             if (changedState) {
-                this.state?.enter?.();
+                this.state?.enter?.(previousFrame);
             }
         }
         if (this.next.direction) {
@@ -281,8 +308,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         }
         this.next.reset();
     }
-
-    public transition(_frame: number, _nextFrame: number) { }
 
     mechanicsUpdate(_dx: number) {
         if (this.hitStop) {

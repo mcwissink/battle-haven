@@ -81,6 +81,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     hit: () => fall(),
                 },
                 [State.standing]: {
+                    enter: () => {
+                        if (!this.mechanics.isGrounded) {
+                            this.next.setFrame(animation.airborn);
+                        }
+                    },
                     fall: () => this.next.setFrame(animation.airborn),
                     combo: {
                         hit_a: () => this.animator.alternate(animation.punch, 65),
@@ -134,6 +139,12 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.jumping]: {
+                    enter: (previousFrame) => {
+                        if (previousFrame === 211) {
+                            this.mechanics.force(this.data.data.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || this.controller.stickDirectionX));
+                            this.mechanics.velocity[1] = this.data.data.bmp.jump_height;
+                        }
+                    },
                     combo: {
                         hit_j: doubleJump,
                         hit_a: animation.jump_attack,
@@ -141,6 +152,12 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     update: airMove,
                 },
                 [State.doubleJumping]: {
+                    enter: () => {
+                        const direction = this.controller.stickDirectionX;
+                        const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
+                        this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
+                        this.mechanics.velocity[1] = this.data.data.bmp.jump_height * 1.1;
+                    },
                     combo: {
                         hit_a: animation.jump_attack,
                         hit_j: doubleJump,
@@ -157,6 +174,14 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.dash]: {
+                    enter: () => {
+                        if (this.frame === animation.dash) {
+                            const direction = Math.sign(this.mechanics.velocity[0]) || this.direction;
+                            this.mechanics.force(this.data.data.bmp.dash_distance * direction);
+                            this.mechanics.velocity[1] = this.data.data.bmp.dash_height;
+                            this.next.direction = direction;
+                        }
+                    },
                     combo: {
                         hit_a: animation.dash_attack,
                         hit_j: doubleJump,
@@ -262,28 +287,5 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 }
             },
         );
-    }
-
-    transition(frame: CharacterFrame, nextFrame: CharacterFrame) {
-        // Frame specific updates
-        // Jump
-        if (frame === 211 && nextFrame === 212) {
-            this.mechanics.force(this.data.data.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || this.controller.stickDirectionX));
-            this.mechanics.velocity[1] = this.data.data.bmp.jump_height;
-        }
-        // Dash
-        if (nextFrame === animation.dash) {
-            const direction = Math.sign(this.mechanics.velocity[0]) || this.direction;
-            this.mechanics.force(this.data.data.bmp.dash_distance * direction);
-            this.mechanics.velocity[1] = this.data.data.bmp.dash_height;
-            this.next.direction = direction;
-        }
-        // Double-jump
-        if (nextFrame === animation.double_jump) {
-            const direction = this.controller.stickDirectionX;
-            const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
-            this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
-            this.mechanics.velocity[1] = this.data.data.bmp.jump_height * 1.1;
-        }
     }
 }
