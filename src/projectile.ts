@@ -7,7 +7,7 @@ import { Mechanics, Rectangle } from './mechanics';
 import { Sprite } from './sprite';
 
 export class Projectile extends Entity {
-    animator = new Animator<any>();
+    animator = new Animator();
     constructor(public spawnTask: SpawnTask, data: EntityData) {
         let direction = spawnTask.parent.direction;
         if (spawnTask.opoint.facing === 1) {
@@ -29,7 +29,7 @@ export class Projectile extends Entity {
             new Sprite(data.spriteSheet),
             data.data.frame,
             {
-                system: {},
+                default: {},
                 3000: {
                     attacked: () => {
                         this.next.setFrame(20);

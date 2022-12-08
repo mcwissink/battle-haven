@@ -32,8 +32,6 @@ interface BattleHavenConfig {
     friction: number;
 }
 
-let frame = 0;
-
 export class BattleHaven {
     previousTime = 0;
     ctx: CanvasRenderingContext2D;
@@ -60,7 +58,7 @@ export class BattleHaven {
 
     initialize() {
         controllers.on('connect', (port) => {
-            this.scene.entities.push(new Character(port, entityData[0]));
+            this.scene.entities.push(new Character(port, entityData[4]));
         });
     }
     start() {

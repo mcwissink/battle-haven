@@ -7,7 +7,7 @@ type Event = {
     land: { vx: number, vy: number };
     collide: null;
     fall: null;
-    hit: { entity: Entity, dvx?: number; dvy?: number, effect: number };
+    hit: { entity: Entity, dvx?: number; dvy?: number, effect?: number };
     attacked: { entity: Entity };
     caught: { entity: Entity };
     catching: { entity: Entity };
@@ -17,7 +17,7 @@ type EventQueue = {
     [E in keyof Event]: Array<Event[E]>;
 }
 
-type EventHandlers = {
+export type EventHandlers = {
     [E in keyof Event]?: Event[E] extends null ? () => void : (data: Event[E]) => void;
 }
 
@@ -179,7 +179,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         public environment: Shape,
         public sprite: Sprite,
         public frames: Frames,
-        public states: Record<number | 'system', EntityState<Frame> | undefined>,
+        public states: Record<number | 'default', EntityState<Frame> | undefined>,
     ) {
         this.environment.follow(this.mechanics.position);
     }
@@ -234,8 +234,12 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     processEvents() {
         (Object.keys(this.events) as Array<keyof Event>).forEach((event) => {
             this.events[event].forEach((data) => {
-                this.state?.[event]?.(data as any);
-                this.states.system?.[event]?.(data as any);
+                const stateHandler = this.state?.[event];
+                if (stateHandler) {
+                    stateHandler?.(data as any);
+                } else {
+                    this.states.default?.[event]?.(data as any);
+                }
             });
             this.events[event].length = 0;
         });
@@ -328,14 +332,10 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
 
     update(_dx: number) {
         this.processFrame();
-
         this.state?.update?.();
-
-        this.states.system?.update?.();
-
         this.sprite.setFrame(this.frameData.pic, this.direction);
-
     }
+
     render(ctx: CanvasRenderingContext2D) {
         const shiver = hitShiver[this.frameData.state] ?? 0;
         const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
