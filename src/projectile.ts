@@ -62,7 +62,7 @@ export class Projectile extends Entity {
             }
         );
         this.frame = spawnTask.opoint.action;
-        this.parent = spawnTask.parent;
+        this.parent = spawnTask.parent.parent || spawnTask.parent;
         this.direction = direction;
         if (spawnTask.opoint.dvx) {
             this.mechanics.force(this.direction * spawnTask.opoint.dvx)

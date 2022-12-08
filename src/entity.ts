@@ -223,7 +223,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     }
 
     canAttack(entity: Entity): boolean {
-        return this.parent !== entity && entity.parent !== this && !this.attackRest.has(entity);
+        return this.parent !== entity && entity.parent !== this && !this.attackRest.has(entity) && (!this.parent || this.parent !== entity.parent);
     }
 
     attacked(entity: Entity, rest: number) {
