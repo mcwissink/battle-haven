@@ -14,10 +14,8 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
     constructor(public port: number, private data: EntityData) {
         // TODO: Probably should use classes with overrides
         const doubleJump = () => {
-            if (this.controller.stickY > 0 || this.frameData.state === State.doubleJumping) {
-                this.mechanics.velocity[0] = (this.controller.stickDirectionX || this.direction) * 20;
-                this.mechanics.velocity[1] = 20;
-                return animation.drop;
+            if (this.controller.stickY > 0) {
+                return animation.drop
             } else {
                 return animation.double_jump;
             }
@@ -38,6 +36,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             } else {
                 this.next.setFrame(this.direction !== Math.sign(this.mechanics.velocity[0]) ? 230 : 231, 1);
             }
+        }
+
+        const catching: EventHandlers['catching'] = ({ entity }) => {
+            this.catching = entity;
+            this.catching.next.direction = this.direction * -1;
         }
 
         const hit: EventHandlers['hit'] = ({ dvx, dvy, effect }) => {
@@ -112,10 +115,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 },
                 [State.walking]: {
                     fall: () => this.next.setFrame(animation.airborn, 1),
-                    catching: ({ entity }) => {
-                        this.catching = entity;
-                        this.catching.next.direction = this.direction * -1;
-                    },
+                    catching,
                     combo: {
                         hit_a: animation.punch,
                         hit_d: animation.defend,
@@ -157,6 +157,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         }
                     },
                     combo: {
+                        hit_d: animation.drop,
                         hit_j: doubleJump,
                         hit_a: animation.jump_attack,
                     },
@@ -170,12 +171,17 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         this.mechanics.velocity[1] = this.data.data.bmp.jump_height * 1.1;
                     },
                     combo: {
+                        hit_d: animation.drop,
                         hit_a: animation.jump_attack,
-                        hit_j: doubleJump,
+                        hit_j: animation.drop,
                     },
                     update: airMove,
                 },
                 [State.drop]: {
+                    enter: () => {
+                        this.mechanics.velocity[0] = (this.controller.stickDirectionX || this.direction) * 20;
+                        this.mechanics.velocity[1] = 20;
+                    },
                     combo: {
                         hit_a: animation.dash_attack,
                     },
@@ -192,6 +198,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         }
                     },
                     combo: {
+                        hit_d: animation.drop,
                         hit_a: animation.dash_attack,
                         hit_j: doubleJump,
                     },
@@ -273,7 +280,12 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         return this.animator.oscillate(203, 204);
                     },
                 },
+                [State.caught]: {
+                    land: noop,
+                    hit: noop,
+                },
                 [State.catching]: {
+                    catching,
                     leave: () => {
                         if (this.catching && this.frameData.cpoint) {
                             this.catching?.next.setFrame(animation.falling, 5);
