@@ -45,6 +45,8 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
 
         const hit: EventHandlers['hit'] = ({ dvx, dvy, effect }) => {
             this.hitStop = BH.config.hitStop * 2;
+            this.mechanics.velocity[0] *= 0.7;
+            this.mechanics.velocity[1] *= 0.7;
             if (dvx) {
                 this.mechanics.force(dvx);
             }
@@ -80,7 +82,21 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 },
                 [State.attacks]: {
                     combo: {
-                        hit_j: animation.dash,
+                        hit_j: animation.dash_go,
+                    },
+                    update: () => {
+                        if (!this.mechanics.isGrounded) {
+                            airMove();
+                        }
+                    }
+                },
+                [State.dashGo]: {
+                    enter: () => {
+                        this.mechanics.force(this.data.data.bmp.dash_distance * this.direction);
+                        this.mechanics.velocity[1] = this.data.data.bmp.dash_height * 0.5;
+                    },
+                    attacked: () => {
+                        this.next.setFrame(animation.double_jump, 100);
                     },
                 },
                 [State.ice]: {
@@ -193,6 +209,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.dash]: {
                     enter: () => {
                         if (this.frame === animation.dash) {
+                            this.mechanics.isGrounded = false;
                             this.mechanics.force(this.data.data.bmp.dash_distance * this.direction);
                             this.mechanics.velocity[1] = this.data.data.bmp.dash_height;
                         }

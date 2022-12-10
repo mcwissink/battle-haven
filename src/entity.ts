@@ -73,6 +73,7 @@ export enum State {
     crouching = 20,
     doubleJumping = 21,
     drop = 22,
+    dashGo = 23,
 }
 
 type Defaults = 999 | 0;

@@ -1,4 +1,28 @@
 const buildCustomFrames = (rollingPics: number[]) => ({
+    391: {
+        name: "dash_go",
+        pic: 63, state: 23, wait: 8, next: 216, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
+        bpoint: {
+            x: 48, y: 33
+        },
+        wpoint: {
+            kind: 1, x: 33, y: 34, weaponact: 21, attacking: 0, cover: 0, dvx: 0, dvy: 0, dvz: 0
+        },
+        itr: {
+            kind: 0, x: 24, y: 23, w: 55, h: 39, dvy: -15, fall: 70, arest: 20, bdefend: 60, injury: 70
+        },
+        bdy: [
+            {
+                kind: 0, x: 43, y: 5, w: 23, h: 33
+            },
+            {
+                kind: 0, x: 28, y: 29, w: 21, h: 33
+            },
+            {
+                kind: 0, x: 18, y: 48, w: 27, h: 21
+            }
+        ]
+    },
     392: {
         name: "drop",
         pic: 64, state: 22, wait: 0, next: 0, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0,
