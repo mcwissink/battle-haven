@@ -42,6 +42,7 @@ type EntityState<Frame extends number> = {
     update?: () => void;
     nextFrame?: () => Frame;
     resetComboBuffer?: boolean;
+    noMechanics?: boolean;
 } & EventHandlers;
 
 export enum Effect {
@@ -315,7 +316,9 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         if (this.hitStop) {
             this.hitStop--;
         } else {
-            this.mechanics.update();
+            if (!this.state?.noMechanics) {
+                this.mechanics.update();
+            }
             this.attackRest.forEach((value, key) => {
                 if (value) {
                     this.attackRest.set(key, value - 1);

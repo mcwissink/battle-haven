@@ -281,6 +281,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.caught]: {
+                    noMechanics: true,
                     land: noop,
                     hit: noop,
                 },
