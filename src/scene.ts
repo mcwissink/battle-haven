@@ -13,8 +13,8 @@ export class Scene {
         new Mechanics(new Rectangle(150, 600), { position: [1600, 210] }),
     ];
     update(dx: number) {
+        this.entities.forEach(entity => entity.stateUpdate());
         this.entities.forEach(entity => entity.mechanicsUpdate(dx));
-        this.entities.forEach(entity => entity.update(dx));
         this.entities.forEach(entity => {
             let isGrounded = false;
             let isOverlapping = false;
@@ -95,6 +95,7 @@ export class Scene {
                 });
             }
         });
+        this.entities.forEach(entity => entity.update(dx));
     }
 
     render(ctx: CanvasRenderingContext2D) {

@@ -269,8 +269,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             this.next.setFrame(state?.nextFrame ? state.nextFrame() : this.frameData.next as Frame);
         }
 
-        this.processEvents();
-
         // TODO: care about infinite loops
         while (this.next.frame) {
             const translatedFrame = this.translateFrame(this.next.frame);
@@ -317,9 +315,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         if (this.hitStop) {
             this.hitStop--;
         } else {
-            if (this.frameData.state !== State.caught) {
-                this.mechanics.update();
-            }
+            this.mechanics.update();
             this.attackRest.forEach((value, key) => {
                 if (value) {
                     this.attackRest.set(key, value - 1);
@@ -330,9 +326,13 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         }
     }
 
+    stateUpdate() {
+        this.state?.update?.();
+        this.processEvents();
+    }
+
     update(_dx: number) {
         this.processFrame();
-        this.state?.update?.();
         this.sprite.setFrame(this.frameData.pic, this.direction);
     }
 

@@ -300,7 +300,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             const [x, y] = this.getFrameElementPosition(this.frameData.cpoint);
                             this.catching.mechanics.position[0] = this.mechanics.position[0] + x;
                             this.catching.mechanics.position[1] = this.mechanics.position[1] + y;
-                            this.catching.next.direction;
                             if (this.frameData.cpoint.throwvx) {
                                 this.catching.mechanics.force(this.frameData.cpoint.throwvx * this.direction, 0, Infinity);
                             }
