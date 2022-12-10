@@ -271,6 +271,9 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             this.next.setFrame(state?.nextFrame ? state.nextFrame() : this.frameData.next as Frame);
         }
 
+        if (this.next.direction) {
+            this.direction = this.next.direction;
+        }
         // TODO: care about infinite loops
         while (this.next.frame) {
             const translatedFrame = this.translateFrame(this.next.frame);
@@ -306,9 +309,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             if (changedState) {
                 this.state?.enter?.(previousFrame);
             }
-        }
-        if (this.next.direction) {
-            this.direction = this.next.direction;
         }
         this.next.reset();
     }
