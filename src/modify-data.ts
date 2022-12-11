@@ -9,7 +9,7 @@ const buildCustomFrames = (rollingPics: number[]) => ({
             kind: 1, x: 33, y: 34, weaponact: 21, attacking: 0, cover: 0, dvx: 0, dvy: 0, dvz: 0
         },
         itr: {
-            kind: 0, x: 24, y: 23, w: 55, h: 39, dvy: -15, fall: 70, arest: 20, bdefend: 60, injury: 70
+            kind: 0, x: 20, y: 20, w: 45, h: 39, dvy: -15, fall: 70, arest: 20, bdefend: 60, injury: 70
         },
         bdy: [
             {

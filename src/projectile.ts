@@ -54,7 +54,17 @@ export class Projectile extends Entity {
                         // TODO: maybe use facing instead of direction
                         this.direction = this.direction * -1;
                         this.next.setFrame(1000);
+                    },
+                    killed: () => this.next.setFrame(this.frameData.hit_d),
+                    update: () => {
+                        this.health -= this.frameData.hit_a;
                     }
+                },
+                3004: {
+                    update: () => {
+                        this.mechanics.velocity[0] *= 0.8;
+                        this.mechanics.velocity[1] *= 0.8;
+                    },
                 },
                 3005: {
                     collide: () => this.next.setFrame(1000),

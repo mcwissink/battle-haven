@@ -1,16 +1,18 @@
 import { controllers } from './controller';
 import { BH } from './main';
-import { Mechanics, Shape } from './mechanics';
+import { Mechanics, Shape, Vector } from './mechanics';
 import { Sprite } from './sprite';
+import { Body, Combo, FrameData, Interaction0, Point } from './types';
 
 type Event = {
     land: { vx: number, vy: number };
     collide: null;
     fall: null;
-    hit: { entity: Entity, dvx?: number; dvy?: number, effect?: number };
+    hit: Interaction0 & { entity: Entity };
     attacked: { entity: Entity };
     caught: { entity: Entity };
     catching: { entity: Entity };
+    killed: null;
 }
 
 type EventQueue = {
@@ -19,20 +21,6 @@ type EventQueue = {
 
 export type EventHandlers = {
     [E in keyof Event]?: Event[E] extends null ? () => void : (data: Event[E]) => void;
-}
-
-interface Body {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-}
-
-interface Point {
-    x: number;
-    y: number;
-    w?: never;
-    h?: never;
 }
 
 type EntityState<Frame extends number> = {
@@ -110,47 +98,6 @@ class Transition<Frame extends number> {
     }
 }
 
-type Interaction = {
-    kind: 0;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    dvx?: number;
-    dvy?: number;
-    fall: number;
-    arest?: number;
-    vrest?: number;
-    bdefend: number;
-    injury: number;
-}
-
-interface FrameData {
-    name: string;
-    pic: number;
-    state: number;
-    wait: number;
-    next: number;
-    dvx: number;
-    dvy: number;
-    dvz: number;
-    centerx: number;
-    centery: number;
-    hit_a: number;
-    hit_d: number;
-    hit_j: number;
-    bdy?: [{
-        kind: number;
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-    }]
-    opoint: any;
-    itr?: Interaction[]
-    cpoint: any;
-}
-
 const hitShiver: Record<number, number> = {
     [State.injured]: 10,
     [State.falling]: 10,
@@ -166,6 +113,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     next = new Transition<Frame>();
     attackRest: Map<Entity, number> = new Map();
     hitStop = 0;
+    health = BH.config.health;
     events: EventQueue = {
         collide: [],
         fall: [],
@@ -174,6 +122,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         catching: [],
         attacked: [],
         hit: [],
+        killed: [],
     }
     public port = -1;
     constructor(
@@ -189,7 +138,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     translateFrame(frame: Frame | Defaults) {
         const frameAbs = Math.abs(frame) as Frame;
         if (frame < 0) {
-            this.next.direction = this.direction * -1;
+            this.direction = this.direction * -1;
         }
         return frameAbs === 999 ? 0 : frameAbs;
     }
@@ -210,7 +159,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         return controllers.get(this.port);
     }
 
-    getFrameElementPosition({ x, y, w = 0 }: Body | Point) {
+    getFrameElementPosition({ x, y, w = 0 }: Body | Point): Vector {
         return [
             (x - this.frameData.centerx) * this.direction + (this.direction === 1 ? 0 : -w),
             y - this.sprite.spriteSheet.height * 0.5,
@@ -252,7 +201,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
 
         const combo = this.controller.combo;
         if (combo) {
-            const comboName = combo.name as keyof FrameData;
+            const comboName = combo.name as Combo;
             const comboHandler = (this.frameData[comboName] || state?.combo?.[comboName]);
             const frameFromCombo = typeof comboHandler === 'function' ? comboHandler() : comboHandler;
             if (frameFromCombo) {
@@ -338,6 +287,9 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     update(_dx: number) {
         this.processFrame();
         this.sprite.setFrame(this.frameData.pic, this.direction);
+        if (this.health <= 0) {
+            this.event('killed');
+        }
     }
 
     render(ctx: CanvasRenderingContext2D) {

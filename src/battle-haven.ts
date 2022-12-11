@@ -4,21 +4,11 @@ import { entityData } from './data-loader';
 import { Entity } from './entity';
 import { Projectile } from './projectile';
 import { Scene } from './scene';
-
-interface ObjectPoint {
-    kind: 1;
-    x: number;
-    y: number;
-    action: number;
-    dvx: number;
-    dvy: number;
-    oid: number;
-    facing: number;
-}
+import { ObjectPoint } from './types';
 
 export interface SpawnTask {
     opoint: ObjectPoint;
-    parent: Entity<any, any>
+    parent: Entity;
 }
 
 type Task = {
@@ -30,6 +20,7 @@ interface BattleHavenConfig {
     gravity: number;
     hitStop: number;
     friction: number;
+    health: number;
 }
 
 export class BattleHaven {
@@ -58,7 +49,7 @@ export class BattleHaven {
 
     initialize() {
         controllers.on('connect', (port) => {
-            this.scene.entities.push(new Character(port, entityData[1]));
+            this.scene.entities.push(new Character(port, entityData[2]));
         });
     }
     start() {

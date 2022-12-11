@@ -43,7 +43,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             this.catching.next.direction = this.direction * -1;
         }
 
-        const hit: EventHandlers['hit'] = ({ dvx, dvy, effect }) => {
+        const hit: EventHandlers['hit'] = ({ dvx, dvy: dvyBase = 0, effect, injury }) => {
+            const dvy = (this.frame >= 223 && this.frame <= 226 ? -10 : dvyBase);
+            this.health -= injury
             this.hitStop = BH.config.hitStop * 2;
             this.mechanics.velocity[0] *= 0.7;
             this.mechanics.velocity[1] *= 0.7;
@@ -51,7 +53,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 this.mechanics.force(dvx);
             }
             if (dvy || !this.mechanics.isGrounded) {
-                this.mechanics.force(dvy ?? 0, 1);
+                this.mechanics.force(dvy, 1);
                 fall();
             } else {
                 this.next.setFrame(animation.injured);
@@ -77,6 +79,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             data.data.frame,
             {
                 default: {
+                    killed: () => this.next.setFrame(1000),
                     hit,
                     land,
                 },
@@ -92,6 +95,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 },
                 [State.dashGo]: {
                     enter: () => {
+                        this.mechanics.isGrounded = false;
                         this.mechanics.force(this.data.data.bmp.dash_distance * this.direction);
                         this.mechanics.velocity[1] = this.data.data.bmp.dash_height * 0.5;
                     },
@@ -310,11 +314,8 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             this.catching = null;
                         }
                     },
-                    combo: {
-                        hit_a: () => 232 * this.controller.stickDirectionX * this.direction,
-                    },
                     update: () => {
-                        if (this.catching && this.frameData.cpoint) {
+                        if (this.catching && this.frameData.cpoint?.kind === 1) {
                             const [x, y] = this.getFrameElementPosition(this.frameData.cpoint);
                             this.catching.mechanics.position[0] = this.mechanics.position[0] + x;
                             this.catching.mechanics.position[1] = this.mechanics.position[1] + y;
@@ -325,6 +326,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                                 this.catching.mechanics.force(this.frameData.cpoint.throwvy, 1, Infinity);
                             }
                             this.catching.next.setFrame(this.frameData.cpoint.vaction);
+                            if (this.frameData.cpoint.taction && this.controller.stickDirectionX && this.controller.attack) {
+                                this.next.setFrame(Math.abs(this.frameData.cpoint.taction) * this.controller.stickDirectionX);
+                            }
                         }
                     }
                 }

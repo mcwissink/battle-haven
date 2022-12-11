@@ -1,5 +1,6 @@
 import { Entity } from './entity';
 import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mechanics';
+import { Interaction } from './types';
 
 export class Scene {
     entities: Entity[] = [];
@@ -72,12 +73,10 @@ export class Scene {
                             case 0: {
                                 entityA.attacked(entityB, itr.arest || itr.vrest || 1);
                                 entityA.event('attacked', { entity: entityB });
-                                const isThirdHit = entityB.frame >= 223 && entityB.frame <= 226;
                                 entityB.event('hit', {
+                                    ...itr,
                                     entity: entityA,
                                     dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
-                                    dvy: itr.dvy || (isThirdHit ? -10 : 0),
-                                    effect: itr.effect,
                                 });
                                 break;
                             }
@@ -101,13 +100,16 @@ export class Scene {
     render(ctx: CanvasRenderingContext2D) {
         this.platforms.forEach((platform) => platform.render(ctx));
         this.entities.forEach(entity => entity.render(ctx));
+        this.entities.forEach((entity, index) => {
+            ctx.fillRect(0, 10 * index, entity.health, 5);
+        });
     }
 }
 
 const itrOverlap = (
     entityA: Entity,
     entityB: Entity,
-): any => {
+): Interaction | undefined => {
     const originA = entityA.mechanics.position;
     const originB = entityB.mechanics.position;
     const bodiesA = entityA.frameData.itr;
