@@ -118,7 +118,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                     fall: () => this.next.setFrame(animation.airborn),
                     combo: {
-                        hit_a: () => this.animator.alternate(animation.punch, 65),
+                        hit_a: animation.punch,
                         hit_d: animation.defend,
                         hit_j: animation.jump,
                         hit_F: animation.running,

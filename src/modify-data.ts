@@ -122,6 +122,14 @@ export const modifyData = (data: any) => {
         //     frameData.hit_a = 241;
         // });
 
+        // Chain punches together
+        Object.keys(data.frame).map((frame, index, frames) => {
+            const frameData = data.frame[frame];
+            if (frameData.name === 'punch' && frameData.next === 999) {
+                frameData.hit_a = frames[index + 1];
+            }
+        });
+
         modifyFrames([215], (frameData) => frameData.state = 20);
         // Allow action out of stop_running
         modifyFrames([218], (frameData) => frameData.state = 0);
