@@ -12,19 +12,19 @@ export class Projectile extends Entity {
         if (spawnTask.opoint.facing === 1) {
             direction *= -1;
         }
-        const [x] = spawnTask.parent.getFrameElementPosition(spawnTask.opoint);
+        const [x, y] = spawnTask.parent.getFrameElementPosition(spawnTask.opoint);
         super(
             new Mechanics(
-                new Rectangle(10, 10),
+                new Rectangle(1, 1),
                 {
                     position: [
-                        spawnTask.parent.mechanics.position[0] + x * 0.9,
-                        spawnTask.parent.mechanics.position[1],
+                        spawnTask.parent.mechanics.position[0] + x,
+                        spawnTask.parent.mechanics.position[1] + y,
                     ],
                     mass: 0,
                 }
             ),
-            new Rectangle(12, 12),
+            new Rectangle(2, 2),
             new Sprite(data.spriteSheet),
             data.data.frame,
             {

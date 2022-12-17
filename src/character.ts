@@ -298,9 +298,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 },
                 [State.burning]: {
                     land: landInjured,
-                    nextFrame: () => {
-                        return this.animator.oscillate(203, 204);
-                    },
                 },
                 [State.caught]: {
                     noMechanics: true,
@@ -328,12 +325,13 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             }
                             this.catching.next.setFrame(this.frameData.cpoint.vaction);
                             if (this.frameData.cpoint.taction && this.controller.stickDirectionX && this.controller.attack) {
-                                this.next.setFrame(Math.abs(this.frameData.cpoint.taction) * this.controller.stickDirectionX);
+                                this.next.setFrame(Math.abs(this.frameData.cpoint.taction) * this.direction * this.controller.stickDirectionX);
                             }
                         }
                     }
                 }
             },
+            22,
         );
     }
 }

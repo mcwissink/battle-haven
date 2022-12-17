@@ -55,7 +55,7 @@ export class BattleHaven {
 
     initialize() {
         controllers.on('connect', (port) => {
-            this.scene.entities.push(new Character(port, entityData[0]));
+            this.scene.entities.push(new Character(port, entityData[4]));
         });
     }
     start() {
@@ -72,8 +72,8 @@ export class BattleHaven {
         if (!--this.wait) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.scene.update(dx);
-            this.processTasks();
             this.scene.render(this.ctx);
+            this.processTasks();
             this.wait = 2;
         }
 

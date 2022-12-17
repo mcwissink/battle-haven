@@ -132,6 +132,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         public sprite: Sprite,
         public frames: Frames,
         public states: Record<number | 'default', EntityState<Frame> | undefined>,
+        public offsetY = 0,
     ) {
         this.environment.follow(this.mechanics.position);
     }
@@ -163,7 +164,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     getFrameElementPosition({ x, y, w = 0 }: Body | Point): Vector {
         return [
             (x - this.frameData.centerx) * this.direction + (this.direction === 1 ? 0 : -w),
-            y - this.sprite.dimensions.height * 0.5,
+            y - this.frameData.centery + this.offsetY,
         ];
     }
 
@@ -187,6 +188,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         (Object.keys(this.events) as Array<keyof Event>).forEach((event) => {
             this.events[event].forEach((data) => {
                 const stateHandler = this.state?.[event];
+                console.log(event);
                 if (stateHandler) {
                     stateHandler?.(data as any);
                 } else {
@@ -226,6 +228,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         }
         // TODO: care about infinite loops
         while (this.next.frame) {
+            const test = this.next.frame;
             const translatedFrame = this.translateFrame(this.next.frame);
             this.next._frame = 0;
 
@@ -236,6 +239,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             const previousFrame = this.frame;
             const previousFrameData = this.frameData;
             const nextFrameData = this.frames[translatedFrame];
+            console.log(test, previousFrame, translatedFrame, nextFrameData);
             const changedState = nextFrameData.state !== previousFrameData.state;
 
             if (nextFrameData.dvx) {
@@ -248,7 +252,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             if (nextFrameData.opoint) {
                 BH.spawn(nextFrameData.opoint, this);
             }
-
             if (changedState) {
                 this.state?.leave?.(translatedFrame);
             }
@@ -297,7 +300,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         const shiver = hitShiver[this.frameData.state] ?? 0;
         const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
         const offsetX = this.direction === 1 ? this.frameData.centerx : this.sprite.dimensions.width - this.frameData.centerx;
-        const offsetY = this.sprite.dimensions.height * 0.5;
+        const offsetY = this.frameData.centery - this.offsetY;
         this.sprite.render(
             ctx,
             this.mechanics.position[0] - offsetX + modX,

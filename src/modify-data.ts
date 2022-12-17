@@ -134,7 +134,6 @@ export const modifyData = (data: any) => {
         // Allow action out of stop_running
         modifyFrames([218], (frameData) => frameData.state = 0);
         modifyFrames([210, 211], (frameData) => frameData.state = 20);
-        // modifyFrames([86], (frameData) => frameData.dvx = 0);
     }
 
     Object.entries(data.frame).forEach(([, frameData]: any) => {
