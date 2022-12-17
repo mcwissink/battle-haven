@@ -100,9 +100,17 @@ export class BattleHaven {
     }
 
     destroy(entity: Entity) {
-        const entityIndex = this.scene.entities.findIndex((e) => e === entity);
-        if (entityIndex !== -1) {
-            this.scene.entities.splice(entityIndex, 1);
+        if (entity.type === 'effect') {
+            // TODO: effects shhould be udpated to use object pooling
+            const index = this.scene.effects.findIndex((e) => e === entity);
+            if (index !== -1) {
+                this.scene.effects.splice(index, 1);
+            }
+        } else {
+            const index = this.scene.entities.findIndex((e) => e === entity);
+            if (index !== -1) {
+                this.scene.entities.splice(index, 1);
+            }
         }
     }
 }

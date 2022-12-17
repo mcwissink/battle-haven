@@ -1,10 +1,17 @@
-export interface SpriteSheet {
-    images: HTMLImageElement[];
+export interface Dimensions {
+    imageOffset: number;
+    relativeOffset: number;
     rows: number;
     columns: number;
     width: number;
     height: number;
 }
+
+export interface SpriteSheet {
+    images: HTMLImageElement[];
+    dimensions: (frame: number) => Dimensions;
+}
+
 
 export class Sprite {
     x = 0;
@@ -16,14 +23,17 @@ export class Sprite {
     frameOffsetImage = 0;
     isFlippedX = false;
     isFlippedY = false;
-    constructor(public spriteSheet: SpriteSheet) { }
+    dimensions: Dimensions;
+    constructor(public spriteSheet: SpriteSheet) {
+        this.dimensions = spriteSheet.dimensions(0);
+    }
 
     setFrame(frame: number, direction: number) {
-        const sheetSize = this.spriteSheet.rows * this.spriteSheet.columns;
-        this.frameOffsetImage = Math.floor(frame / sheetSize);
-        const relativeFrame = frame - this.frameOffsetImage * sheetSize;
-        this.frameOffsetX = (relativeFrame % this.spriteSheet.columns) * this.spriteSheet.width;
-        this.frameOffsetY = Math.floor(relativeFrame / (this.spriteSheet.columns)) * this.spriteSheet.height;
+        this.dimensions = this.spriteSheet.dimensions(frame);
+        this.frameOffsetImage = this.dimensions.imageOffset;
+        const relativeFrame = frame - this.dimensions.relativeOffset;
+        this.frameOffsetX = (relativeFrame % this.dimensions.columns) * this.dimensions.width;
+        this.frameOffsetY = Math.floor(relativeFrame / (this.dimensions.columns)) * this.dimensions.height;
         this.directionX = direction;
     }
 
@@ -35,12 +45,12 @@ export class Sprite {
                 this.spriteSheet.images[this.frameOffsetImage],
                 this.frameOffsetX + 1,
                 this.frameOffsetY + 1,
-                this.spriteSheet.width - 2,
-                this.spriteSheet.height - 2,
-                this.directionX === -1 ? -(this.spriteSheet.width - 2) : 0,
-                this.directionY === -1 ? -(this.spriteSheet.height - 2) : 0,
-                this.spriteSheet.width - 2,
-                this.spriteSheet.height - 2
+                this.dimensions.width - 2,
+                this.dimensions.height - 2,
+                this.directionX === -1 ? -(this.dimensions.width - 2) : 0,
+                this.directionY === -1 ? -(this.dimensions.height - 2) : 0,
+                this.dimensions.width - 2,
+                this.dimensions.height - 2
             );
         }
         ctx.setTransform(1, 0, 0, 1, 0, 0);

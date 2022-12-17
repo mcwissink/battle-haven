@@ -2,6 +2,7 @@ import { davis } from './data/davis';
 import { davisBall } from './data/davis-ball';
 import { deep } from './data/deep';
 import { deepBall } from './data/deep-ball';
+import { effect0 } from './data/effect-0';
 import { firen } from './data/firen';
 import { firenBall } from './data/firen-ball';
 import { firenFlame } from './data/firen-flame';
@@ -30,6 +31,7 @@ const entityDataMapping: Record<string, any> = {
     210: firenBall,
     211: firenFlame,
     212: freezeColumn,
+    300: effect0,
 }
 
 export interface EntityData {
@@ -61,20 +63,44 @@ const loadData = (data: any): EntityData => {
         }
         return loadImage(filePath.replace('sprite', './data'));
     });
-    const {
-        w: width,
-        h: height,
-        row: columns,
-        col: rows,
-    } = data.bmp.file[0];
+
+    const dimensions =
+        (data.bmp.file as any[])
+            .map((file: Record<string, string>) => {
+                const fileKey = Object.keys(file).find((v) => v.includes('file'))
+                const [_, lower, upper] = fileKey?.match(/file\((\d+)-(\d+)\)/) ?? [];
+                if (!lower || !upper) {
+                    throw new Error('Missing size mapping');
+                }
+                return [Number(lower), Number(upper)];
+            })
+            .reduce<Record<number, any>>((acc, [lower, upper], index) => {
+                const {
+                    w: width,
+                    h: height,
+                    row: columns,
+                    col: rows,
+                } = data.bmp.file[index]
+                acc[upper] = {
+                    imageOffset: index,
+                    relativeOffset: lower,
+                    width: width + 1,
+                    height: height + 1,
+                    columns,
+                    rows,
+                };
+                return acc;
+            }, {});
+
+    const breakpoints = Object.keys(dimensions).map(Number);
+
     return {
         data,
         spriteSheet: {
             images,
-            width: width + 1,
-            height: height + 1,
-            rows,
-            columns,
+            dimensions(frame: number) {
+                return dimensions[breakpoints.find((breakpoint) => frame <= breakpoint) ?? 0]
+            }
         }
     }
 };

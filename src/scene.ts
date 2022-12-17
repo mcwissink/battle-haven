@@ -1,9 +1,12 @@
+import { entityData } from './data-loader';
+import { Effect } from './effect';
 import { Entity } from './entity';
 import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mechanics';
 import { Interaction } from './types';
 
 export class Scene {
     entities: Entity[] = [];
+    effects: Effect[] = [];
     platforms = [
         new Mechanics(new Rectangle(200, 30), { position: [500, 245], passThrough: UP_VECTOR }),
         new Mechanics(new Rectangle(200, 30), { position: [800, 150], passThrough: UP_VECTOR }),
@@ -71,13 +74,29 @@ export class Scene {
                     if (itr) {
                         switch (itr.kind) {
                             case 0: {
-                                entityA.attacked(entityB, itr.arest || itr.vrest || 1);
+                                entityA.attacked(entityB, itr.arest || itr.vrest || 2);
                                 entityA.event('attacked', { entity: entityB });
                                 entityB.event('hit', {
                                     ...itr,
                                     entity: entityA,
                                     dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
                                 });
+
+                                const effect = itr.effect ?? 0;
+                                switch (effect) {
+                                    case 0:
+                                    case 4: {
+                                        this.effects.push(
+                                            new Effect(
+                                                [
+                                                    (entityA.mechanics.position[0] + entityB.mechanics.position[0]) * 0.5,
+                                                    (entityA.mechanics.position[1] + entityB.mechanics.position[1]) * 0.5,
+                                                ],
+                                                entityData[300]
+                                            )
+                                        );
+                                    }
+                                }
                                 break;
                             }
                             case 1:
@@ -95,11 +114,13 @@ export class Scene {
             }
         });
         this.entities.forEach(entity => entity.update(dx));
+        this.effects.forEach(effect => effect.update(dx));
     }
 
     render(ctx: CanvasRenderingContext2D) {
-        this.platforms.forEach((platform) => platform.render(ctx));
+        this.platforms.forEach(platform => platform.render(ctx));
         this.entities.forEach(entity => entity.render(ctx));
+        this.effects.forEach(effect => effect.render(ctx));
         this.entities.forEach((entity, index) => {
             ctx.fillRect(0, 10 * index, entity.health, 5);
         });

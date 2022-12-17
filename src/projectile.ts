@@ -1,4 +1,3 @@
-import { Animator } from './animator';
 import { SpawnTask } from './battle-haven';
 import { EntityData } from './data-loader';
 import { Entity } from "./entity";
@@ -7,7 +6,7 @@ import { Mechanics, Rectangle } from './mechanics';
 import { Sprite } from './sprite';
 
 export class Projectile extends Entity {
-    animator = new Animator();
+    type = 'projectile';
     constructor(public spawnTask: SpawnTask, data: EntityData) {
         let direction = spawnTask.parent.direction;
         if (spawnTask.opoint.facing === 1) {
@@ -42,7 +41,6 @@ export class Projectile extends Entity {
                     },
                     hit: ({ entity }) => {
                         BH.spawn({
-                            kind: 1,
                             x: 0,
                             y: 0,
                             action: 0,
@@ -51,7 +49,6 @@ export class Projectile extends Entity {
                             oid: this.spawnTask.opoint.oid,
                             facing: 0,
                         }, entity);
-                        // TODO: maybe use facing instead of direction
                         this.direction = this.direction * -1;
                         this.next.setFrame(1000);
                     },

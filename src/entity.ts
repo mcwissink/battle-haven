@@ -106,6 +106,7 @@ const hitShiver: Record<number, number> = {
 }
 
 export class Entity<Frames extends Record<number, FrameData> = any, Frame extends number = any> {
+    type = 'entity';
     parent?: Entity;
     _direction = 1;
     frame: Frame | 0 = 0;
@@ -162,7 +163,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     getFrameElementPosition({ x, y, w = 0 }: Body | Point): Vector {
         return [
             (x - this.frameData.centerx) * this.direction + (this.direction === 1 ? 0 : -w),
-            y - this.sprite.spriteSheet.height * 0.5,
+            y - this.sprite.dimensions.height * 0.5,
         ];
     }
 
@@ -280,8 +281,8 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     }
 
     stateUpdate() {
-        this.state?.update?.();
         this.processEvents();
+        this.state?.update?.();
     }
 
     update(_dx: number) {
@@ -295,8 +296,8 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     render(ctx: CanvasRenderingContext2D) {
         const shiver = hitShiver[this.frameData.state] ?? 0;
         const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
-        const offsetX = this.direction === 1 ? this.frameData.centerx : this.sprite.spriteSheet.width - this.frameData.centerx;
-        const offsetY = this.sprite.spriteSheet.height * 0.5;
+        const offsetX = this.direction === 1 ? this.frameData.centerx : this.sprite.dimensions.width - this.frameData.centerx;
+        const offsetY = this.sprite.dimensions.height * 0.5;
         this.sprite.render(
             ctx,
             this.mechanics.position[0] - offsetX + modX,

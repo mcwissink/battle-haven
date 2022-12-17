@@ -1,6 +1,6 @@
 import { Animator } from './animator';
 import { animation, EntityData } from './data-loader';
-import { Effect, Entity, EventHandlers, State } from "./entity";
+import { Entity, EventHandlers, State } from "./entity";
 import { BH } from './main';
 import { Diamond, Mechanics } from './mechanics';
 import { Sprite } from './sprite';
@@ -9,6 +9,7 @@ type CharacterFrameData = any;
 type CharacterFrame = number;
 
 export class Character extends Entity<CharacterFrameData, CharacterFrame> {
+    type = 'character';
     animator = new Animator();
     catching: Entity | null = null;
     constructor(public port: number, private data: EntityData) {
@@ -100,7 +101,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         this.mechanics.velocity[1] = this.data.data.bmp.dash_height * 0.5;
                     },
                     attacked: () => {
-                        this.next.setFrame(animation.double_jump, 100);
+                        this.next.setFrame(animation.double_jump);
                     },
                 },
                 [State.ice]: {
