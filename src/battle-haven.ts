@@ -14,7 +14,13 @@ export interface SpawnTask {
 type Task = {
     type: 'spawn';
     data: SpawnTask;
+} | {
+    type: 'destroy';
+    data: {
+        entity: Entity;
+    };
 }
+
 
 interface BattleHavenConfig {
     gravity: number;
@@ -66,8 +72,8 @@ export class BattleHaven {
         if (!--this.wait) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.scene.update(dx);
-            this.scene.render(this.ctx);
             this.processTasks();
+            this.scene.render(this.ctx);
             this.wait = 2;
         }
 
@@ -76,13 +82,29 @@ export class BattleHaven {
     }
 
     processTasks() {
-        this.tasks.forEach(({ type, data }) => {
-            switch (type) {
+        this.tasks.forEach(task => {
+            switch (task.type) {
                 case 'spawn': {
-                    const entity = entityData[data.opoint.oid];
+                    const entity = entityData[task.data.opoint.oid];
                     if (entity) {
-                        this.scene.entities.push(new Projectile(data, entity))
+                        this.scene.entities.push(new Projectile(task.data, entity))
                     }
+                    break;
+                }
+                case 'destroy': {
+                    if (task.data.entity.type === 'effect') {
+                        // TODO: effects should be udpated to use object pooling
+                        const index = this.scene.effects.findIndex((e) => e === task.data.entity);
+                        if (index !== -1) {
+                            this.scene.effects.splice(index, 1);
+                        }
+                    } else {
+                        const index = this.scene.entities.findIndex((e) => e === task.data.entity);
+                        if (index !== -1) {
+                            this.scene.entities.splice(index, 1);
+                        }
+                    }
+                    break;
                 }
             }
         });
@@ -100,17 +122,11 @@ export class BattleHaven {
     }
 
     destroy(entity: Entity) {
-        if (entity.type === 'effect') {
-            // TODO: effects shhould be udpated to use object pooling
-            const index = this.scene.effects.findIndex((e) => e === entity);
-            if (index !== -1) {
-                this.scene.effects.splice(index, 1);
+        this.tasks.push({
+            type: 'destroy',
+            data: {
+                entity
             }
-        } else {
-            const index = this.scene.entities.findIndex((e) => e === entity);
-            if (index !== -1) {
-                this.scene.entities.splice(index, 1);
-            }
-        }
+        });
     }
 }

@@ -35,6 +35,6 @@ export class Effect extends Entity {
             }
         );
         // TODO: choose variant (0 or 10)
-        this.frame = 0;
+        this.frame = 10;
     }
 }
