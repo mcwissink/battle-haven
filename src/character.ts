@@ -1,6 +1,6 @@
 import { Animator } from './animator';
 import { animation, EntityData } from './data-loader';
-import { Entity, EventHandlers, State } from "./entity";
+import { Effect, Entity, EventHandlers, State } from "./entity";
 import { BH } from './main';
 import { Diamond, Mechanics } from './mechanics';
 import { Sprite } from './sprite';

@@ -17,7 +17,6 @@ export class Scene {
         new Mechanics(new Rectangle(150, 600), { position: [1600, 210] }),
     ];
     update(dx: number) {
-        this.entities.forEach(entity => entity.stateUpdate());
         this.entities.forEach(entity => entity.mechanicsUpdate(dx));
         this.entities.forEach(entity => {
             let isGrounded = false;
@@ -66,6 +65,8 @@ export class Scene {
                 entity.mechanics.isGrounded = false;
             }
         });
+
+        this.entities.forEach(entity => entity.stateUpdate());
 
         this.entities.forEach(entityA => {
             if (entityA.frameData.itr) {
