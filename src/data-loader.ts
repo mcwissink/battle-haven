@@ -2,6 +2,9 @@ import { davis } from './data/davis';
 import { davisBall } from './data/davis-ball';
 import { deep } from './data/deep';
 import { deepBall } from './data/deep-ball';
+import { dennis } from './data/dennis';
+import { dennisBall } from './data/dennis-ball';
+import { dennisChase } from './data/dennis-chase';
 import { effect0 } from './data/effect-0';
 import { firen } from './data/firen';
 import { firenBall } from './data/firen-ball';
@@ -11,6 +14,8 @@ import { freezeBall } from './data/freeze-ball';
 import { freezeColumn } from './data/freeze-column';
 import { wind } from './data/henry_louis_rudolf_wind';
 import { louis } from './data/louis';
+import { rudolf } from './data/rudolf';
+import { rudolfWeapon } from './data/rudolf-weapon';
 import { woody } from './data/woody';
 import { woodyBall } from './data/woody-ball';
 import { modifyData } from './modify-data';
@@ -23,14 +28,19 @@ const entityDataMapping: Record<string, any> = {
     3: deep,
     4: freeze,
     5: firen,
+    6: rudolf,
+    7: dennis,
+    202: rudolfWeapon,
     203: deepBall,
     204: wind,
+    205: dennisBall,
     206: woodyBall,
     207: davisBall,
     209: freezeBall,
     210: firenBall,
     211: firenFlame,
     212: freezeColumn,
+    215: dennisChase,
     300: effect0,
 }
 
