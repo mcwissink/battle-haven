@@ -8,8 +8,8 @@ type Event = {
     land: { vx: number, vy: number };
     collide: null;
     fall: null;
-    hit: Interaction0 & { entity: Entity };
-    attacked: { entity: Entity };
+    attacked: Interaction0 & { entity: Entity };
+    attacking: { entity: Entity };
     caught: { entity: Entity };
     catching: { entity: Entity };
     killed: null;
@@ -121,8 +121,8 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         land: [],
         caught: [],
         catching: [],
+        attacking: [],
         attacked: [],
-        hit: [],
         killed: [],
     }
     public port = -1;
@@ -179,7 +179,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         return this.parent !== entity && entity.parent !== this && !this.attackRest.has(entity) && (!this.parent || this.parent !== entity.parent);
     }
 
-    attacked(entity: Entity, rest: number) {
+    attacking(entity: Entity, rest: number) {
         this.hitStop = BH.config.hitStop;
         this.attackRest.set(entity, Math.floor(rest / 2));
     }
@@ -188,7 +188,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         (Object.keys(this.events) as Array<keyof Event>).forEach((event) => {
             this.events[event].forEach((data) => {
                 const stateHandler = this.state?.[event];
-                console.log(event);
                 if (stateHandler) {
                     stateHandler?.(data as any);
                 } else {
@@ -228,7 +227,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         }
         // TODO: care about infinite loops
         while (this.next.frame) {
-            const test = this.next.frame;
             const translatedFrame = this.translateFrame(this.next.frame);
             this.next._frame = 0;
 
@@ -239,7 +237,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             const previousFrame = this.frame;
             const previousFrameData = this.frameData;
             const nextFrameData = this.frames[translatedFrame];
-            console.log(test, previousFrame, translatedFrame, nextFrameData);
             const changedState = nextFrameData.state !== previousFrameData.state;
 
             if (nextFrameData.dvx) {

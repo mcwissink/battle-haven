@@ -94,6 +94,22 @@ const buildCustomFrames = (rollingPics: number[]) => ({
 });
 
 export const modifyData = (data: any) => {
+    const modifyFrames = (frames: number[], mod: (frameData: any) => void) => {
+        frames.forEach((frame) => {
+            if (data.frame[frame]) {
+                mod(data.frame[frame])
+            }
+        });
+    }
+
+    // Fix davis and dennis ball
+    modifyFrames([30], (frameData) => {
+        if (frameData.pic === 42) {
+            frameData.pic = 4;
+        }
+    });
+
+    // Character mods
     if (data.bmp.name) {
         const rollingPics = new Array(4).fill(102).map((v, i) => data.frame[v + i].pic);
         data.frame = {
@@ -103,13 +119,6 @@ export const modifyData = (data: any) => {
 
         data.bmp.walking_speedz = 7;
 
-        const modifyFrames = (frames: number[], mod: (frameData: any) => void) => {
-            frames.forEach((frame) => {
-                if (data.frame[frame]) {
-                    mod(data.frame[frame])
-                }
-            });
-        }
 
         // Mod woody teleport to see animation
         // modifyFrames(new Array(28).fill(275).map((v, i) => v + i), (frameData) => {

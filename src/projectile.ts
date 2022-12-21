@@ -1,7 +1,6 @@
 import { SpawnTask } from './battle-haven';
-import { EntityData } from './data-loader';
+import { animation, EntityData } from './data-loader';
 import { Entity } from "./entity";
-import { BH } from './main';
 import { Mechanics, Rectangle } from './mechanics';
 import { Sprite } from './sprite';
 
@@ -30,7 +29,7 @@ export class Projectile extends Entity {
             {
                 default: {},
                 3000: {
-                    attacked: () => {
+                    attacking: () => {
                         this.next.setFrame(20);
                         this.mechanics.velocity[0] = 0;
                         this.mechanics.velocity[1] = 0;
@@ -39,18 +38,14 @@ export class Projectile extends Entity {
                         this.mechanics.velocity[0] = 0;
                         this.next.setFrame(20);
                     },
-                    hit: ({ entity }) => {
-                        BH.spawn({
-                            x: 0,
-                            y: 0,
-                            action: 0,
-                            dvx: 0,
-                            dvy: 0,
-                            oid: this.spawnTask.opoint.oid,
-                            facing: 0,
-                        }, entity);
-                        this.direction = this.direction * -1;
-                        this.next.setFrame(1000);
+                    attacked: ({ entity }) => {
+                        this.mechanics.velocity[0] = 0;
+                        if (entity.type === 'character') {
+                            this.parent = entity;
+                            this.next.setFrame(animation.rebounding);
+                        } else {
+                            this.next.setFrame(20);
+                        }
                     },
                     killed: () => this.next.setFrame(this.frameData.hit_d),
                     update: () => {
@@ -80,6 +75,6 @@ export class Projectile extends Entity {
     }
 
     canAttack(entity: Entity) {
-        return super.canAttack(entity) && !entity.frameData.itr?.some(itr => itr.kind === 0);
+        return super.canAttack(entity) && !(entity.type === 'character' && entity.frameData.itr?.some(itr => itr.kind === 0));
     }
 }

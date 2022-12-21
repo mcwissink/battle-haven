@@ -44,7 +44,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             this.catching.next.direction = this.direction * -1;
         }
 
-        const hit: EventHandlers['hit'] = ({ dvx, dvy: dvyBase = 0, effect, injury }) => {
+        const hit: EventHandlers['attacked'] = ({ dvx, dvy: dvyBase = 0, effect, injury }) => {
             const dvy = (this.frame >= 223 && this.frame <= 226 ? -10 : dvyBase);
             this.health -= injury
             this.hitStop = BH.config.hitStop * 2;
@@ -81,7 +81,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             {
                 default: {
                     killed: () => this.next.setFrame(1000),
-                    hit,
+                    attacked: hit,
                     land,
                 },
                 [State.attacks]: {
@@ -100,13 +100,13 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         this.mechanics.force(this.data.data.bmp.dash_distance * this.direction);
                         this.mechanics.velocity[1] = this.data.data.bmp.dash_height * 0.5;
                     },
-                    attacked: () => {
+                    attacking: () => {
                         this.next.setFrame(animation.double_jump);
                     },
                 },
                 [State.ice]: {
                     land: noop,
-                    hit: ({ effect, ...data }) => {
+                    attacked: ({ effect, ...data }) => {
                         hit(data);
                         fall()
                     },
@@ -233,7 +233,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.defend]: {
-                    hit: ({ dvx, dvy }) => {
+                    attacked: ({ dvx, dvy }) => {
                         this.hitStop = BH.config.hitStop * 2;
                         if (dvx) {
                             this.mechanics.force(dvx * 0.4);
@@ -261,7 +261,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 },
                 [State.injured]: {
                     fall: () => this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2),
-                    hit: (data) => {
+                    attacked: (data) => {
                         hit(data);
                         if (this.frame < 222) {
                             this.next.setFrame(222, 1);
@@ -302,7 +302,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.caught]: {
                     noMechanics: true,
                     land: noop,
-                    hit: noop,
+                    attacked: noop,
                 },
                 [State.catching]: {
                     catching,

@@ -75,9 +75,9 @@ export class Scene {
                     if (itr) {
                         switch (itr.kind) {
                             case 0: {
-                                entityA.attacked(entityB, itr.arest || itr.vrest || 2);
-                                entityA.event('attacked', { entity: entityB });
-                                entityB.event('hit', {
+                                entityA.attacking(entityB, itr.arest || itr.vrest || 2);
+                                entityA.event('attacking', { entity: entityB });
+                                entityB.event('attacked', {
                                     ...itr,
                                     entity: entityA,
                                     dvx: itr.dvx ? itr.dvx * entityA.direction : itr.dvx,
