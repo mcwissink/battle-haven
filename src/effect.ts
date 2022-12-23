@@ -20,7 +20,6 @@ export class Effect extends Entity {
         public spawnTask: SpawnTask,
         data: EntityData,
     ) {
-        console.log('new effect');
         super(
             new Mechanics(
                 new Rectangle(10, 10),
