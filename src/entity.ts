@@ -58,6 +58,7 @@ export enum State {
     lying = 14,
     other = 15,
     burning = 18,
+    fireRunning = 19,
     crouching = 20,
     doubleJumping = 21,
     drop = 22,
@@ -267,7 +268,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
 
     stateUpdate() {
         this.processEvents();
-        this.state?.update?.();
+        (this.state?.update ?? this.states.default?.update)?.();
     }
 
     update(_dx: number) {

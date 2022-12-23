@@ -12,6 +12,8 @@ export class Projectile extends Entity {
             direction *= -1;
         }
         const [x, y] = spawnTask.parent.getFrameElementPosition(spawnTask.opoint);
+        const killed = () => this.next.setFrame(this.frameData.hit_d);
+        const update = () => this.health -= this.frameData.hit_a;
         super(
             new Mechanics(
                 new Rectangle(1, 1),
@@ -27,7 +29,10 @@ export class Projectile extends Entity {
             new Sprite(data.spriteSheet),
             data.data.frame,
             {
-                default: {},
+                default: {
+                    killed,
+                    update,
+                },
                 3000: {
                     attacking: () => {
                         this.next.setFrame(20);
@@ -47,13 +52,10 @@ export class Projectile extends Entity {
                             this.next.setFrame(20);
                         }
                     },
-                    killed: () => this.next.setFrame(this.frameData.hit_d),
-                    update: () => {
-                        this.health -= this.frameData.hit_a;
-                    }
                 },
                 3004: {
                     update: () => {
+                        update();
                         this.mechanics.velocity[0] *= 0.8;
                         this.mechanics.velocity[1] *= 0.8;
                     },

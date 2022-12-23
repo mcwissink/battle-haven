@@ -20,6 +20,9 @@ export class Scene {
     update(dx: number) {
         this.entities.forEach(entity => entity.mechanicsUpdate(dx));
         this.entities.forEach(entity => {
+            if (entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) {
+                return;
+            }
             let isGrounded = false;
             let isOverlapping = false;
             this.platforms.forEach((platform) => {

@@ -64,7 +64,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         this.next.setFrame(animation.ice, 3);
                         break;
                     case Effect.fire:
-                        this.next.setFrame(animation.fire, 3);
+                        // this.next.setFrame(animation.fire, 3);
                         break;
                 }
             }
@@ -302,6 +302,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     noMechanics: true,
                     land: noop,
                     attacked: noop,
+                },
+                [State.fireRunning]: {
+                    fall: () => this.next.setFrame(animation.airborn),
                 },
                 [State.catching]: {
                     catching,

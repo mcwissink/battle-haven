@@ -56,7 +56,7 @@ export class BattleHaven {
 
     initialize() {
         controllers.on('connect', (port) => {
-            this.scene.entities.push(new Character(port, entityData[0]));
+            this.scene.entities.push(new Character(port, entityData[4]));
         });
     }
     start() {
