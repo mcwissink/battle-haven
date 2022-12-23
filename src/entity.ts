@@ -67,34 +67,27 @@ export enum State {
 type Defaults = 999 | 0;
 
 class Transition<Frame extends number> {
-    _frame: Frame | Defaults = 0;
-    _direction = 0;
-    _priority = 0;
-    get frame(): Frame | Defaults {
-        return this._frame;
-    }
+    frame: Frame | Defaults = 0;
+    direction = 0;
+    priority = 0;
     setFrame(frame: number, priority = 0, direction?: number) {
-        if (priority >= this._priority) {
-            this._frame = frame as Frame | Defaults;
-            this._priority = priority;
+        if (priority >= this.priority) {
+            this.frame = frame as Frame | Defaults;
+            this.priority = priority;
             if (direction) {
-                this._direction = direction;
+                this.setDirectionFromValue(direction);
             }
         }
     }
 
-    set direction(direction: number) {
-        this._direction = Math.sign(direction) || this._direction;
-    }
-
-    get direction() {
-        return this._direction;
+    setDirectionFromValue(value: number) {
+        this.direction = Math.sign(value) || this.direction;
     }
 
     reset() {
-        this._priority = 0;
-        this._frame = 0;
-        this._direction = 0;
+        this.priority = 0;
+        this.frame = 0;
+        this.direction = 0;
     }
 }
 
@@ -108,7 +101,7 @@ const hitShiver: Record<number, number> = {
 export class Entity<Frames extends Record<number, FrameData> = any, Frame extends number = any> {
     type = 'entity';
     parent?: Entity;
-    _direction = 1;
+    direction = 1;
     frame: Frame | 0 = 0;
     wait = 1;
     next = new Transition<Frame>();
@@ -143,14 +136,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             this.direction = this.direction * -1;
         }
         return frameAbs === 999 ? 0 : frameAbs;
-    }
-
-    get direction() {
-        return this._direction;
-    }
-
-    set direction(direction: number) {
-        this._direction = Math.sign(direction) || this._direction;
     }
 
     get state() {
@@ -228,7 +213,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         // TODO: care about infinite loops
         while (this.next.frame) {
             const translatedFrame = this.translateFrame(this.next.frame);
-            this.next._frame = 0;
+            this.next.frame = 0;
 
             if (translatedFrame === 1000) {
                 BH.destroy(this);

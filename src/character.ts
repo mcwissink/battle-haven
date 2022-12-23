@@ -128,7 +128,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         hit_ja: animation.walking,
                     },
                     update: () => {
-                        this.next.direction = this.controller.stickDirectionX;
+                        this.next.setDirectionFromValue(this.controller.stickDirectionX);
                         if (this.controller.stickX) {
                             this.next.setFrame(animation.running);
                         }
@@ -147,7 +147,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     nextFrame: () => this.animator.oscillate(5, 8),
                     update: () => {
                         this.mechanics.force(this.direction * this.data.data.bmp.walking_speed);
-                        this.next.direction = this.controller.stickDirectionX;
+                        this.next.setDirectionFromValue(this.controller.stickDirectionX)
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.standing);
                         }
@@ -164,7 +164,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     nextFrame: () => this.animator.oscillate(9, 11),
                     update: () => {
                         this.mechanics.force(this.direction * this.data.data.bmp.running_speed);
-                        this.next.direction = this.controller.stickDirectionX;
+                        this.next.setDirectionFromValue(this.controller.stickDirectionX)
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.stop_running);
                         }
@@ -208,7 +208,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                     update: () => {
                         airMove();
-                        this.next.direction = Math.sign(this.mechanics.velocity[0]);
+                        this.next.setDirectionFromValue(Math.sign(this.mechanics.velocity[0]))
                     },
                 },
                 [State.dash]: {
@@ -246,14 +246,14 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         }
                     },
                     update: () => {
-                        this.next.direction = this.controller.stickDirectionX;
+                        this.next.setDirectionFromValue(this.controller.stickDirectionX)
                     },
                 },
                 [State.crouching]: {
                     fall: () => this.next.setFrame(animation.airborn),
                     update: () => {
                         this.mechanics.velocity[0] *= 0.8;
-                        this.next.direction = this.controller.stickDirectionX;
+                        this.next.setDirectionFromValue(this.controller.stickDirectionX)
                     },
                 },
                 [State.lying]: {
