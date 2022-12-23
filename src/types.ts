@@ -59,6 +59,7 @@ export type CatchPoint = Point & {
 }
 
 export type ObjectPoint = Point & {
+    kind: 1,
     action: number;
     dvx: number;
     dvy: number;

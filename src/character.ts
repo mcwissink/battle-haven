@@ -13,7 +13,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
     animator = new Animator();
     catching: Entity | null = null;
     constructor(public port: number, private data: EntityData) {
-        // TODO: Probably should use classes with overrides
         const doubleJump = () => {
             if (this.controller.stickY > 0) {
                 return animation.drop

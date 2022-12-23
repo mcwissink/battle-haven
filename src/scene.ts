@@ -1,12 +1,13 @@
-import { entityData } from './data-loader';
 import { Effect } from './effect';
 import { Entity } from './entity';
+import { BH } from './main';
 import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mechanics';
 import { Interaction } from './types';
 
 export class Scene {
     entities: Entity[] = [];
     effects: Effect[] = [];
+    effectsPool: Effect[] = [];
     platforms = [
         new Mechanics(new Rectangle(200, 30), { position: [500, 245], passThrough: UP_VECTOR }),
         new Mechanics(new Rectangle(200, 30), { position: [800, 150], passThrough: UP_VECTOR }),
@@ -87,15 +88,16 @@ export class Scene {
                                 switch (effect) {
                                     case 0:
                                     case 4: {
-                                        this.effects.push(
-                                            new Effect(
-                                                [
-                                                    (entityA.mechanics.position[0] + entityB.mechanics.position[0]) * 0.5,
-                                                    (entityA.mechanics.position[1] + entityB.mechanics.position[1]) * 0.5,
-                                                ],
-                                                entityData[300]
-                                            )
-                                        );
+                                        BH.spawn({
+                                            kind: 1,
+                                            x: (entityB.mechanics.position[0] - entityA.mechanics.position[0]) * 0.5,
+                                            y: (entityB.mechanics.position[1] - entityA.mechanics.position[1]) * 0.5 - 10,
+                                            action: 0,
+                                            dvx: 0,
+                                            dvy: 0,
+                                            oid: 300,
+                                            facing: entityA.direction,
+                                        }, entityA);
                                     }
                                 }
                                 break;

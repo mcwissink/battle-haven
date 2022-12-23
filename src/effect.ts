@@ -1,6 +1,7 @@
+import { SpawnTask } from "./battle-haven";
 import { EntityData } from "./data-loader";
 import { Entity } from "./entity";
-import { Mechanics, Rectangle, Vector } from "./mechanics";
+import { Mechanics, Rectangle } from "./mechanics";
 import { Sprite } from "./sprite";
 
 interface EffectFrameData {
@@ -11,19 +12,19 @@ interface EffectFrameData {
     centery: number;
 }
 
-type EffectFrames = Record<number, EffectFrameData>;
+export type EffectFrames = Record<number, EffectFrameData>;
 
 export class Effect extends Entity {
     type = 'effect';
     constructor(
-        public position: Vector,
+        public spawnTask: SpawnTask,
         data: EntityData,
     ) {
+        console.log('new effect');
         super(
             new Mechanics(
                 new Rectangle(10, 10),
                 {
-                    position,
                     mass: 0,
                 }
             ),
@@ -34,7 +35,17 @@ export class Effect extends Entity {
                 default: {}
             }
         );
-        // TODO: choose variant (0 or 10)
-        this.frame = 10;
+        this.reset(spawnTask);
+    }
+
+    reset(spawnTask: SpawnTask) {
+        this.spawnTask = spawnTask;
+        const { x, y } = spawnTask.opoint;
+        this.mechanics.position = [
+            spawnTask.parent.mechanics.position[0] + x,
+            spawnTask.parent.mechanics.position[1] + y,
+        ];
+        this.frame = Math.random() > 0.5 ? 0 : 10;
+        this.wait = 1;
     }
 }
