@@ -6,6 +6,7 @@ import { dennis } from './data/dennis';
 import { dennisBall } from './data/dennis-ball';
 import { dennisChase } from './data/dennis-chase';
 import { effect0 } from './data/effect-0';
+import { effect1 } from './data/effect-1';
 import { firen } from './data/firen';
 import { firenBall } from './data/firen-ball';
 import { firenFlame } from './data/firen-flame';
@@ -42,6 +43,7 @@ const entityDataMapping: Record<string, any> = {
     212: freezeColumn,
     215: dennisChase,
     300: effect0,
+    301: effect1,
 }
 
 export interface EntityData {

@@ -34,10 +34,12 @@ export class Effect extends Entity {
                 default: {}
             }
         );
-        this.reset(spawnTask);
+        this.reset(spawnTask, data);
     }
 
-    reset(spawnTask: SpawnTask) {
+    reset(spawnTask: SpawnTask, data: EntityData) {
+        this.frames = data.data.frame;
+        this.sprite.spriteSheet = data.spriteSheet;
         this.spawnTask = spawnTask;
         const { x, y } = spawnTask.opoint;
         this.mechanics.position = [

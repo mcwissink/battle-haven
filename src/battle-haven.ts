@@ -56,7 +56,7 @@ export class BattleHaven {
 
     initialize() {
         controllers.on('connect', (port) => {
-            this.scene.entities.push(new Character(port, entityData[4]));
+            this.scene.entities.push(new Character(port, entityData[3]));
         });
     }
     start() {
@@ -90,7 +90,7 @@ export class BattleHaven {
                     if (entity) {
                         if (task.data.opoint.oid >= 300) {
                             const effect = this.scene.effectsPool.pop() ?? new Effect(task.data, entity);
-                            effect.reset(task.data);
+                            effect.reset(task.data, entity);
                             this.scene.effects.push(effect);
                         } else {
                             this.scene.entities.push(new Projectile(task.data, entity))

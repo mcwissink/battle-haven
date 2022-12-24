@@ -88,19 +88,35 @@ export class Scene {
                                 });
 
                                 const effect = itr.effect ?? 0;
+                                const x = (entityB.mechanics.position[0] - entityA.mechanics.position[0]);
+                                const y = (entityB.mechanics.position[1] - entityA.mechanics.position[1]) - 10;
                                 switch (effect) {
                                     case 0:
                                     case 4: {
                                         BH.spawn({
                                             kind: 1,
-                                            x: (entityB.mechanics.position[0] - entityA.mechanics.position[0]) * 0.5,
-                                            y: (entityB.mechanics.position[1] - entityA.mechanics.position[1]) * 0.5 - 10,
+                                            x,
+                                            y,
                                             action: 0,
                                             dvx: 0,
                                             dvy: 0,
                                             oid: 300,
                                             facing: entityA.direction,
                                         }, entityA);
+                                        break;
+                                    }
+                                    case 1: {
+                                        BH.spawn({
+                                            kind: 1,
+                                            x,
+                                            y,
+                                            action: 0,
+                                            dvx: 0,
+                                            dvy: 0,
+                                            oid: 301,
+                                            facing: entityA.direction,
+                                        }, entityA);
+                                        break;
                                     }
                                 }
                                 break;
