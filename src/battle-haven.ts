@@ -1,8 +1,8 @@
-import { Character } from './character';
 import { controllers } from './controller';
 import { entityData } from './data-loader';
 import { Effect } from './effect';
 import { Entity } from './entity';
+import { Menu } from './menu';
 import { Projectile } from './projectile';
 import { Scene } from './scene';
 import { ObjectPoint } from './types';
@@ -34,14 +34,17 @@ export class BattleHaven {
     previousTime = 0;
     ctx: CanvasRenderingContext2D;
     scene = new Scene();
+    showMenu = true;
+    public menu = new Menu([]);
     tasks: Task[] = [];
     debug = {
         hitbox: false,
         mechanics: false,
     }
     combo: Record<string, (() => void) | undefined> = {
-        debug_hitbox: () => this.debug.hitbox = !this.debug.hitbox,
-        debug_mechanics: () => this.debug.mechanics = !this.debug.mechanics,
+        // debug_hitbox: () => this.debug.hitbox = !this.debug.hitbox,
+        // debug_mechanics: () => this.debug.mechanics = !this.debug.mechanics,
+        toggle_menu: () => this.showMenu = !this.showMenu,
     }
     constructor(
         private canvas: HTMLCanvasElement,
@@ -54,26 +57,38 @@ export class BattleHaven {
         this.ctx = ctx;
     }
 
-    initialize() {
-        controllers.on('connect', (port) => {
-            this.scene.entities.push(new Character(port, entityData[3]));
-        });
-    }
     start() {
-        this.initialize();
+        // controllers.on('connect', (port) => {
+        //     this.scene.entities.push(new Character(port, entityData[5]));
+        // });
         window.requestAnimationFrame(this.update);
     }
 
     wait = 2;
     update: FrameRequestCallback = (time) => {
-        controllers.ports.forEach((port) => {
-            port?.update();
+        controllers.ports.forEach((controller) => {
+            controller.update();
+            controller.processCombo(combo => {
+                const systemCombo = this.combo[combo.name];
+                if (systemCombo) {
+                    systemCombo();
+                    return true;
+                }
+            });
         });
         const dx = time - this.previousTime;
         if (!--this.wait) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            this.scene.update(dx);
+
+            if (!this.showMenu) {
+                this.scene.update(dx);
+            }
             this.scene.render(this.ctx);
+            if (this.showMenu) {
+                this.menu.update();
+                this.menu.render(this.ctx);
+            }
+
             this.processTasks();
             this.wait = 2;
         }

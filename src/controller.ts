@@ -1,8 +1,11 @@
 const combos = [
-    // { sequence: ['up'], name: 'hit_U', },
-    // { sequence: ['down'], name: 'hit_D', },
-    // { sequence: ['left'], name: 'hit_F', },
-    // { sequence: ['right'], name: 'hit_F', },
+    // TODO: Remove directional combos since they cause buffering issues
+    // Temporarily necessary for the menu
+    { sequence: ['up'], name: 'hit_U', },
+    { sequence: ['down'], name: 'hit_D', },
+    { sequence: ['left'], name: 'hit_F', },
+    { sequence: ['right'], name: 'hit_F', },
+
     { sequence: ['attack'], name: 'hit_a', },
     { sequence: ['jump'], name: 'hit_j', },
     { sequence: ['defend'], name: 'hit_d', },
@@ -19,6 +22,7 @@ const combos = [
     { sequence: ['defend', 'jump', 'attack'], name: 'hit_ja', },
     { sequence: ['up', 'up', 'attack'], name: 'debug_hitbox', },
     { sequence: ['up', 'up', 'jump'], name: 'debug_mechanics', },
+    { sequence: ['menu'], name: 'toggle_menu', },
 ];
 
 export class CircleBuffer<T> {
@@ -47,7 +51,7 @@ export class CircleBuffer<T> {
     }
 }
 
-type ComboInput = 'left' | 'right' | 'up' | 'down' | 'attack' | 'jump' | 'defend' | null;
+type ComboInput = 'left' | 'right' | 'up' | 'down' | 'attack' | 'jump' | 'defend' | 'menu' | null;
 
 export interface ControllerState {
     stickX: number;
@@ -55,7 +59,13 @@ export interface ControllerState {
     jump: number;
     defend: number;
     attack: number;
+    menu: number;
 }
+
+type Combo = {
+    name: string
+    direction: number
+};
 
 export class Controller {
     stickX = 0;
@@ -63,6 +73,7 @@ export class Controller {
     jump = 0;
     defend = 0;
     attack = 0;
+    menu = 0;
 
     get stickDirectionX() {
         return Math.sign(this.stickX);
@@ -72,10 +83,16 @@ export class Controller {
         return Math.sign(this.stickY);
     }
 
-    combo: {
-        name: string
-        direction: number
-    } | null = null;
+    combo: Combo | null = null;
+
+    processCombo(callback: (combo: Combo) => boolean | void) {
+        if (this.combo) {
+            const isConsumed = callback(this.combo);
+            if (isConsumed) {
+                this.combo = null;
+            }
+        }
+    }
 
     buffer = new CircleBuffer<ComboInput>(3, null);
 
@@ -115,6 +132,11 @@ export class Controller {
             case 'jump':
                 if (magnitude && !this.jump) {
                     return 'jump'
+                }
+                break;
+            case 'menu':
+                if (magnitude && !this.menu) {
+                    return 'menu'
                 }
                 break;
         }
@@ -232,6 +254,7 @@ const mappings = [
         z: 'defend',
         x: 'jump',
         c: 'attack',
+        Escape: 'menu',
     },
     {
         i: 'up',
@@ -244,7 +267,7 @@ const mappings = [
     }
 ] as const;
 
-type Port = Controller | null;
+export type Port = Controller;
 
 interface Listeners {
     connect: Array<(port: number) => void>
@@ -253,7 +276,12 @@ interface Listeners {
 type Flat<T> = T extends Array<infer K> ? K : T;
 
 class ControllerManager {
-    ports: [Port, Port, Port, Port] = [null, null, null, null];
+    ports: [Port, Port, Port, Port] = [
+        ControllerManager.dummy,
+        ControllerManager.dummy,
+        ControllerManager.dummy,
+        ControllerManager.dummy,
+    ];
     keyboardControllers: KeyboardController[] = [];
     gamepads: Record<number, number> = {};
     listeners: Listeners = {
@@ -298,7 +326,7 @@ class ControllerManager {
     }
 
     connect(controller: Controller) {
-        const port = this.ports.indexOf(null);
+        const port = this.ports.indexOf(ControllerManager.dummy);
         if (port !== -1) {
             this.ports[port] = controller;
             this.listeners.connect.forEach((callback) => callback(port));
@@ -308,7 +336,7 @@ class ControllerManager {
     }
 
     disconnect(port: number) {
-        this.ports[port] = null;
+        this.ports[port] = ControllerManager.dummy;
     }
 }
 

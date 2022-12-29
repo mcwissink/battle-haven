@@ -187,22 +187,15 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     processFrame() {
         const state = this.state;
 
-        const combo = this.controller.combo;
-        if (combo) {
+        this.controller.processCombo(combo => {
             const comboName = combo.name as Combo;
             const comboHandler = (this.frameData[comboName] || state?.combo?.[comboName]);
             const frameFromCombo = typeof comboHandler === 'function' ? comboHandler() : comboHandler;
             if (frameFromCombo) {
                 this.next.setFrame(frameFromCombo, 0, combo.direction);
-                // Reset combo since it was consumed
-                this.controller.combo = null;
+                return true;
             }
-            const systemCombo = BH.combo[comboName];
-            if (systemCombo) {
-                systemCombo();
-                this.controller.combo = null;
-            }
-        }
+        });
 
         if (!this.hitStop && !this.next.frame && !--this.wait) {
             this.next.setFrame(state?.nextFrame ? state.nextFrame() : this.frameData.next as Frame);
