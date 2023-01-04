@@ -21,15 +21,30 @@ const selectCharacter = (oid: number) => ({ port }: { port: number }) => {
 };
 
 BH.start();
-BH.menu = new Menu([
-    { text: 'woody', select: selectCharacter(0) },
-    { text: 'davis', select: selectCharacter(1) },
-    { text: 'louis', select: selectCharacter(2) },
-    { text: 'deep', select: selectCharacter(3) },
-    { text: 'freeze', select: selectCharacter(4) },
-    { text: 'firen', select: selectCharacter(5) },
-    { text: 'rudolf', select: selectCharacter(6) },
-    { text: 'dennis', select: selectCharacter(7) },
-]);
+BH.menu = new Menu({
+    text: 'main menu',
+    entries: [
+        {
+            text: 'select character',
+            entries: [
+                { text: 'woody', click: selectCharacter(0) },
+                { text: 'davis', click: selectCharacter(1) },
+                { text: 'louis', click: selectCharacter(2) },
+                { text: 'deep', click: selectCharacter(3) },
+                { text: 'freeze', click: selectCharacter(4) },
+                { text: 'firen', click: selectCharacter(5) },
+                { text: 'rudolf', click: selectCharacter(6) },
+                { text: 'dennis', click: selectCharacter(7) },
+            ],
+        },
+        {
+            text: 'settings',
+            entries: [
+                { text: 'debug hitbox', click: BH.debugHitbox },
+                { text: 'debug mechanics', click: BH.debugMechanics },
+            ],
+        },
+    ]
+});
 
 

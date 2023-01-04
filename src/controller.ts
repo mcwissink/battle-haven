@@ -20,8 +20,8 @@ const combos = [
     { sequence: ['defend', 'down', 'attack'], name: 'hit_Da', },
     { sequence: ['defend', 'down', 'jump'], name: 'hit_Dj', },
     { sequence: ['defend', 'jump', 'attack'], name: 'hit_ja', },
-    { sequence: ['up', 'up', 'attack'], name: 'debug_hitbox', },
-    { sequence: ['up', 'up', 'jump'], name: 'debug_mechanics', },
+    // { sequence: ['up', 'up', 'attack'], name: 'debug_hitbox', },
+    // { sequence: ['up', 'up', 'jump'], name: 'debug_mechanics', },
     { sequence: ['menu'], name: 'toggle_menu', },
 ];
 

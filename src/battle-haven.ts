@@ -42,8 +42,8 @@ export class BattleHaven {
         mechanics: false,
     }
     combo: Record<string, (() => void) | undefined> = {
-        // debug_hitbox: () => this.debug.hitbox = !this.debug.hitbox,
-        // debug_mechanics: () => this.debug.mechanics = !this.debug.mechanics,
+        // debug_hitbox: () => this.debugHitbox,
+        // debug_mechanics: () => this.debugMechanic,
         toggle_menu: () => this.showMenu = !this.showMenu,
     }
     constructor(
@@ -151,5 +151,13 @@ export class BattleHaven {
                 entity
             }
         });
+    }
+
+    debugHitbox = () => {
+        this.debug.hitbox = !this.debug.hitbox
+    }
+
+    debugMechanics = () => {
+        this.debug.mechanics = !this.debug.mechanics
     }
 }
