@@ -59,6 +59,7 @@ export const gameOverMenu = {
                     if (existingCharacter && existingCharacter instanceof Character) {
                         BH.destroy(existingCharacter);
                         BH.scene.entities.push(new Character(port, existingCharacter.data));
+                        BH.openMenu(mainMenu);
                         BH.showMenu = false;
                     }
                 });
