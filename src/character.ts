@@ -1,7 +1,7 @@
 import { Animator } from './animator';
 import { animation, EntityData } from './data-loader';
 import { Effect, Entity, EventHandlers, State } from "./entity";
-import { BH } from './main';
+import { BH, gameOverMenu } from './main';
 import { Diamond, Mechanics } from './mechanics';
 import { Sprite } from './sprite';
 
@@ -12,7 +12,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
     type = 'character';
     animator = new Animator();
     catching: Entity | null = null;
-    constructor(public port: number, private data: EntityData) {
+    constructor(public port: number, public data: EntityData) {
         const doubleJump = () => {
             if (this.controller.stickY > 0) {
                 return animation.drop
@@ -79,7 +79,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             data.data.frame,
             {
                 default: {
-                    killed: () => this.next.setFrame(1000),
+                    killed: () => {
+                        BH.openMenu(gameOverMenu);
+                    },
                     attacked: hit,
                     land,
                 },

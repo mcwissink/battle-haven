@@ -6,7 +6,7 @@ type EntryState = {
     index: number;
 }
 
-interface Entries {
+export interface Entries {
     text: string;
     entries?: Array<Entries>;
     click?: (context: { port: number }) => void;
@@ -23,6 +23,11 @@ export class Menu {
                 port,
             });
         });
+    }
+    setEntries(entries: Entries) {
+        this.entries = entries;
+        this.globalCursor = [];
+        this.cursors.forEach(cursor => cursor.index = 0);
     }
     traverseEntries(cursor: EntryState[]) {
         return cursor.reduce<Entries>((acc, c) => {

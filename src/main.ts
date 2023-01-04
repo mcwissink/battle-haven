@@ -1,7 +1,7 @@
 import { BattleHaven } from './battle-haven';
 import { Character } from './character';
+import { controllers } from './controller';
 import { entityData } from './data-loader';
-import { Menu } from './menu';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 export const BH = new BattleHaven(canvas, {
@@ -20,8 +20,7 @@ const selectCharacter = (oid: number) => ({ port }: { port: number }) => {
     BH.scene.entities.push(new Character(port, entityData[oid]));
 };
 
-BH.start();
-BH.menu = new Menu({
+export const mainMenu = {
     text: 'main menu',
     entries: [
         {
@@ -45,6 +44,31 @@ BH.menu = new Menu({
             ],
         },
     ]
-});
+};
+
+
+
+export const gameOverMenu = {
+    text: 'game over',
+    entries: [
+        {
+            text: 'rematch',
+            click: () => {
+                controllers.ports.forEach((_, port) => {
+                    const existingCharacter = BH.scene.entities.find((entity) => entity.port === port);
+                    if (existingCharacter && existingCharacter instanceof Character) {
+                        BH.destroy(existingCharacter);
+                        BH.scene.entities.push(new Character(port, existingCharacter.data));
+                        BH.showMenu = false;
+                    }
+                });
+            }
+        },
+        { text: 'main menu', click: () => BH.openMenu(mainMenu) }
+    ],
+}
+
+BH.start();
+BH.openMenu(mainMenu);
 
 

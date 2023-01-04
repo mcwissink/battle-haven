@@ -2,7 +2,7 @@ import { controllers } from './controller';
 import { entityData } from './data-loader';
 import { Effect } from './effect';
 import { Entity } from './entity';
-import { Menu } from './menu';
+import { Entries, Menu } from './menu';
 import { Projectile } from './projectile';
 import { Scene } from './scene';
 import { ObjectPoint } from './types';
@@ -34,16 +34,14 @@ export class BattleHaven {
     previousTime = 0;
     ctx: CanvasRenderingContext2D;
     scene = new Scene();
-    showMenu = true;
-    public menu = new Menu([]);
+    showMenu = false;
+    public menu = new Menu({ text: '', entries: [] });
     tasks: Task[] = [];
     debug = {
         hitbox: false,
         mechanics: false,
     }
     combo: Record<string, (() => void) | undefined> = {
-        // debug_hitbox: () => this.debugHitbox,
-        // debug_mechanics: () => this.debugMechanic,
         toggle_menu: () => this.showMenu = !this.showMenu,
     }
     constructor(
@@ -55,6 +53,11 @@ export class BattleHaven {
             throw new Error('Failed to get context');
         }
         this.ctx = ctx;
+    }
+
+    openMenu(entries: Entries) {
+        this.menu.setEntries(entries);
+        this.showMenu = true;
     }
 
     start() {
