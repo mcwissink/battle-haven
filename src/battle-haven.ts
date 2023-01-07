@@ -157,11 +157,7 @@ export class BattleHaven {
         });
     }
 
-    debugHitbox = () => {
-        this.debug.hitbox = !this.debug.hitbox
-    }
-
-    debugMechanics = () => {
-        this.debug.mechanics = !this.debug.mechanics
+    toggleDebug = (key: keyof typeof this.debug) => {
+        this.debug[key] = !this.debug[key];
     }
 }

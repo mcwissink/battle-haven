@@ -161,6 +161,30 @@ export class Scene {
                 ctx.fillRect(140 + padding, padding, entity.health / BH.config.health * (400 - padding2), 28 - padding2);
                 ctx.drawImage(entity.data.face, 10, 10);
                 ctx.restore();
+
+                if (BH.debug.stats) {
+                    ctx.save();
+                    if (entity.port === 1) {
+                        ctx.translate(1160, 0);
+                    }
+                    ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+                    ctx.fillRect(140, 28, 160, 100);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+                    const stats = {
+                        x: entity.mechanics.position[0].toFixed(2),
+                        y: entity.mechanics.position[1].toFixed(2),
+                        grounded: String(Number(entity.mechanics.isGrounded)),
+                        state: String(entity.frameData.state),
+                    };
+                    Object.entries(stats).forEach(([label, value], index) => {
+                        ctx.fillText(
+                            `${label}: ${value.padStart(10 - label.length, ' ')}`,
+                            148,
+                            48 + index * 20,
+                        );
+                    });
+                    ctx.restore();
+                }
             }
         });
         this.effects.forEach(effect => effect.render(ctx));

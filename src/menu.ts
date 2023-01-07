@@ -80,12 +80,11 @@ export class Menu {
         });
     }
     render(ctx: CanvasRenderingContext2D) {
+        ctx.font = '20px mono';
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fillRect(0, 0, 1600, 900);
 
-        ctx.font = '20px mono';
-
-        ctx.fillStyle = 'rgba(0, 0, 0)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
         ctx.fillRect(
             0,
             ENTRY_HEIGHT,

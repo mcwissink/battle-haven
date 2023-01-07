@@ -38,10 +38,10 @@ export const mainMenu = {
         },
         {
             text: 'settings',
-            entries: [
-                { text: 'debug hitbox', click: BH.debugHitbox },
-                { text: 'debug mechanics', click: BH.debugMechanics },
-            ],
+            entries: Object.keys(BH.debug).map((key) => ({
+                text: `debug ${key}`,
+                click: () => BH.toggleDebug(key as any)
+            })),
         },
     ]
 };

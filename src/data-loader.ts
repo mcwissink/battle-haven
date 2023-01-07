@@ -122,8 +122,8 @@ const loadData = (data: any): EntityData => {
 
 export const entityData: Record<string, EntityData> = {};
 
-Object.keys(entityDataMapping).forEach((key) => {
-    entityData[key] = loadData(entityDataMapping[key]);
+Object.entries(entityDataMapping).forEach(([key, data]) => {
+    entityData[key] = loadData(data);
 });
 
 

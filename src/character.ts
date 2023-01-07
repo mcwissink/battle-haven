@@ -76,7 +76,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         const noop = () => { };
 
         super(
-            new Mechanics(new Diamond(20, 40), { position: [350, 100] }),
+            new Mechanics(new Diamond(20, 40), { position: [port === 1 ? 350 : 1250, 100] }),
             new Diamond(10, 42),
             new Sprite(data.spriteSheet),
             data.data.frame,

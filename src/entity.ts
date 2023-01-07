@@ -111,6 +111,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     attackRest: Map<Entity, number> = new Map();
     hitStop = 0;
     health = BH.config.health;
+    isKilled = false;
     events: EventQueue = {
         collide: [],
         fall: [],
@@ -269,6 +270,10 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     update(_dx: number) {
         this.processFrame();
         this.sprite.setFrame(this.frameData.pic, this.direction);
+        if (this.health <= 0 && !this.isKilled) {
+            this.isKilled = true;
+            this.event('killed');
+        }
     }
 
     render(ctx: CanvasRenderingContext2D) {

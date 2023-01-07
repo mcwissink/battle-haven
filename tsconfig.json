@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "libs": ["esnext"],
         "target": "es2017",
         "strict": true
     }
