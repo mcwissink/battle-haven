@@ -79,11 +79,13 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             data.data.frame,
             {
                 default: {
-                    killed: () => {
-                        BH.openMenu(gameOverMenu);
-                    },
-                    attacked: hit,
-                    land,
+                    event: {
+                        killed: () => {
+                            BH.openMenu(gameOverMenu);
+                        },
+                        attacked: hit,
+                        land,
+                    }
                 },
                 [State.attacks]: {
                     combo: {
@@ -96,29 +98,35 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     }
                 },
                 [State.dashGo]: {
-                    enter: () => {
-                        this.mechanics.isGrounded = false;
-                        this.mechanics.force(this.data.data.bmp.dash_distance * this.direction);
-                        this.mechanics.velocity[1] = this.data.data.bmp.dash_height * 0.5;
-                    },
-                    attacking: () => {
-                        this.next.setFrame(animation.double_jump);
-                    },
+                    event: {
+                        enter: () => {
+                            this.mechanics.isGrounded = false;
+                            this.mechanics.force(this.data.data.bmp.dash_distance * this.direction);
+                            this.mechanics.velocity[1] = this.data.data.bmp.dash_height * 0.5;
+                        },
+                        attacking: () => {
+                            this.next.setFrame(animation.double_jump);
+                        },
+                    }
                 },
                 [State.ice]: {
-                    land: noop,
-                    attacked: ({ effect, ...data }) => {
-                        hit(data);
-                        fall()
-                    },
+                    event: {
+                        land: noop,
+                        attacked: ({ effect, ...data }) => {
+                            hit(data);
+                            fall()
+                        },
+                    }
                 },
                 [State.standing]: {
-                    enter: () => {
-                        if (!this.mechanics.isGrounded) {
-                            this.next.setFrame(animation.airborn);
-                        }
+                    event: {
+                        fall: () => this.next.setFrame(animation.airborn),
+                        enter: () => {
+                            if (!this.mechanics.isGrounded) {
+                                this.next.setFrame(animation.airborn);
+                            }
+                        },
                     },
-                    fall: () => this.next.setFrame(animation.airborn),
                     combo: {
                         hit_a: animation.punch,
                         hit_d: animation.defend,
@@ -135,8 +143,10 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.walking]: {
-                    fall: () => this.next.setFrame(animation.airborn, 1),
-                    catching,
+                    event: {
+                        fall: () => this.next.setFrame(animation.airborn, 1),
+                        catching,
+                    },
                     combo: {
                         hit_a: animation.punch,
                         hit_d: animation.defend,
@@ -153,8 +163,10 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.running]: {
-                    enter: () => this.controller.clearComboBuffer(),
-                    fall: () => this.next.setFrame(animation.airborn, 1),
+                    event: {
+                        enter: () => this.controller.clearComboBuffer(),
+                        fall: () => this.next.setFrame(animation.airborn, 1),
+                    },
                     combo: {
                         hit_a: 85,
                         hit_d: 102,
@@ -170,11 +182,13 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.jumping]: {
-                    enter: (previousFrame) => {
-                        if (previousFrame === 211) {
-                            this.mechanics.force(this.data.data.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || this.controller.stickDirectionX));
-                            this.mechanics.velocity[1] = this.data.data.bmp.jump_height;
-                        }
+                    event: {
+                        enter: (previousFrame) => {
+                            if (previousFrame === 211) {
+                                this.mechanics.force(this.data.data.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || this.controller.stickDirectionX));
+                                this.mechanics.velocity[1] = this.data.data.bmp.jump_height;
+                            }
+                        },
                     },
                     combo: {
                         hit_d: animation.drop,
@@ -184,11 +198,13 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     update: airMove,
                 },
                 [State.doubleJumping]: {
-                    enter: () => {
-                        const direction = this.controller.stickDirectionX;
-                        const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
-                        this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
-                        this.mechanics.velocity[1] = this.data.data.bmp.jump_height * 1.1;
+                    event: {
+                        enter: () => {
+                            const direction = this.controller.stickDirectionX;
+                            const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
+                            this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
+                            this.mechanics.velocity[1] = this.data.data.bmp.jump_height * 1.1;
+                        },
                     },
                     combo: {
                         hit_d: animation.drop,
@@ -198,9 +214,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     update: airMove,
                 },
                 [State.drop]: {
-                    enter: () => {
-                        this.mechanics.velocity[0] = (this.controller.stickDirectionX || this.direction) * 20;
-                        this.mechanics.velocity[1] = 20;
+                    event: {
+                        enter: () => {
+                            this.mechanics.velocity[0] = (this.controller.stickDirectionX || this.direction) * 20;
+                            this.mechanics.velocity[1] = 20;
+                        },
                     },
                     combo: {
                         hit_a: animation.dash_attack,
@@ -211,12 +229,14 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.dash]: {
-                    enter: () => {
-                        if (this.frame === animation.dash) {
-                            this.mechanics.isGrounded = false;
-                            this.mechanics.force(this.data.data.bmp.dash_distance * this.direction);
-                            this.mechanics.velocity[1] = this.data.data.bmp.dash_height;
-                        }
+                    event: {
+                        enter: () => {
+                            if (this.frame === animation.dash) {
+                                this.mechanics.isGrounded = false;
+                                this.mechanics.force(this.data.data.bmp.dash_distance * this.direction);
+                                this.mechanics.velocity[1] = this.data.data.bmp.dash_height;
+                            }
+                        },
                     },
                     combo: {
                         hit_d: animation.drop,
@@ -232,47 +252,57 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.defend]: {
-                    attacked: ({ dvx, dvy }) => {
-                        this.hitStop = BH.config.hitStop * 2;
-                        if (dvx) {
-                            this.mechanics.force(dvx * 0.4);
-                        }
-                        if (dvy && dvy < 0) {
+                    event: {
+                        attacked: ({ dvx, dvy }) => {
+                            this.hitStop = BH.config.hitStop * 2;
+                            if (dvx) {
+                                this.mechanics.force(dvx * 0.4);
+                            }
+                            if (dvy && dvy < 0) {
 
-                            this.next.setFrame(animation.broken_defend, 3);
-                        } else {
-                            this.next.setFrame(animation.defend, 3);
-                        }
+                                this.next.setFrame(animation.broken_defend, 3);
+                            } else {
+                                this.next.setFrame(animation.defend, 3);
+                            }
+                        },
                     },
                     update: () => {
                         this.next.setDirectionFromValue(this.controller.stickDirectionX)
                     },
                 },
                 [State.crouching]: {
-                    fall: () => this.next.setFrame(animation.airborn),
+                    event: {
+                        fall: () => this.next.setFrame(animation.airborn),
+                    },
                     update: () => {
                         this.mechanics.velocity[0] *= 0.8;
                         this.next.setDirectionFromValue(this.controller.stickDirectionX)
                     },
                 },
                 [State.lying]: {
-                    fall: () => this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2),
+                    event: {
+                        fall: () => this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2),
+                    },
                 },
                 [State.injured]: {
-                    fall: () => this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2),
-                    attacked: (data) => {
-                        hit(data);
-                        if (this.frame < 222) {
-                            this.next.setFrame(222, 1);
-                        } else if (this.frame < 224, 1) {
-                            this.next.setFrame(224, 1);
-                        } else if (this.frame < 226) {
-                            this.next.setFrame(224, 1);
+                    event: {
+                        fall: () => this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2),
+                        attacked: (data) => {
+                            hit(data);
+                            if (this.frame < 222) {
+                                this.next.setFrame(222, 1);
+                            } else if (this.frame < 224, 1) {
+                                this.next.setFrame(224, 1);
+                            } else if (this.frame < 226) {
+                                this.next.setFrame(224, 1);
+                            }
                         }
-                    }
+                    },
                 },
                 [State.falling]: {
-                    land: landInjured,
+                    event: {
+                        land: landInjured,
+                    },
                     nextFrame: () => {
                         if (this.direction !== Math.sign(this.mechanics.velocity[0])) {
                             if (this.mechanics.velocity[1] > 6) {
@@ -296,23 +326,31 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.burning]: {
-                    land: landInjured,
+                    event: {
+                        land: landInjured,
+                    }
                 },
                 [State.caught]: {
                     noMechanics: true,
-                    land: noop,
-                    attacked: noop,
+                    event: {
+                        land: noop,
+                        attacked: noop,
+                    },
                 },
                 [State.fireRunning]: {
-                    fall: () => this.next.setFrame(animation.airborn),
+                    event: {
+                        fall: () => this.next.setFrame(animation.airborn),
+                    },
                 },
                 [State.catching]: {
-                    catching,
-                    leave: () => {
-                        if (this.catching && this.frameData.cpoint) {
-                            this.catching?.next.setFrame(animation.falling, 5);
-                            this.catching = null;
-                        }
+                    event: {
+                        catching,
+                        leave: () => {
+                            if (this.catching && this.frameData.cpoint) {
+                                this.catching?.next.setFrame(animation.falling, 5);
+                                this.catching = null;
+                            }
+                        },
                     },
                     update: () => {
                         if (this.catching && this.frameData.cpoint?.kind === 1) {

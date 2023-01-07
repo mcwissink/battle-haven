@@ -25,13 +25,15 @@ export type EventHandlers = {
 
 type EntityState<Frame extends number> = {
     combo?: Record<string, Frame | 999 | (() => Frame | 999)>;
-    enter?: (previousFrame: Frame | 0) => void;
-    leave?: (nextFrame: Frame | 0) => void;
     update?: () => void;
     nextFrame?: () => Frame;
     resetComboBuffer?: boolean;
     noMechanics?: boolean;
-} & EventHandlers;
+    event?: EventHandlers & {
+        enter?: (previousFrame: Frame | 0) => void;
+        leave?: (nextFrame: Frame | 0) => void;
+    }
+};
 
 export enum Effect {
     normal = 0,
@@ -173,11 +175,11 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     processEvents() {
         (Object.keys(this.events) as Array<keyof Event>).forEach((event) => {
             this.events[event].forEach((data) => {
-                const stateHandler = this.state?.[event];
+                const stateHandler = this.state?.event?.[event];
                 if (stateHandler) {
                     stateHandler?.(data as any);
                 } else {
-                    this.states.default?.[event]?.(data as any);
+                    this.states.default?.event?.[event]?.(data as any);
                 }
             });
             this.events[event].length = 0;
@@ -229,14 +231,14 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
                 BH.spawn(nextFrameData.opoint, this);
             }
             if (changedState) {
-                this.state?.leave?.(translatedFrame);
+                this.state?.event?.leave?.(translatedFrame);
             }
 
             this.wait = (1 + nextFrameData.wait);
             this.frame = translatedFrame;
 
             if (changedState) {
-                this.state?.enter?.(previousFrame);
+                this.state?.event?.enter?.(previousFrame);
             }
         }
         this.next.reset();

@@ -30,27 +30,31 @@ export class Projectile extends Entity {
             data.data.frame,
             {
                 default: {
-                    killed,
+                    event: {
+                        killed,
+                    },
                     update,
                 },
                 3000: {
-                    attacking: () => {
-                        this.next.setFrame(20);
-                        this.mechanics.velocity[0] = 0;
-                        this.mechanics.velocity[1] = 0;
-                    },
-                    collide: () => {
-                        this.mechanics.velocity[0] = 0;
-                        this.next.setFrame(20);
-                    },
-                    attacked: ({ entity }) => {
-                        this.mechanics.velocity[0] = 0;
-                        if (entity.type === 'character') {
-                            this.parent = entity;
-                            this.next.setFrame(animation.rebounding);
-                        } else {
+                    event: {
+                        attacking: () => {
                             this.next.setFrame(20);
-                        }
+                            this.mechanics.velocity[0] = 0;
+                            this.mechanics.velocity[1] = 0;
+                        },
+                        collide: () => {
+                            this.mechanics.velocity[0] = 0;
+                            this.next.setFrame(20);
+                        },
+                        attacked: ({ entity }) => {
+                            this.mechanics.velocity[0] = 0;
+                            if (entity.type === 'character') {
+                                this.parent = entity;
+                                this.next.setFrame(animation.rebounding);
+                            } else {
+                                this.next.setFrame(20);
+                            }
+                        },
                     },
                 },
                 3004: {
@@ -61,7 +65,9 @@ export class Projectile extends Entity {
                     },
                 },
                 3005: {
-                    collide: () => this.next.setFrame(1000),
+                    event: {
+                        collide: () => this.next.setFrame(1000),
+                    },
                 }
             }
         );
