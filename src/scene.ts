@@ -1,3 +1,4 @@
+import { Character } from './character';
 import { Effect } from './effect';
 import { Entity } from './entity';
 import { BH } from './main';
@@ -141,11 +142,28 @@ export class Scene {
 
     render(ctx: CanvasRenderingContext2D) {
         this.platforms.forEach(platform => platform.render(ctx));
-        this.entities.forEach(entity => entity.render(ctx));
-        this.effects.forEach(effect => effect.render(ctx));
-        this.entities.forEach((entity, index) => {
-            ctx.fillRect(0, 10 * index, entity.health, 5);
+        this.entities.forEach(entity => {
+            entity.render(ctx)
+            if (entity instanceof Character && entity.data.face) {
+                ctx.save();
+                if (entity.port === 1) {
+                    ctx.scale(-1, 1);
+                    ctx.translate(-1600, 0);
+                }
+                const padding = 8;
+                const padding2 = padding * 2;
+                ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+                ctx.fillRect(0, 0, 140, 140);
+                ctx.fillRect(140, 0, 400, 28);
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                ctx.fillRect(140 + padding, padding, 400 - padding2, 28 - padding2);
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+                ctx.fillRect(140 + padding, padding, entity.health / BH.config.health * (400 - padding2), 28 - padding2);
+                ctx.drawImage(entity.data.face, 10, 10);
+                ctx.restore();
+            }
         });
+        this.effects.forEach(effect => effect.render(ctx));
     }
 }
 

@@ -40,6 +40,7 @@ export class BattleHaven {
     debug = {
         hitbox: false,
         mechanics: false,
+        stats: true,
     }
     combo: Record<string, (() => void) | undefined> = {
         toggle_menu: () => this.showMenu = !this.showMenu,
