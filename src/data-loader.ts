@@ -48,12 +48,13 @@ const entityDataMapping: Record<string, any> = {
 
 export interface EntityData {
     data: any;
+    face: HTMLImageElement | null;
     spriteSheet: SpriteSheet;
 }
 
 const loadImage = (source: string) => {
     const image = new Image();
-    image.src = source;
+    image.src = source.replace('sprite', './data');
     return image;
 };
 
@@ -68,12 +69,13 @@ const loadData = (data: any): EntityData => {
             animation[frameData.name] = (Number(frame) || 999);
         }
     });
+
     const images = data.bmp.file.map((file: Record<string, string>) => {
         const filePath = Object.values(file).find((v) => v.includes('sprite'))
         if (!filePath) {
             throw new Error('Missing file path');
         }
-        return loadImage(filePath.replace('sprite', './data'));
+        return loadImage(filePath);
     });
 
     const dimensions =
@@ -108,6 +110,7 @@ const loadData = (data: any): EntityData => {
 
     return {
         data,
+        face: data.bmp.head ? loadImage(data.bmp.head) : null,
         spriteSheet: {
             images,
             dimensions(frame: number) {

@@ -46,6 +46,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         const hit: EventHandlers['attacked'] = ({ dvx, dvy: dvyBase = 0, effect, injury }) => {
             const dvy = (this.frame >= 223 && this.frame <= 226 ? -10 : dvyBase);
             this.health -= injury
+            if (this.health <= 0) {
+                this.event('killed');
+            }
             this.hitStop = BH.config.hitStop * 2;
             this.mechanics.velocity[0] *= 0.7;
             this.mechanics.velocity[1] *= 0.7;

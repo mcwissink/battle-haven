@@ -269,9 +269,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     update(_dx: number) {
         this.processFrame();
         this.sprite.setFrame(this.frameData.pic, this.direction);
-        if (this.health <= 0) {
-            this.event('killed');
-        }
     }
 
     render(ctx: CanvasRenderingContext2D) {
