@@ -5,6 +5,8 @@ import { BH } from './main';
 import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mechanics';
 import { Interaction } from './types';
 
+const shakeValue = () => Math.sin(Date.now()) * (Math.random() > 0.5 ? -1 : 1) * 4;
+
 export class Scene {
     entities: Entity[] = [];
     effects: Effect[] = [];
@@ -141,9 +143,15 @@ export class Scene {
     }
 
     render(ctx: CanvasRenderingContext2D) {
+        ctx.save();
+        if (this.entities.some((entity) => entity.hitStop && !entity.isKilled)) {
+            ctx.translate(shakeValue(), shakeValue());
+        }
         this.platforms.forEach(platform => platform.render(ctx));
+        this.entities.forEach(entity => entity.render(ctx));
+        this.effects.forEach(effect => effect.render(ctx));
+        ctx.restore();
         this.entities.forEach(entity => {
-            entity.render(ctx)
             if (entity instanceof Character && entity.data.face) {
                 ctx.save();
                 if (entity.port === 1) {
@@ -187,7 +195,6 @@ export class Scene {
                 }
             }
         });
-        this.effects.forEach(effect => effect.render(ctx));
     }
 }
 

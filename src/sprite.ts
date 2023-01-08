@@ -38,6 +38,7 @@ export class Sprite {
     }
 
     render(ctx: CanvasRenderingContext2D, x: number, y: number) {
+        ctx.save();
         ctx.translate(x, y);
         ctx.scale(this.directionX, this.directionY);
         if (this.spriteSheet) {
@@ -53,6 +54,6 @@ export class Sprite {
                 this.dimensions.height - 2
             );
         }
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.restore();
     }
 }
