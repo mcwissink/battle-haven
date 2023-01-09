@@ -285,7 +285,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             ctx,
             this.mechanics.position[0] - offsetX + modX,
             this.mechanics.position[1] - offsetY,
-        );
+        )
         if (BH.debug.hitbox) {
             this.debugRender(ctx);
         }

@@ -5,16 +5,16 @@ import { BH } from './main';
 import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mechanics';
 import { Interaction } from './types';
 
-const shakeValue = () => Math.sin(Date.now()) * (Math.random() > 0.5 ? -1 : 1) * 4;
+const shakeValue = () => Math.sin(Date.now()) * (Math.random() > 0.5 ? -1 : 1) * BH.config.cameraShake;
 
 export class Scene {
     entities: Entity[] = [];
     effects: Effect[] = [];
     effectsPool: Effect[] = [];
     platforms = [
-        new Mechanics(new Rectangle(200, 30), { position: [500, 245], passThrough: UP_VECTOR }),
-        new Mechanics(new Rectangle(200, 30), { position: [800, 150], passThrough: UP_VECTOR }),
-        new Mechanics(new Rectangle(200, 30), { position: [1100, 245], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 3), { position: [500, 245], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 3), { position: [800, 150], passThrough: UP_VECTOR }),
+        new Mechanics(new Rectangle(200, 3), { position: [1100, 245], passThrough: UP_VECTOR }),
         new Mechanics(new Rectangle(1000, 100), { position: [800, 400] }),
         new Mechanics(new Rectangle(150, 600), { position: [5, 210] }),
         new Mechanics(new Rectangle(1500, 100), { position: [800, 510] }),
@@ -144,6 +144,30 @@ export class Scene {
 
     render(ctx: CanvasRenderingContext2D) {
         ctx.save();
+        const [charactersX, charactersY] = this.entities.reduce((acc, entity) => {
+            if (entity instanceof Character) {
+                acc[0] += entity.mechanics.position[0] * 0.5;
+                acc[1] += entity.mechanics.position[1] * 0.5;
+            }
+            return acc;
+        }, [0, 0]);
+        const scalingFactor = this.entities.reduce((acc, entity) => {
+            if (entity instanceof Character) {
+                return Math.max(
+                    Math.hypot(
+                        charactersX - entity.mechanics.position[0],
+                        charactersY - entity.mechanics.position[1],
+                    ),
+                    acc
+                )
+            }
+            return acc;
+        }, 0);
+        ctx.translate((800 - charactersX) * 0.8, (450 - charactersY) * 0.8);
+
+        const scale = 1 + 80 / (Math.max(scalingFactor, 50) + 200);
+        ctx.scale(scale, scale);
+        ctx.translate(-(800 - (800 / scale)), -(450 - (450 / scale)));
         if (this.entities.some((entity) => entity.hitStop && !entity.isKilled)) {
             ctx.translate(shakeValue(), shakeValue());
         }

@@ -15,7 +15,7 @@ export interface Entries {
 const ENTRY_HEIGHT = 26;
 export class Menu {
     cursors = new Map<Port, EntryState>();
-    globalCursor: EntryState[] = [];
+    menuCursor: EntryState[] = [];
     constructor(public entries: Entries) {
         controllers.on('connect', (port) => {
             this.cursors.set(controllers.get(port), {
@@ -26,7 +26,7 @@ export class Menu {
     }
     setEntries(entries: Entries) {
         this.entries = entries;
-        this.globalCursor = [];
+        this.menuCursor = [];
         this.cursors.forEach(cursor => cursor.index = 0);
     }
     traverseEntries(cursor: EntryState[]) {
@@ -35,10 +35,10 @@ export class Menu {
         }, this.entries);
     }
     get title() {
-        return this.traverseEntries(this.globalCursor).text;
+        return this.traverseEntries(this.menuCursor).text;
     }
     get activeEntries() {
-        return this.traverseEntries(this.globalCursor).entries ?? [];
+        return this.traverseEntries(this.menuCursor).entries ?? [];
     }
     update() {
         controllers.ports.forEach((controller, port) => {
@@ -49,7 +49,7 @@ export class Menu {
                         case 'hit_a': {
                             const selectedEntry = this.activeEntries[cursor.index];
                             if (selectedEntry.entries) {
-                                this.globalCursor.push({
+                                this.menuCursor.push({
                                     index: cursor.index,
                                     port: -1,
                                 });
@@ -60,7 +60,7 @@ export class Menu {
                             return true;
                         }
                         case 'hit_d': {
-                            const globalCursor = this.globalCursor.pop();
+                            const globalCursor = this.menuCursor.pop();
                             if (globalCursor) {
                                 this.cursors.forEach((cursor) => cursor.index = globalCursor.index);
                             }

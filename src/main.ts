@@ -5,6 +5,7 @@ import { entityData } from './data-loader';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 export const BH = new BattleHaven(canvas, {
+    cameraShake: 2,
     hitStop: 2,
     gravity: 1.7,
     friction: 1,

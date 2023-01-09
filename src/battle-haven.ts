@@ -24,6 +24,7 @@ type Task = {
 
 
 interface BattleHavenConfig {
+    cameraShake: number;
     gravity: number;
     hitStop: number;
     friction: number;
