@@ -5,10 +5,11 @@ import { BH } from './main';
 import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mechanics';
 import { Interaction } from './types';
 
-const shakeValue = () => Math.sin(Date.now()) * (Math.random() > 0.5 ? -1 : 1) * BH.config.cameraShake;
+const shakeValue = () => Math.sin(Date.now()) * (Math.random() > 0.5 ? -1 : 1) * BH.config.camera.shake;
 
 export class Scene {
     entities: Entity[] = [];
+    characters: Character[] = [];
     effects: Effect[] = [];
     effectsPool: Effect[] = [];
     platforms = [
@@ -142,81 +143,90 @@ export class Scene {
         this.effects.forEach(effect => effect.update(dx));
     }
 
-    render(ctx: CanvasRenderingContext2D) {
-        ctx.save();
-        const [charactersX, charactersY] = this.entities.reduce((acc, entity) => {
-            if (entity instanceof Character) {
-                acc[0] += entity.mechanics.position[0] * 0.5;
-                acc[1] += entity.mechanics.position[1] * 0.5;
-            }
+    camera(ctx: CanvasRenderingContext2D) {
+        const cameraHalfWidth = BH.config.camera.width * 0.5;
+        const cameraHalfHeight = BH.config.camera.height * 0.5;
+        const characterPositions = this.characters.reduce((acc, entity) => {
+            acc[0] += entity.mechanics.position[0];
+            acc[1] += entity.mechanics.position[1];
             return acc;
         }, [0, 0]);
-        const scalingFactor = this.entities.reduce((acc, entity) => {
-            if (entity instanceof Character) {
-                return Math.max(
-                    Math.hypot(
-                        charactersX - entity.mechanics.position[0],
-                        charactersY - entity.mechanics.position[1],
-                    ),
-                    acc
-                )
-            }
-            return acc;
+        const charactersX = characterPositions[0] / this.characters.length;
+        const charactersY = characterPositions[1] / this.characters.length;
+        const scalingFactor = this.characters.reduce((acc, entity) => {
+            return Math.max(
+                Math.hypot(
+                    charactersX - entity.mechanics.position[0],
+                    charactersY - entity.mechanics.position[1],
+                ),
+                acc
+            )
         }, 0);
-        ctx.translate((800 - charactersX) * 0.8, (450 - charactersY) * 0.8);
 
-        const scale = 1 + 80 / (Math.max(scalingFactor, 50) + 200);
+        ctx.translate(
+            (cameraHalfWidth - charactersX) * BH.config.camera.follow,
+            (cameraHalfHeight - charactersY) * BH.config.camera.follow
+        );
+
+        const scale = 1 + BH.config.camera.zoom / (Math.max(scalingFactor, 50) + 200);
         ctx.scale(scale, scale);
-        ctx.translate(-(800 - (800 / scale)), -(450 - (450 / scale)));
+        ctx.translate(
+            -cameraHalfWidth + (cameraHalfWidth / scale),
+            -cameraHalfHeight + (cameraHalfHeight / scale)
+        );
+
         if (this.entities.some((entity) => entity.hitStop && !entity.isKilled)) {
             ctx.translate(shakeValue(), shakeValue());
         }
+    }
+
+    render(ctx: CanvasRenderingContext2D) {
+        ctx.save();
+        this.camera(ctx);
         this.platforms.forEach(platform => platform.render(ctx));
         this.entities.forEach(entity => entity.render(ctx));
         this.effects.forEach(effect => effect.render(ctx));
         ctx.restore();
-        this.entities.forEach(entity => {
-            if (entity instanceof Character && entity.data.face) {
+        this.characters.forEach(entity => {
+            ctx.save();
+            if (entity.port === 1) {
+                ctx.scale(-1, 1);
+                ctx.translate(-1600, 0);
+            }
+            const padding = 8;
+            const padding2 = padding * 2;
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.fillRect(0, 0, 140, 140);
+            ctx.fillRect(140, 0, 400, 28);
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+            ctx.fillRect(140 + padding, padding, 400 - padding2, 28 - padding2);
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+            ctx.fillRect(140 + padding, padding, entity.health / BH.config.health * (400 - padding2), 28 - padding2);
+            ctx.drawImage(entity.data.face!, 10, 10);
+            ctx.restore();
+
+            if (BH.debug.stats) {
                 ctx.save();
                 if (entity.port === 1) {
-                    ctx.scale(-1, 1);
-                    ctx.translate(-1600, 0);
+                    ctx.translate(1160, 0);
                 }
-                const padding = 8;
-                const padding2 = padding * 2;
                 ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-                ctx.fillRect(0, 0, 140, 140);
-                ctx.fillRect(140, 0, 400, 28);
-                ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-                ctx.fillRect(140 + padding, padding, 400 - padding2, 28 - padding2);
-                ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
-                ctx.fillRect(140 + padding, padding, entity.health / BH.config.health * (400 - padding2), 28 - padding2);
-                ctx.drawImage(entity.data.face, 10, 10);
+                ctx.fillRect(140, 28, 160, 100);
+                ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+                const stats = {
+                    x: entity.mechanics.position[0].toFixed(2),
+                    y: entity.mechanics.position[1].toFixed(2),
+                    grounded: String(Number(entity.mechanics.isGrounded)),
+                    state: String(entity.frameData.state),
+                };
+                Object.entries(stats).forEach(([label, value], index) => {
+                    ctx.fillText(
+                        `${label}: ${value.padStart(10 - label.length, ' ')}`,
+                        148,
+                        48 + index * 20,
+                    );
+                });
                 ctx.restore();
-
-                if (BH.debug.stats) {
-                    ctx.save();
-                    if (entity.port === 1) {
-                        ctx.translate(1160, 0);
-                    }
-                    ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-                    ctx.fillRect(140, 28, 160, 100);
-                    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-                    const stats = {
-                        x: entity.mechanics.position[0].toFixed(2),
-                        y: entity.mechanics.position[1].toFixed(2),
-                        grounded: String(Number(entity.mechanics.isGrounded)),
-                        state: String(entity.frameData.state),
-                    };
-                    Object.entries(stats).forEach(([label, value], index) => {
-                        ctx.fillText(
-                            `${label}: ${value.padStart(10 - label.length, ' ')}`,
-                            148,
-                            48 + index * 20,
-                        );
-                    });
-                    ctx.restore();
-                }
             }
         });
     }

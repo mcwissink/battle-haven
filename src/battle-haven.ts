@@ -1,3 +1,4 @@
+import { Character } from './character';
 import { controllers } from './controller';
 import { entityData } from './data-loader';
 import { Effect } from './effect';
@@ -24,7 +25,13 @@ type Task = {
 
 
 interface BattleHavenConfig {
-    cameraShake: number;
+    camera: {
+        width: number;
+        height: number;
+        shake: number;
+        follow: number;
+        zoom: number;
+    };
     gravity: number;
     hitStop: number;
     friction: number;
@@ -63,9 +70,6 @@ export class BattleHaven {
     }
 
     start() {
-        // controllers.on('connect', (port) => {
-        //     this.scene.entities.push(new Character(port, entityData[5]));
-        // });
         window.requestAnimationFrame(this.update);
     }
 
@@ -130,6 +134,12 @@ export class BattleHaven {
                         const index = this.scene.entities.findIndex((e) => e === task.data.entity);
                         if (index !== -1) {
                             this.scene.entities.splice(index, 1);
+                        }
+                        if (task.data.entity instanceof Character) {
+                            const characterIndex = this.scene.characters.findIndex((c) => c === task.data.entity);
+                            if (characterIndex !== -1) {
+                                this.scene.characters.splice(characterIndex, 1);
+                            }
                         }
                     }
                     break;

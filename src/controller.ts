@@ -240,8 +240,8 @@ class GamepadController extends Controller {
         this.input('attack', this.gamepad.buttons[1].value);
         this.input('defend', this.gamepad.buttons[5].value);
         this.input('jump', this.gamepad.buttons[3].value);
-        this.input('stickX', this.gamepad.axes[0]);
-        this.input('stickY', this.gamepad.axes[1]);
+        this.input('stickX', Math.round(this.gamepad.axes[0]));
+        this.input('stickY', Math.round(this.gamepad.axes[1]));
     }
 }
 

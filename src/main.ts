@@ -5,7 +5,13 @@ import { entityData } from './data-loader';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 export const BH = new BattleHaven(canvas, {
-    cameraShake: 2,
+    camera: {
+        width: 1600,
+        height: 900,
+        shake: 2,
+        follow: 0.5,
+        zoom: 150,
+    },
     hitStop: 2,
     gravity: 1.7,
     friction: 1,
@@ -18,7 +24,9 @@ const selectCharacter = (oid: number) => ({ port }: { port: number }) => {
     if (existingCharacter) {
         BH.destroy(existingCharacter);
     }
-    BH.scene.entities.push(new Character(port, entityData[oid]));
+    const character = new Character(port, entityData[oid]);
+    BH.scene.entities.push(character);
+    BH.scene.characters.push(character);
 };
 
 export const mainMenu = {
@@ -56,10 +64,12 @@ export const gameOverMenu = {
             text: 'rematch',
             click: () => {
                 controllers.ports.forEach((_, port) => {
-                    const existingCharacter = BH.scene.entities.find((entity) => entity.port === port);
-                    if (existingCharacter && existingCharacter instanceof Character) {
+                    const existingCharacter = BH.scene.characters.find((entity) => entity.port === port);
+                    if (existingCharacter) {
                         BH.destroy(existingCharacter);
-                        BH.scene.entities.push(new Character(port, existingCharacter.data));
+                        const character = new Character(port, existingCharacter.data);
+                        BH.scene.entities.push(character);
+                        BH.scene.characters.push(character);
                         BH.openMenu(mainMenu);
                         BH.showMenu = false;
                     }
