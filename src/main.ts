@@ -10,7 +10,7 @@ export const BH = new BattleHaven(canvas, {
         height: 900,
         shake: 2,
         follow: 0.5,
-        zoom: 150,
+        zoom: 90,
     },
     hitStop: 2,
     gravity: 1.7,
