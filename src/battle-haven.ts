@@ -3,7 +3,7 @@ import { controllers } from './controller';
 import { entityData } from './data-loader';
 import { Effect } from './effect';
 import { Entity } from './entity';
-import { Entries, Menu } from './menu';
+import { Menu } from './menu';
 import { Projectile } from './projectile';
 import { Scene } from './scene';
 import { ObjectPoint } from './types';
@@ -42,7 +42,6 @@ export class BattleHaven {
     previousTime = 0;
     ctx: CanvasRenderingContext2D;
     scene = new Scene();
-    showMenu = false;
     public menu = new Menu({ text: '', entries: [] });
     tasks: Task[] = [];
     debug = {
@@ -51,7 +50,7 @@ export class BattleHaven {
         stats: true,
     }
     combo: Record<string, (() => void) | undefined> = {
-        toggle_menu: () => this.showMenu = !this.showMenu,
+        toggle_menu: () => this.menu.toggle(),
     }
     constructor(
         private canvas: HTMLCanvasElement,
@@ -62,11 +61,6 @@ export class BattleHaven {
             throw new Error('Failed to get context');
         }
         this.ctx = ctx;
-    }
-
-    openMenu(entries: Entries) {
-        this.menu.setEntries(entries);
-        this.showMenu = true;
     }
 
     start() {
@@ -89,14 +83,11 @@ export class BattleHaven {
         if (!--this.wait) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-            if (!this.showMenu) {
+            if (!this.menu.isOpen) {
                 this.scene.update(dx);
             }
             this.scene.render(this.ctx);
-            if (this.showMenu) {
-                this.menu.update();
-                this.menu.render(this.ctx);
-            }
+            this.menu.render(this.ctx);
 
             this.processTasks();
             this.wait = 2;

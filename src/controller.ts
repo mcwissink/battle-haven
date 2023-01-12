@@ -1,11 +1,4 @@
 const combos = [
-    // TODO: Remove directional combos since they cause buffering issues
-    // Temporarily necessary for the menu
-    { sequence: ['up'], name: 'hit_U', },
-    { sequence: ['down'], name: 'hit_D', },
-    { sequence: ['left'], name: 'hit_F', },
-    { sequence: ['right'], name: 'hit_F', },
-
     { sequence: ['attack'], name: 'hit_a', },
     { sequence: ['jump'], name: 'hit_j', },
     { sequence: ['defend'], name: 'hit_d', },
@@ -67,13 +60,35 @@ type Combo = {
     direction: number
 };
 
+interface ControllerListener {
+    input: Array<(input: string, controller: Controller) => void>
+}
+
 export class Controller {
+    port = -1;
     stickX = 0;
     stickY = 0;
     jump = 0;
     defend = 0;
     attack = 0;
     menu = 0;
+    listeners: ControllerListener = {
+        input: [],
+    }
+
+    on<T extends keyof ControllerListener>(event: T, callback: Flat<ControllerListener[T]>) {
+        const index = this.listeners[event].indexOf(callback);
+        if (index === -1) {
+            this.listeners[event].push(callback);
+        }
+    }
+
+    off<T extends keyof ControllerListener>(event: T, callback: Flat<ControllerListener[T]>) {
+        const index = this.listeners[event].indexOf(callback);
+        if (index !== -1) {
+            this.listeners[event].splice(index, 1);
+        }
+    }
 
     get stickDirectionX() {
         return Math.sign(this.stickX);
@@ -144,7 +159,9 @@ export class Controller {
 
     input(control: keyof ControllerState, magnitude: number) {
         const comboInput = this.getComboInput(control, magnitude);
+
         if (comboInput) {
+            this.listeners.input.forEach((callback) => callback(comboInput, this));
             this.buffer.push(comboInput);
             // detect combo
             combos.forEach((combo) => {
@@ -269,8 +286,8 @@ const mappings = [
 
 export type Port = Controller;
 
-interface Listeners {
-    connect: Array<(port: number) => void>
+interface ManagerListener {
+    connect: Array<(controller: Controller) => void>
 }
 
 type Flat<T> = T extends Array<infer K> ? K : T;
@@ -284,7 +301,7 @@ class ControllerManager {
     ];
     keyboardControllers: KeyboardController[] = [];
     gamepads: Record<number, number> = {};
-    listeners: Listeners = {
+    listeners: ManagerListener = {
         connect: [],
     }
     static dummy = new Controller();
@@ -321,7 +338,7 @@ class ControllerManager {
         return this.ports[port] ?? ControllerManager.dummy;
     }
 
-    on<T extends keyof Listeners>(event: T, callback: Flat<Listeners[T]>) {
+    on<T extends keyof ManagerListener>(event: T, callback: Flat<ManagerListener[T]>) {
         this.listeners[event].push(callback);
     }
 
@@ -329,7 +346,8 @@ class ControllerManager {
         const port = this.ports.indexOf(ControllerManager.dummy);
         if (port !== -1) {
             this.ports[port] = controller;
-            this.listeners.connect.forEach((callback) => callback(port));
+            controller.port = port;
+            this.listeners.connect.forEach((callback) => callback(controller));
             return port;
         }
         return -1;

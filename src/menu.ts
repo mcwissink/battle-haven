@@ -1,4 +1,4 @@
-import { controllers, Port } from './controller';
+import { Controller, controllers, Port } from './controller';
 import { mod } from './utils';
 
 type EntryState = {
@@ -14,16 +14,55 @@ export interface Entries {
 
 const ENTRY_HEIGHT = 26;
 export class Menu {
+    isOpen = true;
     cursors = new Map<Port, EntryState>();
     menuCursor: EntryState[] = [];
     constructor(public entries: Entries) {
-        controllers.on('connect', (port) => {
-            this.cursors.set(controllers.get(port), {
+        controllers.on('connect', (controller) => {
+            controller.on('input', this.input);
+            this.cursors.set(controller, {
                 index: 0,
-                port,
+                port: controller.port,
             });
         });
     }
+
+    input = (input: string, controller: Controller) => {
+        const cursor = this.cursors.get(controller);
+        if (cursor) {
+            switch (input) {
+                case 'attack': {
+                    const selectedEntry = this.activeEntries[cursor.index];
+                    if (selectedEntry.entries) {
+                        this.menuCursor.push({
+                            index: cursor.index,
+                            port: -1,
+                        });
+                        this.cursors.forEach((cursor) => cursor.index = 0);
+                    } else if (selectedEntry.click) {
+                        selectedEntry.click({ port: controller.port });
+                    }
+                    return true;
+                }
+                case 'defend': {
+                    const globalCursor = this.menuCursor.pop();
+                    if (globalCursor) {
+                        this.cursors.forEach((cursor) => cursor.index = globalCursor.index);
+                    }
+                    return true;
+                }
+                case 'down': {
+                    cursor.index = mod(cursor.index + 1, this.activeEntries.length);
+                    return true;
+                }
+                case 'up': {
+                    cursor.index = mod(cursor.index - 1, this.activeEntries.length);
+                    return true;
+                }
+            }
+        }
+    }
+
     setEntries(entries: Entries) {
         this.entries = entries;
         this.menuCursor = [];
@@ -40,46 +79,33 @@ export class Menu {
     get activeEntries() {
         return this.traverseEntries(this.menuCursor).entries ?? [];
     }
-    update() {
-        controllers.ports.forEach((controller, port) => {
-            const cursor = this.cursors.get(controller);
-            if (controller && cursor) {
-                controller.processCombo(combo => {
-                    switch (combo.name) {
-                        case 'hit_a': {
-                            const selectedEntry = this.activeEntries[cursor.index];
-                            if (selectedEntry.entries) {
-                                this.menuCursor.push({
-                                    index: cursor.index,
-                                    port: -1,
-                                });
-                                this.cursors.forEach((cursor) => cursor.index = 0);
-                            } else if (selectedEntry.click) {
-                                selectedEntry.click({ port });
-                            }
-                            return true;
-                        }
-                        case 'hit_d': {
-                            const globalCursor = this.menuCursor.pop();
-                            if (globalCursor) {
-                                this.cursors.forEach((cursor) => cursor.index = globalCursor.index);
-                            }
-                            return true;
-                        }
-                        case 'hit_D': {
-                            cursor.index = mod(cursor.index + 1, this.activeEntries.length);
-                            return true;
-                        }
-                        case 'hit_U': {
-                            cursor.index = mod(cursor.index - 1, this.activeEntries.length);
-                            return true;
-                        }
-                    }
-                });
+    open() {
+        controllers.ports.forEach((controller) => {
+            if (controller) {
+                controller.on('input', this.input);
             }
         });
+        this.isOpen = true;
+    }
+    close() {
+        controllers.ports.forEach((controller) => {
+            if (controller) {
+                controller.off('input', this.input);
+            }
+        });
+        this.isOpen = false;
+    }
+    toggle() {
+        if (this.isOpen) {
+            this.close();
+        } else {
+            this.open();
+        }
     }
     render(ctx: CanvasRenderingContext2D) {
+        if (!this.isOpen) {
+            return;
+        }
         ctx.font = '20px mono';
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fillRect(0, 0, 1600, 900);

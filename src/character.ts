@@ -81,7 +81,8 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 default: {
                     event: {
                         killed: () => {
-                            BH.openMenu(gameOverMenu);
+                            BH.menu.setEntries(gameOverMenu);
+                            BH.menu.open();
                         },
                         attacked: hit,
                         land,

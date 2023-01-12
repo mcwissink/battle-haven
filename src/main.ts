@@ -70,17 +70,18 @@ export const gameOverMenu = {
                         const character = new Character(port, existingCharacter.data);
                         BH.scene.entities.push(character);
                         BH.scene.characters.push(character);
-                        BH.openMenu(mainMenu);
-                        BH.showMenu = false;
+                        BH.menu.setEntries(mainMenu);
+                        BH.menu.open();
                     }
                 });
             }
         },
-        { text: 'main menu', click: () => BH.openMenu(mainMenu) }
+        { text: 'main menu', click: () => BH.menu.setEntries(mainMenu) }
     ],
 }
 
 BH.start();
-BH.openMenu(mainMenu);
+BH.menu.setEntries(mainMenu);
+BH.menu.open();
 
 
