@@ -71,7 +71,7 @@ export const gameOverMenu = {
                         BH.scene.entities.push(character);
                         BH.scene.characters.push(character);
                         BH.menu.setEntries(mainMenu);
-                        BH.menu.open();
+                        BH.menu.close();
                     }
                 });
             }
