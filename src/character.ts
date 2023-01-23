@@ -187,7 +187,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         enter: (previousFrame) => {
                             if (previousFrame === 211) {
                                 this.mechanics.force(this.data.data.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || this.controller.stickDirectionX));
-                                this.mechanics.velocity[1] = this.data.data.bmp.jump_height;
+                                this.mechanics.velocity[1] = this.data.data.bmp.jump_height * (this.controller.jump ? 1 : 0.6);
                             }
                         },
                     },
@@ -272,6 +272,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.crouching]: {
+                    combo: {
+                        hit_j: animation.dash_go,
+                    },
                     event: {
                         fall: () => this.next.setFrame(animation.airborn),
                     },
