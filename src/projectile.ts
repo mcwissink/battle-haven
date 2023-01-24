@@ -1,4 +1,4 @@
-import { SpawnTask } from './battle-haven';
+import { BattleHaven, SpawnTask } from './battle-haven';
 import { animation, EntityData } from './data-loader';
 import { Entity } from "./entity";
 import { Mechanics, Rectangle } from './mechanics';
@@ -6,7 +6,11 @@ import { Sprite } from './sprite';
 
 export class Projectile extends Entity {
     type = 'projectile';
-    constructor(public spawnTask: SpawnTask, data: EntityData) {
+    constructor(
+        public game: BattleHaven,
+        public spawnTask: SpawnTask,
+        data: EntityData
+    ) {
         let direction = spawnTask.parent.direction;
         if (spawnTask.opoint.facing === 1) {
             direction *= -1;
@@ -15,7 +19,9 @@ export class Projectile extends Entity {
         const killed = () => this.next.setFrame(this.frameData.hit_d);
         const update = () => this.health -= this.frameData.hit_a;
         super(
+            game,
             new Mechanics(
+                game,
                 new Rectangle(1, 1),
                 {
                     position: [

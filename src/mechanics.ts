@@ -1,4 +1,4 @@
-import { BH } from "./main";
+import { BattleHaven } from "./battle-haven";
 
 export type Vector = [number, number];
 
@@ -145,6 +145,7 @@ export class Mechanics {
     public isOverlapping = false;
     public mass;
     constructor(
+        public game: BattleHaven,
         public shape: Shape,
         {
             mass = 1,
@@ -179,9 +180,9 @@ export class Mechanics {
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
         if (this.isGrounded) {
-            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), BH.config.friction);
+            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), this.game.config.friction);
         } else {
-            this.velocity[1] += this.mass * BH.config.gravity;
+            this.velocity[1] += this.mass * this.game.config.gravity;
         }
     }
 

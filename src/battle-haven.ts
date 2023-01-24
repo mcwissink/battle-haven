@@ -41,7 +41,7 @@ interface BattleHavenConfig {
 export class BattleHaven {
     previousTime = 0;
     ctx: CanvasRenderingContext2D;
-    scene = new Scene();
+    scene: Scene;
     public menu = new Menu({ text: '', entries: [] });
     tasks: Task[] = [];
     debug = {
@@ -61,6 +61,7 @@ export class BattleHaven {
             throw new Error('Failed to get context');
         }
         this.ctx = ctx;
+        this.scene = new Scene(this);
     }
 
     start() {
@@ -104,11 +105,11 @@ export class BattleHaven {
                     const entity = entityData[task.data.opoint.oid];
                     if (entity) {
                         if (task.data.opoint.oid >= 300) {
-                            const effect = this.scene.effectsPool.pop() ?? new Effect(task.data, entity);
+                            const effect = this.scene.effectsPool.pop() ?? new Effect(this, task.data, entity);
                             effect.reset(task.data, entity);
                             this.scene.effects.push(effect);
                         } else {
-                            this.scene.entities.push(new Projectile(task.data, entity))
+                            this.scene.entities.push(new Projectile(this, task.data, entity))
                         }
                     }
                     break;

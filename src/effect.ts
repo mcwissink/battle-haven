@@ -1,4 +1,4 @@
-import { SpawnTask } from "./battle-haven";
+import { BattleHaven, SpawnTask } from "./battle-haven";
 import { EntityData } from "./data-loader";
 import { Entity } from "./entity";
 import { Mechanics, Rectangle } from "./mechanics";
@@ -17,11 +17,14 @@ export type EffectFrames = Record<number, EffectFrameData>;
 export class Effect extends Entity {
     type = 'effect';
     constructor(
+        public game: BattleHaven,
         public spawnTask: SpawnTask,
         data: EntityData,
     ) {
         super(
+            game,
             new Mechanics(
+                game,
                 new Rectangle(10, 10),
                 {
                     mass: 0,

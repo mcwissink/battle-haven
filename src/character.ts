@@ -1,7 +1,8 @@
 import { Animator } from './animator';
+import { BattleHaven } from './battle-haven';
 import { animation, EntityData } from './data-loader';
 import { Effect, Entity, EventHandlers, State } from "./entity";
-import { BH, gameOverMenu } from './main';
+import { gameOverMenu } from './main';
 import { Diamond, Mechanics } from './mechanics';
 import { Sprite } from './sprite';
 
@@ -12,7 +13,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
     type = 'character';
     animator = new Animator();
     catching: Entity | null = null;
-    constructor(public port: number, public data: EntityData) {
+    constructor(
+        public game: BattleHaven,
+        public port: number,
+        public data: EntityData
+    ) {
         const doubleJump = () => {
             if (this.controller.stickY > 0) {
                 return animation.drop
@@ -46,7 +51,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         const hit: EventHandlers['attacked'] = ({ dvx, dvy: dvyBase = 0, effect, injury }) => {
             const dvy = (this.frame >= 223 && this.frame <= 226 ? -10 : dvyBase);
             this.health -= injury
-            this.hitStop = BH.config.hitStop * 2;
+            this.hitStop = this.game.config.hitStop * 2;
             this.mechanics.velocity[0] *= 0.7;
             this.mechanics.velocity[1] *= 0.7;
             if (dvx) {
@@ -73,7 +78,8 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         const noop = () => { };
 
         super(
-            new Mechanics(new Diamond(20, 40), { position: [port === 1 ? 350 : 1250, 100] }),
+            game,
+            new Mechanics(game, new Diamond(20, 40), { position: [port === 1 ? 350 : 1250, 100] }),
             new Diamond(10, 42),
             new Sprite(data.spriteSheet),
             data.data.frame,
@@ -81,8 +87,8 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 default: {
                     event: {
                         killed: () => {
-                            BH.menu.setEntries(gameOverMenu);
-                            BH.menu.open();
+                            this.game.menu.setEntries(gameOverMenu);
+                            this.game.menu.open();
                         },
                         attacked: hit,
                         land,
@@ -255,7 +261,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.defend]: {
                     event: {
                         attacked: ({ dvx, dvy }) => {
-                            this.hitStop = BH.config.hitStop * 2;
+                            this.hitStop = this.game.config.hitStop * 2;
                             if (dvx) {
                                 this.mechanics.force(dvx * 0.4);
                             }

@@ -25,7 +25,7 @@ const selectCharacter = (oid: number) => ({ port }: { port: number }) => {
     if (existingCharacter) {
         BH.destroy(existingCharacter);
     }
-    const character = new Character(port, entityData[oid]);
+    const character = new Character(BH, port, entityData[oid]);
     BH.scene.entities.push(character);
     BH.scene.characters.push(character);
 };
@@ -68,7 +68,7 @@ export const gameOverMenu = {
                     const existingCharacter = BH.scene.characters.find((entity) => entity.port === port);
                     if (existingCharacter) {
                         BH.destroy(existingCharacter);
-                        const character = new Character(port, existingCharacter.data);
+                        const character = new Character(BH, port, existingCharacter.data);
                         BH.scene.entities.push(character);
                         BH.scene.characters.push(character);
                         BH.menu.setEntries(mainMenu);

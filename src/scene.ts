@@ -1,26 +1,27 @@
+import { BattleHaven } from './battle-haven';
 import { Character } from './character';
 import { Effect } from './effect';
 import { Entity } from './entity';
-import { BH } from './main';
 import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mechanics';
 import { Interaction } from './types';
 
-const shakeValue = () => Math.sin(Date.now()) * (Math.random() > 0.5 ? -1 : 1) * BH.config.camera.shake;
-
 export class Scene {
+    constructor(public game: BattleHaven) {
+        this.platforms = [
+            new Mechanics(this.game, new Rectangle(200, 3), { position: [500, 245], passThrough: UP_VECTOR }),
+            new Mechanics(this.game, new Rectangle(200, 3), { position: [800, 150], passThrough: UP_VECTOR }),
+            new Mechanics(this.game, new Rectangle(200, 3), { position: [1100, 245], passThrough: UP_VECTOR }),
+            new Mechanics(this.game, new Rectangle(1000, 100), { position: [800, 400] }),
+            new Mechanics(this.game, new Rectangle(150, 600), { position: [5, 210] }),
+            new Mechanics(this.game, new Rectangle(1500, 100), { position: [800, 510] }),
+            new Mechanics(this.game, new Rectangle(150, 600), { position: [1600, 210] }),
+        ];
+    }
     entities: Entity[] = [];
     characters: Character[] = [];
     effects: Effect[] = [];
     effectsPool: Effect[] = [];
-    platforms = [
-        new Mechanics(new Rectangle(200, 3), { position: [500, 245], passThrough: UP_VECTOR }),
-        new Mechanics(new Rectangle(200, 3), { position: [800, 150], passThrough: UP_VECTOR }),
-        new Mechanics(new Rectangle(200, 3), { position: [1100, 245], passThrough: UP_VECTOR }),
-        new Mechanics(new Rectangle(1000, 100), { position: [800, 400] }),
-        new Mechanics(new Rectangle(150, 600), { position: [5, 210] }),
-        new Mechanics(new Rectangle(1500, 100), { position: [800, 510] }),
-        new Mechanics(new Rectangle(150, 600), { position: [1600, 210] }),
-    ];
+    platforms: Mechanics[];
     update(dx: number) {
         this.entities.forEach(entity => entity.mechanicsUpdate(dx));
         this.entities.forEach(entity => {
@@ -97,7 +98,7 @@ export class Scene {
                                 switch (effect) {
                                     case 0:
                                     case 4: {
-                                        BH.spawn({
+                                        this.game.spawn({
                                             kind: 1,
                                             x,
                                             y,
@@ -110,7 +111,7 @@ export class Scene {
                                         break;
                                     }
                                     case 1: {
-                                        BH.spawn({
+                                        this.game.spawn({
                                             kind: 1,
                                             x,
                                             y,
@@ -144,8 +145,8 @@ export class Scene {
     }
 
     camera(ctx: CanvasRenderingContext2D) {
-        const cameraHalfWidth = BH.config.camera.width * 0.5;
-        const cameraHalfHeight = BH.config.camera.height * 0.5;
+        const cameraHalfWidth = this.game.config.camera.width * 0.5;
+        const cameraHalfHeight = this.game.config.camera.height * 0.5;
         const characterPositions = this.characters.reduce((acc, entity) => {
             acc[0] += entity.mechanics.position[0];
             acc[1] += entity.mechanics.position[1];
@@ -164,11 +165,11 @@ export class Scene {
         }, 0);
 
         ctx.translate(
-            (cameraHalfWidth - charactersX) * BH.config.camera.follow,
-            (cameraHalfHeight - charactersY) * BH.config.camera.follow
+            (cameraHalfWidth - charactersX) * this.game.config.camera.follow,
+            (cameraHalfHeight - charactersY) * this.game.config.camera.follow
         );
 
-        const scale = 1 + BH.config.camera.zoom / (Math.max(scalingFactor, 50) + 200);
+        const scale = 1 + this.game.config.camera.zoom / (Math.max(scalingFactor, 50) + 200);
         ctx.scale(scale, scale);
         ctx.translate(
             -cameraHalfWidth + (cameraHalfWidth / scale),
@@ -176,9 +177,12 @@ export class Scene {
         );
 
         if (this.entities.some((entity) => entity.hitStop && !entity.isKilled)) {
-            ctx.translate(shakeValue(), shakeValue());
+            ctx.translate(this.shakeValue(), this.shakeValue());
         }
     }
+
+    shakeValue = () => Math.sin(Date.now()) * (Math.random() > 0.5 ? -1 : 1) * this.game.config.camera.shake;
+
 
     render(ctx: CanvasRenderingContext2D) {
         ctx.save();
@@ -201,11 +205,11 @@ export class Scene {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
             ctx.fillRect(140 + padding, padding, 400 - padding2, 28 - padding2);
             ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
-            ctx.fillRect(140 + padding, padding, entity.health / BH.config.health * (400 - padding2), 28 - padding2);
+            ctx.fillRect(140 + padding, padding, entity.health / this.game.config.health * (400 - padding2), 28 - padding2);
             ctx.drawImage(entity.data.face!, 10, 10);
             ctx.restore();
 
-            if (BH.debug.stats) {
+            if (this.game.debug.stats) {
                 ctx.save();
                 if (entity.port === 1) {
                     ctx.translate(1160, 0);

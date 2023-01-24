@@ -1,5 +1,5 @@
+import { BattleHaven } from './battle-haven';
 import { controllers } from './controller';
-import { BH } from './main';
 import { Mechanics, Shape, Vector } from './mechanics';
 import { Sprite } from './sprite';
 import { Body, Combo, FrameData, Interaction0, Point } from './types';
@@ -110,7 +110,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     next = new Transition<Frame>();
     attackRest: Map<Entity, number> = new Map();
     hitStop = 0;
-    health = BH.config.health;
+    health: number;
     isKilled = false;
     events: EventQueue = {
         collide: [],
@@ -124,6 +124,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     }
     public port = -1;
     constructor(
+        public game: BattleHaven,
         public mechanics: Mechanics,
         public environment: Shape,
         public sprite: Sprite,
@@ -132,6 +133,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         public offsetY = 0,
     ) {
         this.environment.follow(this.mechanics.position);
+        this.health = this.game.config.health;
     }
 
     translateFrame(frame: Frame | Defaults) {
@@ -169,7 +171,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     }
 
     attacking(entity: Entity, rest: number) {
-        this.hitStop = BH.config.hitStop;
+        this.hitStop = this.game.config.hitStop;
         this.attackRest.set(entity, Math.floor(rest / 2));
     }
 
@@ -213,7 +215,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             this.next.frame = 0;
 
             if (translatedFrame === 1000) {
-                BH.destroy(this);
+                this.game.destroy(this);
                 return;
             }
             const previousFrame = this.frame;
@@ -229,7 +231,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             }
 
             if (nextFrameData.opoint) {
-                BH.spawn(nextFrameData.opoint, this);
+                this.game.spawn(nextFrameData.opoint, this);
             }
             if (changedState) {
                 this.state?.event?.leave?.(translatedFrame);
@@ -286,10 +288,10 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             this.mechanics.position[0] - offsetX + modX,
             this.mechanics.position[1] - offsetY,
         )
-        if (BH.debug.hitbox) {
+        if (this.game.debug.hitbox) {
             this.debugRender(ctx);
         }
-        if (BH.debug.mechanics) {
+        if (this.game.debug.mechanics) {
             this.mechanics.render(ctx);
             this.environment.render(ctx);
         }
