@@ -52,6 +52,14 @@ export interface EntityData {
     spriteSheet: SpriteSheet;
 }
 
+
+const context = new AudioContext();
+const loadAudio = async (source: string) => {
+    const file = await fetch(source.replace('sound', './data'));
+    const buffer = await context.decodeAudioData(await file.arrayBuffer());
+    return buffer;
+}
+
 const loadImage = (source: string) => {
     const image = new Image();
     image.src = source.replace('sprite', './data');

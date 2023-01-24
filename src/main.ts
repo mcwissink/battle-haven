@@ -4,6 +4,7 @@ import { controllers } from './controller';
 import { entityData } from './data-loader';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+
 export const BH = new BattleHaven(canvas, {
     camera: {
         width: 1600,
