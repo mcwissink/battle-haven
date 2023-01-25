@@ -17,9 +17,11 @@ import { wind } from './data/henry_louis_rudolf_wind';
 import { louis } from './data/louis';
 import { rudolf } from './data/rudolf';
 import { rudolfWeapon } from './data/rudolf-weapon';
+import { soundpack } from './data/soundpack';
 import { woody } from './data/woody';
 import { woodyBall } from './data/woody-ball';
 import { modifyData } from './modify-data';
+import { SoundPack } from './sound';
 import { SpriteSheet } from './sprite';
 
 const entityDataMapping: Record<string, any> = {
@@ -128,17 +130,24 @@ const loadEntity = (data: any): EntityData => {
 };
 
 export type GameData = {
-    entities: Record<string, EntityData>
+    entities: Record<string, EntityData>,
+    soundpacks: Record<string, SoundPack>,
 };
 
 export const loadData = async () => {
     const gameData: GameData = {
         entities: {},
+        soundpacks: {},
     }
 
     Object.entries(entityDataMapping).forEach(([key, data]) => {
         gameData.entities[key] = loadEntity(data);
     });
+
+    gameData.soundpacks[1] = {
+        audio: await loadAudio(`${soundpack.file}.mp3`),
+        mapping: soundpack.sound,
+    };
 
     return gameData;
 }

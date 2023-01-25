@@ -1,5 +1,5 @@
-interface SoundPack {
-    audio: HTMLAudioElement;
+export interface SoundPack {
+    audio: AudioBuffer;
     mapping: any;
 }
 
@@ -11,11 +11,11 @@ export class Audio {
 
     play(path: string) {
         const [pack, id] = path.split('/');
-        const sound = this.soundPool.pop() ?? new Sound(this.soundPacks[pack], id);
-    }
-}
-
-class Sound {
-    constructor(audio: SoundPack, id: string) {
+        const soundpack = this.soundPacks[pack];
+        const source = this.context.createBufferSource();
+        source.buffer = soundpack.audio
+        source.connect(this.context.destination);
+        const { start, end } = soundpack.mapping[id];
+        source.start(0, start, end - start);
     }
 }

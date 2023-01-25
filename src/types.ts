@@ -81,6 +81,7 @@ export type Combo =
 export type FrameData = Record<Combo, number> & {
     name: string;
     pic: number;
+    sound: string;
     state: number;
     wait: number;
     next: number;

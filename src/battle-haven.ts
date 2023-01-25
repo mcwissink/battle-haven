@@ -6,6 +6,7 @@ import { Entity } from './entity';
 import { Menu } from './menu';
 import { Projectile } from './projectile';
 import { Scene } from './scene';
+import { Audio } from './sound';
 import { ObjectPoint } from './types';
 
 export interface SpawnTask {
@@ -42,6 +43,7 @@ export class BattleHaven {
     previousTime = 0;
     ctx: CanvasRenderingContext2D;
     scene: Scene;
+    public audio: Audio;
     public menu: Menu;
     tasks: Task[] = [];
     debug = {
@@ -64,6 +66,7 @@ export class BattleHaven {
         this.ctx = ctx;
         this.scene = new Scene(this);
         this.menu = new Menu(this, () => ({ text: '', entries: [] }));
+        this.audio = new Audio(data.soundpacks);
     }
 
     start() {

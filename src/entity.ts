@@ -243,6 +243,9 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             if (changedState) {
                 this.state?.event?.enter?.(previousFrame);
             }
+            if (nextFrameData.sound) {
+                this.game.audio.play(nextFrameData.sound);
+            }
         }
         this.next.reset();
     }
