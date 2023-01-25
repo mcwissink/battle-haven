@@ -52,7 +52,6 @@ export interface EntityData {
     spriteSheet: SpriteSheet;
 }
 
-
 const context = new AudioContext();
 const loadAudio = async (source: string) => {
     const file = await fetch(source.replace('sound', './data'));
@@ -70,7 +69,7 @@ export const animation: Record<string, number> = {
     airborn: 212,
 };
 
-const loadData = (data: any): EntityData => {
+const loadEntity = (data: any): EntityData => {
     modifyData(data);
     Object.entries(data.frame).forEach(([frame, frameData]: any) => {
         if (!animation[frameData.name]) {
@@ -128,10 +127,21 @@ const loadData = (data: any): EntityData => {
     }
 };
 
-export const entityData: Record<string, EntityData> = {};
+export type GameData = {
+    entities: Record<string, EntityData>
+};
 
-Object.entries(entityDataMapping).forEach(([key, data]) => {
-    entityData[key] = loadData(data);
-});
+export const loadData = async () => {
+    const gameData: GameData = {
+        entities: {},
+    }
+
+    Object.entries(entityDataMapping).forEach(([key, data]) => {
+        gameData.entities[key] = loadEntity(data);
+    });
+
+    return gameData;
+}
+
 
 

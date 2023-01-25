@@ -1,6 +1,6 @@
 import { Character } from './character';
 import { controllers } from './controller';
-import { entityData } from './data-loader';
+import { GameData } from './data-loader';
 import { Effect } from './effect';
 import { Entity } from './entity';
 import { Menu } from './menu';
@@ -42,7 +42,7 @@ export class BattleHaven {
     previousTime = 0;
     ctx: CanvasRenderingContext2D;
     scene: Scene;
-    public menu = new Menu({ text: '', entries: [] });
+    public menu: Menu;
     tasks: Task[] = [];
     debug = {
         hitbox: false,
@@ -54,6 +54,7 @@ export class BattleHaven {
     }
     constructor(
         private canvas: HTMLCanvasElement,
+        public data: GameData,
         public config: BattleHavenConfig
     ) {
         const ctx = canvas.getContext('2d');
@@ -62,6 +63,7 @@ export class BattleHaven {
         }
         this.ctx = ctx;
         this.scene = new Scene(this);
+        this.menu = new Menu(this, () => ({ text: '', entries: [] }));
     }
 
     start() {
@@ -102,7 +104,7 @@ export class BattleHaven {
         this.tasks.forEach(task => {
             switch (task.type) {
                 case 'spawn': {
-                    const entity = entityData[task.data.opoint.oid];
+                    const entity = this.data.entities[task.data.opoint.oid];
                     if (entity) {
                         if (task.data.opoint.oid >= 300) {
                             const effect = this.scene.effectsPool.pop() ?? new Effect(this, task.data, entity);

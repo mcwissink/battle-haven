@@ -1,3 +1,4 @@
+import { BattleHaven } from './battle-haven';
 import { Controller, controllers, Port } from './controller';
 import { mod } from './utils';
 
@@ -12,12 +13,16 @@ export interface Entries {
     click?: (context: { port: number }) => void;
 }
 
+export type Component = (game: BattleHaven) => Entries;
+
 const ENTRY_HEIGHT = 26;
 export class Menu {
     isOpen = true;
     cursors = new Map<Port, EntryState>();
     menuCursor: EntryState[] = [];
-    constructor(public entries: Entries) {
+    entries: Entries;
+    constructor(public game: BattleHaven, public component: Component) {
+        this.entries = component(game);
         controllers.on('connect', (controller) => {
             controller.on('input', this.input);
             this.cursors.set(controller, {
@@ -63,8 +68,8 @@ export class Menu {
         }
     }
 
-    setEntries(entries: Entries) {
-        this.entries = entries;
+    setEntries(component: Component) {
+        this.entries = component(this.game);
         this.menuCursor = [];
         this.cursors.forEach(cursor => cursor.index = 0);
     }
