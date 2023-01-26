@@ -91,11 +91,14 @@ export class BattleHaven {
 
             if (!this.menu.isOpen) {
                 this.scene.update(dx);
+                this.processTasks();
+
+                this.scene.entities.forEach(entity => entity.update(dx));
+                this.scene.effects.forEach(effect => effect.update(dx));
             }
             this.scene.render(this.ctx);
             this.menu.render(this.ctx);
 
-            this.processTasks();
             this.wait = 2;
         }
 

@@ -140,8 +140,6 @@ export class Scene {
                 });
             }
         });
-        this.entities.forEach(entity => entity.update(dx));
-        this.effects.forEach(effect => effect.update(dx));
     }
 
     camera(ctx: CanvasRenderingContext2D) {

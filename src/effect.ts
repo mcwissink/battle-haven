@@ -49,7 +49,6 @@ export class Effect extends Entity {
             spawnTask.parent.mechanics.position[0] + x,
             spawnTask.parent.mechanics.position[1] + y,
         ];
-        this.frame = Math.random() > 0.5 ? 0 : 10;
-        this.wait = 1;
+        this.next.frame = Math.random() > 0.5 ? 999 : 10;
     }
 }

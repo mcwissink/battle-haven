@@ -36,6 +36,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         const land = () => this.next.setFrame(animation.crouch, 1);
 
         const landInjured: EventHandlers['land'] = ({ vy }) => {
+            this.game.audio.play('1/016');
             if (vy > 6) {
                 this.mechanics.force(-2, 1);
             } else {
@@ -67,9 +68,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 switch (effect) {
                     case Effect.ice:
                         this.next.setFrame(animation.ice, 3);
+                        this.game.audio.play('1/066')
                         break;
                     case Effect.fire:
                         // this.next.setFrame(animation.fire, 3);
+                        this.game.audio.play('1/070')
                         break;
                 }
             }

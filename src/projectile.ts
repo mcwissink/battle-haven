@@ -47,10 +47,12 @@ export class Projectile extends Entity {
                             this.next.setFrame(20);
                             this.mechanics.velocity[0] = 0;
                             this.mechanics.velocity[1] = 0;
+                            this.game.audio.play(data.data.bmp.weapon_broken_sound);
                         },
                         collide: () => {
                             this.mechanics.velocity[0] = 0;
                             this.next.setFrame(20);
+                            this.game.audio.play(data.data.bmp.weapon_broken_sound);
                         },
                         attacked: ({ entity }) => {
                             this.mechanics.velocity[0] = 0;
@@ -72,14 +74,17 @@ export class Projectile extends Entity {
                 },
                 3005: {
                     event: {
-                        collide: () => this.next.setFrame(1000),
+                        collide: () => {
+                            this.next.setFrame(1000)
+                            this.game.audio.play(data.data.bmp.weapon_broken_sound);
+                        },
                     },
                 }
             }
         );
-        this.frame = spawnTask.opoint.action;
+        this.next.frame = spawnTask.opoint.action;
+        this.next.direction = direction;
         this.parent = spawnTask.parent.parent || spawnTask.parent;
-        this.direction = direction;
         if (spawnTask.opoint.dvx) {
             this.mechanics.force(this.direction * spawnTask.opoint.dvx)
         }
