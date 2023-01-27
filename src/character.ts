@@ -98,9 +98,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     }
                 },
                 [State.attacks]: {
-                    combo: {
-                        hit_j: animation.dash_go,
-                    },
                     update: () => {
                         if (!this.mechanics.isGrounded) {
                             airMove();
@@ -281,15 +278,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.crouching]: {
-                    combo: {
-                        hit_j: animation.dash_go,
-                    },
                     event: {
                         fall: () => this.next.setFrame(animation.airborn),
                     },
                     update: () => {
                         this.mechanics.velocity[0] *= 0.8;
-                        this.next.setDirectionFromValue(this.controller.stickDirectionX)
                     },
                 },
                 [State.lying]: {
@@ -353,6 +346,17 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.fireRunning]: {
                     event: {
                         fall: () => this.next.setFrame(animation.airborn),
+                    },
+                },
+                [State.teleport]: {
+                    event: {
+                        enter: () => {
+                            const nearestCharacter = this.game.scene.getNearestCharacter(this);
+                            if (nearestCharacter) {
+                                this.mechanics.position[0] = nearestCharacter.mechanics.position[0] - 100 * this.direction;
+                                this.mechanics.position[1] = nearestCharacter.mechanics.position[1];
+                            }
+                        },
                     },
                 },
                 [State.catching]: {

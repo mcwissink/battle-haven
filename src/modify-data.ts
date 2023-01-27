@@ -154,7 +154,9 @@ export const modifyData = (data: any) => {
         }
         frameData.centerx++;
         frameData.centery++;
-        frameData.dvy *= 1.4;
+        if (frameData.dvy !== 550) {
+            frameData.dvy *= 1.4;
+        }
     });
 
 };

@@ -65,6 +65,7 @@ export enum State {
     doubleJumping = 21,
     drop = 22,
     dashGo = 23,
+    teleport = 400,
 }
 
 type Defaults = 999 | 0;
@@ -223,11 +224,13 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             const nextFrameData = this.frames[translatedFrame];
             const changedState = nextFrameData.state !== previousFrameData.state;
 
-            if (nextFrameData.dvx) {
-                this.mechanics.force(nextFrameData.dvx * this.direction, 0, Infinity);
-            }
-            if (nextFrameData.dvy) {
-                this.mechanics.force(nextFrameData.dvy, 1);
+            if (!this.isFrozen(nextFrameData)) {
+                if (nextFrameData.dvx) {
+                    this.mechanics.force(nextFrameData.dvx * this.direction, 0, Infinity);
+                }
+                if (nextFrameData.dvy) {
+                    this.mechanics.force(nextFrameData.dvy, 1);
+                }
             }
 
             if (nextFrameData.opoint) {
@@ -250,11 +253,15 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         this.next.reset();
     }
 
+    isFrozen(frameData: FrameData) {
+        return frameData.dvx === 550 && frameData.dvy === 550;
+    }
+
     mechanicsUpdate(_dx: number) {
         if (this.hitStop) {
             this.hitStop--;
         } else {
-            if (!this.state?.noMechanics) {
+            if (!this.state?.noMechanics && !this.isFrozen(this.frameData)) {
                 this.mechanics.update();
             }
             this.attackRest.forEach((value, key) => {

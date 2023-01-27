@@ -142,6 +142,23 @@ export class Scene {
         });
     }
 
+    getNearestCharacter(entity: Entity) {
+        let nearestCharacter: Character | null = null;
+        let minDistance = Infinity;
+        for (const character of this.characters) {
+            if (character !== entity) {
+                const distance = Math.hypot(
+                    character.mechanics.position[0] - entity.mechanics.position[0],
+                    character.mechanics.position[1] - entity.mechanics.position[1]
+                );
+                if (distance < minDistance) {
+                    nearestCharacter = character;
+                }
+            }
+        }
+        return nearestCharacter;
+    }
+
     camera(ctx: CanvasRenderingContext2D) {
         const cameraHalfWidth = this.game.config.camera.width * 0.5;
         const cameraHalfHeight = this.game.config.camera.height * 0.5;
