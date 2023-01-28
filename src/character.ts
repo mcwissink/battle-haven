@@ -3,7 +3,7 @@ import { BattleHaven } from './battle-haven';
 import { animation, EntityData } from './data-loader';
 import { Effect, Entity, EventHandlers, State } from "./entity";
 import { gameOverMenu } from './main';
-import { Diamond, Mechanics } from './mechanics';
+import { Diamond, Mechanics, normalize } from './mechanics';
 import { Sprite } from './sprite';
 
 type CharacterFrameData = any;
@@ -97,7 +97,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         land,
                     }
                 },
-                [State.attacks]: {
+                [State.attack]: {
                     update: () => {
                         if (!this.mechanics.isGrounded) {
                             airMove();
@@ -106,15 +106,30 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 },
                 [State.dashGo]: {
                     event: {
-                        enter: () => {
-                            this.mechanics.isGrounded = false;
-                            this.mechanics.force(this.data.data.bmp.dash_distance * this.direction);
-                            this.mechanics.velocity[1] = this.data.data.bmp.dash_height * 0.5;
-                        },
                         attacking: () => {
                             this.next.setFrame(animation.double_jump);
+                            this.mechanics.velocity[0] *= 0;
+                            this.mechanics.velocity[1] *= 0;
                         },
-                    }
+                    },
+                    update: () => {
+                        this.mechanics.isGrounded = false;
+                        const nearestCharacter = this.game.scene.getNearestCharacter(this);
+                        if (nearestCharacter) {
+                            const diffX = nearestCharacter.mechanics.position[0] - this.mechanics.position[0];
+                            const diffY = nearestCharacter.mechanics.position[1] - this.mechanics.position[1];
+                            this.next.setDirectionFromValue(diffX);
+                            const distance = Math.hypot(diffX, diffY);
+                            const vector = normalize([
+                                nearestCharacter.mechanics.position[0] - this.mechanics.position[0],
+                                nearestCharacter.mechanics.position[1] - this.mechanics.position[1]
+                            ]);
+                            this.mechanics.force(Math.min(distance * 0.2, 30) * vector[0]);
+                            this.mechanics.force(Math.min(distance * 0.2, 30) * vector[1], 1);
+                            this.mechanics.position[0] += (nearestCharacter.mechanics.position[0] - this.mechanics.position[0]) * 0.3;
+                            this.mechanics.position[1] += (nearestCharacter.mechanics.position[1] - this.mechanics.position[1]) * 0.3;
+                        }
+                    },
                 },
                 [State.ice]: {
                     event: {
@@ -232,7 +247,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                     update: () => {
                         airMove();
-                        this.next.setDirectionFromValue(Math.sign(this.mechanics.velocity[0]))
                     },
                 },
                 [State.dash]: {
@@ -278,6 +292,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.crouching]: {
+                    combo: {
+                        hit_a: animation.dash_go,
+                    },
                     event: {
                         fall: () => this.next.setFrame(animation.airborn),
                     },

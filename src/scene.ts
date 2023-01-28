@@ -153,6 +153,7 @@ export class Scene {
                 );
                 if (distance < minDistance) {
                     nearestCharacter = character;
+                    minDistance = distance;
                 }
             }
         }

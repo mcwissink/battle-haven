@@ -76,6 +76,7 @@ export type Combo =
     | 'hit_Ua'
     | 'hit_Uj'
     | 'hit_Da'
+    | 'hit_jj'
     | 'hit_Dj';
 
 export type FrameData = Record<Combo, number> & {

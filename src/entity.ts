@@ -46,7 +46,7 @@ export enum State {
     standing = 0,
     walking = 1,
     running = 2,
-    attacks = 3,
+    attack = 3,
     jumping = 4,
     dash = 5,
     dodging = 6,
@@ -275,8 +275,8 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     }
 
     stateUpdate() {
-        this.processEvents();
         (this.state?.update ?? this.states.default?.update)?.();
+        this.processEvents();
     }
 
     update(_dx: number) {

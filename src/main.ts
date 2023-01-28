@@ -80,7 +80,7 @@ loadData().then((data) => {
                 follow: 0.5,
                 zoom: 90,
             },
-            hitStop: 2,
+            hitStop: 3,
             gravity: 1.7,
             friction: 1,
             health: 750,
