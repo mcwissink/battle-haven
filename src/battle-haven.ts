@@ -51,9 +51,17 @@ export class BattleHaven {
         hitbox: false,
         mechanics: false,
         stats: true,
+        frames: false,
     }
     combo: Record<string, (() => void) | undefined> = {
-        toggle_menu: () => this.menu.toggle(),
+        toggle_menu: () => {
+            if (this.debug.frames) {
+                this.wait = 2;
+            } else {
+                this.menu.toggle()
+                this.wait = 2;
+            }
+        },
     }
     constructor(
         private canvas: HTMLCanvasElement,
@@ -90,14 +98,14 @@ export class BattleHaven {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (!--this.wait) {
-            if (!this.menu.isOpen) {
+            if (!this.menu.isOpen || this.debug.frames) {
                 this.scene.update(dx);
                 this.processTasks();
 
                 this.scene.entities.forEach(entity => entity.update(dx));
                 this.scene.effects.forEach(effect => effect.update(dx));
             }
-            this.wait = 2;
+            this.wait = this.debug.frames ? 0 : 2;
         }
 
         this.scene.render(this.ctx);
