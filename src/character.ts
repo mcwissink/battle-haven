@@ -3,7 +3,7 @@ import { BattleHaven } from './battle-haven';
 import { animation, EntityData } from './data-loader';
 import { Effect, Entity, EventHandlers, State } from "./entity";
 import { gameOverMenu } from './main';
-import { Diamond, Mechanics, normalize } from './mechanics';
+import { Diamond, difference, Mechanics, normalize } from './mechanics';
 import { Sprite } from './sprite';
 
 type CharacterFrameData = any;
@@ -116,8 +116,10 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         this.mechanics.isGrounded = false;
                         const nearestCharacter = this.game.scene.getNearestCharacter(this);
                         if (nearestCharacter) {
-                            const diffX = nearestCharacter.mechanics.position[0] - this.mechanics.position[0];
-                            const diffY = nearestCharacter.mechanics.position[1] - this.mechanics.position[1];
+                            const [diffX, diffY] = difference(
+                                nearestCharacter.mechanics.position,
+                                this.mechanics.position
+                            );
                             this.next.setDirectionFromValue(diffX);
                             const distance = Math.hypot(diffX, diffY);
                             const vector = normalize([

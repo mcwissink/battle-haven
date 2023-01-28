@@ -6,6 +6,19 @@ export const UP_VECTOR: Vector = [0, -1];
 
 const perpendicular = ([x, y]: Vector): Vector => [y, -x];
 
+export const difference = (vector1: Vector, vector2: Vector): Vector => ([
+    vector2[0] - vector1[0],
+    vector2[1] - vector1[1],
+]);
+
+export const minimum = (vector1: Vector, vector2: Vector): Vector => {
+    if (Math.hypot(vector1[0], vector1[0]) < Math.hypot(vector2[0], vector2[1])) {
+        return vector1;
+    } else {
+        return vector2;
+    }
+}
+
 export const normalize = ([x, y]: Vector): Vector => {
     const magnitude = Math.hypot(x, y) || 1;
     return [x / magnitude, y / magnitude];

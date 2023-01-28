@@ -2,7 +2,7 @@ import { BattleHaven } from './battle-haven';
 import { Character } from './character';
 import { Effect } from './effect';
 import { Entity } from './entity';
-import { collide, dot, Mechanics, normalize, Rectangle, UP_VECTOR } from './mechanics';
+import { collide, difference, dot, Mechanics, minimum, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
 import { Interaction } from './types';
 
 export class Scene {
@@ -160,6 +160,7 @@ export class Scene {
         return nearestCharacter;
     }
 
+    cameraPosition: Vector = [0, 0]
     camera(ctx: CanvasRenderingContext2D) {
         const cameraHalfWidth = this.game.config.camera.width * 0.5;
         const cameraHalfHeight = this.game.config.camera.height * 0.5;
@@ -180,10 +181,20 @@ export class Scene {
             )
         }, 0);
 
-        ctx.translate(
-            (cameraHalfWidth - charactersX) * this.game.config.camera.follow,
-            (cameraHalfHeight - charactersY) * this.game.config.camera.follow
-        );
+        const target: Vector = [
+            (cameraHalfWidth - charactersX) * this.game.config.camera.follow || 0,
+            (cameraHalfHeight - charactersY) * this.game.config.camera.follow || 0
+        ];
+        const cameraFullTranslation = difference(this.cameraPosition, target);
+        const [x, y] = normalize(cameraFullTranslation);
+        const cameraLimitedTranslation: Vector = [
+            x * this.game.config.camera.speed,
+            y * this.game.config.camera.speed
+        ];
+        const minimumTranslation = minimum(cameraFullTranslation, cameraLimitedTranslation):
+        this.cameraPosition[0] += minimumTranslation[0];
+        this.cameraPosition[1] += minimumTranslation[1];
+        ctx.translate(this.cameraPosition[0], this.cameraPosition[1]);
 
         const scale = 1 + this.game.config.camera.zoom / (Math.max(scalingFactor, 50) + 200);
         ctx.scale(scale, scale);

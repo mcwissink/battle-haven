@@ -32,6 +32,7 @@ interface BattleHavenConfig {
         shake: number;
         follow: number;
         zoom: number;
+        speed: number;
     };
     gravity: number;
     hitStop: number;
@@ -86,9 +87,9 @@ export class BattleHaven {
             });
         });
         const dx = time - this.previousTime;
-        if (!--this.wait) {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+        if (!--this.wait) {
             if (!this.menu.isOpen) {
                 this.scene.update(dx);
                 this.processTasks();
@@ -96,11 +97,12 @@ export class BattleHaven {
                 this.scene.entities.forEach(entity => entity.update(dx));
                 this.scene.effects.forEach(effect => effect.update(dx));
             }
-            this.scene.render(this.ctx);
-            this.menu.render(this.ctx);
-
             this.wait = 2;
         }
+
+        this.scene.render(this.ctx);
+        this.menu.render(this.ctx);
+
 
         window.requestAnimationFrame(this.update);
         this.previousTime = time;
