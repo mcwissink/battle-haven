@@ -50,7 +50,7 @@ export class Scene {
                 const mtv2 = collide(entity.environment, platform.shape)
                 if (mtv2) {
                     isOverlapping = true;
-                    if (!entity.mechanics.isOverlapping) {
+                    if (!entity.mechanics.isOverlapping && mtv) {
                         entity.mechanics.isOverlapping = true;
                         entity.event('collide');
                     }

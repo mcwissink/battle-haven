@@ -88,8 +88,6 @@ export class Shape {
     }
 
     render(ctx: CanvasRenderingContext2D) {
-        ctx.fillStyle = 'rgba(100, 0, 0, 0.4)';
-        ctx.strokeStyle = 'blue';
         ctx.lineWidth = 2;
         ctx.beginPath();
         this._corners.forEach((corner, index) => {
@@ -200,6 +198,7 @@ export class Mechanics {
     }
 
     render(ctx: CanvasRenderingContext2D) {
+        ctx.strokeStyle = this.isOverlapping ? 'orange' : 'blue';
         this.shape.render(ctx);
     }
 }
