@@ -31,7 +31,16 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2);
         };
 
-        const airMove = () => this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.walking_speedz, 0, 1);
+        const drop = () => {
+            if (this.controller.stickDirectionY === 1) {
+                this.mechanics.ignorePassthrough = true;
+            }
+        }
+
+        const airMove = () => {
+            this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.walking_speedz, 0, 1);
+            drop();
+        }
 
         const land = () => this.next.setFrame(animation.crouch, 1);
 
@@ -161,9 +170,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         hit_ja: animation.walking,
                     },
                     update: () => {
-                        if (this.controller.stickDirectionY === 1) {
-                            this.mechanics.ignorePassthrough = true;
-                        }
+                        drop();
                         this.next.setDirectionFromValue(this.controller.stickDirectionX);
                         if (this.controller.stickX) {
                             this.next.setFrame(animation.running);
