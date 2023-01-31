@@ -93,6 +93,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             this.game.menu.setEntries(gameOverMenu);
                             this.game.menu.open();
                         },
+                        drop: () => this.mechanics.force(this.game.config.gravity * 4, 1),
                         attacked: hit,
                         land,
                     }

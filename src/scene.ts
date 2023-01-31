@@ -54,9 +54,7 @@ export class Scene {
                 if (mtv2) {
                     if (platform.passthrough && entity.mechanics.ignorePassthrough) {
                         if (entity.mechanics.isGrounded) {
-                            // TODO: refactor to event
-                            entity.mechanics.force(this.game.config.gravity * 4, 1);
-                            console.log('drop');
+                            entity.event('drop');
                         }
                         isIgnoringPassthrough = true;
                         return;

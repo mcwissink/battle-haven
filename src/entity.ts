@@ -13,6 +13,7 @@ type Event = {
     caught: { entity: Entity };
     catching: { entity: Entity };
     killed: null;
+    drop: null;
 }
 
 type EventQueue = {
@@ -122,6 +123,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         attacking: [],
         attacked: [],
         killed: [],
+        drop: [],
     }
     public port = -1;
     constructor(
