@@ -160,6 +160,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         hit_ja: animation.walking,
                     },
                     update: () => {
+                        if (this.controller.stickDirectionY === 1) {
+                            this.mechanics.ignorePassthrough = true;
+                        }
                         this.next.setDirectionFromValue(this.controller.stickDirectionX);
                         if (this.controller.stickX) {
                             this.next.setFrame(animation.running);

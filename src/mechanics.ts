@@ -150,10 +150,11 @@ export class Rectangle extends Shape {
 
 export class Mechanics {
     public position: Vector;
-    public passThrough?: Vector;
+    public passthrough?: Vector;
     public velocity: Vector = [0, 0];
     public isGrounded = false;
     public isOverlapping = false;
+    public ignorePassthrough = false;
     public mass;
     constructor(
         public game: BattleHaven,
@@ -161,16 +162,16 @@ export class Mechanics {
         {
             mass = 1,
             position = [0, 0],
-            passThrough,
+            passthrough,
         }: {
             mass?: number,
-            passThrough?: Vector,
+            passthrough?: Vector,
             position?: Vector
         } = {}
     ) {
         this.mass = mass;
         this.position = position;
-        this.passThrough = passThrough;
+        this.passthrough = passthrough;
         this.shape.follow(this.position);
     }
 

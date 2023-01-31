@@ -8,9 +8,9 @@ import { Interaction } from './types';
 export class Scene {
     constructor(public game: BattleHaven) {
         this.platforms = [
-            new Mechanics(this.game, new Rectangle(200, 3), { position: [500, 245], passThrough: UP_VECTOR }),
-            new Mechanics(this.game, new Rectangle(200, 3), { position: [800, 150], passThrough: UP_VECTOR }),
-            new Mechanics(this.game, new Rectangle(200, 3), { position: [1100, 245], passThrough: UP_VECTOR }),
+            new Mechanics(this.game, new Rectangle(200, 3), { position: [500, 245], passthrough: UP_VECTOR }),
+            new Mechanics(this.game, new Rectangle(200, 3), { position: [800, 150], passthrough: UP_VECTOR }),
+            new Mechanics(this.game, new Rectangle(200, 3), { position: [1100, 245], passthrough: UP_VECTOR }),
             new Mechanics(this.game, new Rectangle(1000, 100), { position: [800, 400] }),
             new Mechanics(this.game, new Rectangle(150, 600), { position: [5, 210] }),
             new Mechanics(this.game, new Rectangle(1500, 100), { position: [800, 510] }),
@@ -30,14 +30,17 @@ export class Scene {
             }
             let isGrounded = false;
             let isOverlapping = false;
+            let isIgnoringPassthrough = false;
             this.platforms.forEach((platform) => {
                 let mtv = collide(entity.mechanics.shape, platform.shape)
                 // One-way platforms
-                if (mtv && platform.passThrough) {
+                if (mtv && platform.passthrough) {
                     if (
-                        dot(platform.passThrough, normalize(mtv)) < 0.5 ||
-                        dot(platform.passThrough, normalize(entity.mechanics.velocity)) >= 0
+                        entity.mechanics.ignorePassthrough ||
+                        dot(platform.passthrough, normalize(mtv)) < 0.5 ||
+                        dot(platform.passthrough, normalize(entity.mechanics.velocity)) >= 0
                     ) {
+                        isIgnoringPassthrough = true;
                         mtv = undefined;
                     }
                 }
@@ -49,6 +52,15 @@ export class Scene {
                 }
                 const mtv2 = collide(entity.environment, platform.shape)
                 if (mtv2) {
+                    if (platform.passthrough && entity.mechanics.ignorePassthrough) {
+                        if (entity.mechanics.isGrounded) {
+                            // TODO: refactor to event
+                            entity.mechanics.force(this.game.config.gravity * 4, 1);
+                            console.log('drop');
+                        }
+                        isIgnoringPassthrough = true;
+                        return;
+                    }
                     isOverlapping = true;
                     if (!entity.mechanics.isOverlapping && mtv) {
                         entity.mechanics.isOverlapping = true;
@@ -72,6 +84,9 @@ export class Scene {
                     entity.event('fall');
                 }
                 entity.mechanics.isGrounded = false;
+            }
+            if (!isIgnoringPassthrough && entity.mechanics.ignorePassthrough) {
+                entity.mechanics.ignorePassthrough = false;
             }
         });
 
