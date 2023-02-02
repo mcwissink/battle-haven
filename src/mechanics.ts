@@ -68,6 +68,36 @@ export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
     return mtv;
 };
 
+export const collide2 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
+    // minimum translation vector
+    let mtv: Vector = [0, 0];
+    let minDistance = Infinity;
+
+    const normals = getNormals(m1.shape.corners).concat(getNormals(m2.shape.corners));
+    for (const axis of normals) {
+        const shape1Corners = m1.shape.corners;
+        m1.shape.position[0] += m1.velocity[0];
+        m1.shape.position[1] += m1.velocity[1];
+
+        const ov = overlap(
+            project(axis, shape1Corners.concat(m1.shape.corners)),
+            project(axis, m2.shape.corners)
+        );
+
+        m1.shape.position[0] -= m1.velocity[0];
+        m1.shape.position[1] -= m1.velocity[1];
+        if (!ov) {
+            return;
+        }
+        const tv: Vector = [axis[0] * ov, axis[1] * ov]
+        if (Math.abs(ov) < minDistance) {
+            minDistance = Math.abs(ov);
+            mtv = tv;
+        }
+    }
+    return mtv;
+};
+
 export class Shape {
     public _corners: Vector[] = [];
     public position: Vector = [0, 0];
@@ -201,5 +231,13 @@ export class Mechanics {
     render(ctx: CanvasRenderingContext2D) {
         ctx.strokeStyle = this.isOverlapping ? 'orange' : 'blue';
         this.shape.render(ctx);
+        ctx.strokeStyle = 'red';
+        if (this.velocity[0] || this.velocity[1]) {
+            // this.position[0] += this.velocity[0];
+            // this.position[1] += this.velocity[1];
+            // this.shape.render(ctx);
+            // this.position[0] -= this.velocity[0];
+            // this.position[1] -= this.velocity[1];
+        }
     }
 }

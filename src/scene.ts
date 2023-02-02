@@ -2,7 +2,7 @@ import { BattleHaven } from './battle-haven';
 import { Character } from './character';
 import { Effect } from './effect';
 import { Entity } from './entity';
-import { collide, difference, dot, Mechanics, minimum, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
+import { collide, collide2, difference, dot, Mechanics, minimum, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
 import { Interaction } from './types';
 
 export class Scene {
@@ -32,23 +32,22 @@ export class Scene {
             let isOverlapping = false;
             let isIgnoringPassthrough = false;
             this.platforms.forEach((platform) => {
-                let mtv = collide(entity.mechanics.shape, platform.shape)
+                let mtv = collide2(entity.mechanics, platform)
                 // One-way platforms
                 if (mtv && platform.passthrough) {
                     if (
-                        entity.mechanics.ignorePassthrough ||
-                        dot(platform.passthrough, normalize(mtv)) < 0.5 ||
-                        dot(platform.passthrough, normalize(entity.mechanics.velocity)) >= 0
+                        entity.mechanics.ignorePassthrough
                     ) {
                         isIgnoringPassthrough = true;
                         mtv = undefined;
                     }
                 }
                 if (mtv) {
-                    entity.mechanics.position[0] += mtv[0];
-                    entity.mechanics.position[1] += mtv[1];
-                    entity.mechanics.velocity[0] += mtv[0] * 0.5;
-                    entity.mechanics.velocity[1] += mtv[1] * 0.5;
+                    console.log('collide', mtv);
+                    entity.mechanics.position[0] += mtv[0] + entity.mechanics.velocity[0];
+                    entity.mechanics.position[1] += mtv[1] + entity.mechanics.velocity[1];
+                    entity.mechanics.velocity[0] = 0;
+                    entity.mechanics.velocity[1] = 0;
                 }
                 const mtv2 = collide(entity.environment, platform.shape)
                 if (mtv2) {

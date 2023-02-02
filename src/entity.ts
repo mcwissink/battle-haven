@@ -295,11 +295,11 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
         const offsetX = this.direction === 1 ? this.frameData.centerx : this.sprite.dimensions.width - this.frameData.centerx;
         const offsetY = this.frameData.centery - this.offsetY;
-        this.sprite.render(
-            ctx,
-            this.mechanics.position[0] - offsetX + modX,
-            this.mechanics.position[1] - offsetY,
-        )
+        // this.sprite.render(
+        //     ctx,
+        //     this.mechanics.position[0] - offsetX + modX,
+        //     this.mechanics.position[1] - offsetY,
+        // )
         if (this.game.debug.hitbox) {
             this.debugRender(ctx);
         }
