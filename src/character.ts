@@ -13,6 +13,8 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
     type = 'character';
     animator = new Animator();
     catching: Entity | null = null;
+    // Testing
+    enterWalking = false;
     constructor(
         public game: BattleHaven,
         public port: number,
@@ -165,15 +167,12 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         hit_a: animation.punch,
                         hit_d: animation.defend,
                         hit_j: animation.jump,
-                        hit_F: animation.running,
-                        hit_DF: animation.walking,
                         hit_ja: animation.walking,
                     },
                     update: () => {
                         drop();
-                        this.next.setDirectionFromValue(this.controller.stickDirectionX);
                         if (this.controller.stickX) {
-                            this.next.setFrame(animation.running);
+                            this.next.setFrame(animation.walking);
                         }
                     },
                 },
@@ -181,6 +180,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     event: {
                         fall: () => this.next.setFrame(animation.airborn, 1),
                         catching,
+                        enter: () => {
+                            this.enterWalking = true;
+                        }
                     },
                     combo: {
                         hit_a: animation.punch,
@@ -190,16 +192,28 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                     nextFrame: () => this.animator.oscillate(5, 8),
                     update: () => {
+                        if (this.enterWalking) {
+                            if (this.controller.stickMagnitudeX > 0.5) {
+                                this.next.setFrame(animation.running);
+                            }
+                            this.enterWalking = false;
+                        }
                         this.mechanics.force(this.direction * this.data.data.bmp.walking_speed);
                         this.next.setDirectionFromValue(this.controller.stickDirectionX)
+                        console.log(this.controller.stickMagnitudeX);
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.standing);
                         }
                     },
                 },
+                // TODO: initial dash and turn states
+                // drop through platform
                 [State.running]: {
                     event: {
-                        enter: () => this.controller.clearComboBuffer(),
+                        enter: () => {
+                            this.controller.clearComboBuffer();
+                            this.mechanics.force(this.direction * this.data.data.bmp.running_speed * 1.2);
+                        },
                         fall: () => this.next.setFrame(animation.airborn, 1),
                     },
                     combo: {
@@ -306,7 +320,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 },
                 [State.crouching]: {
                     combo: {
-                        hit_a: animation.dash_go,
+                        // hit_a: animation.dash_go,
                     },
                     event: {
                         fall: () => this.next.setFrame(animation.airborn),

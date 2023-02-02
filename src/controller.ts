@@ -90,6 +90,10 @@ export class Controller {
         }
     }
 
+    get stickMagnitudeX() {
+        return Math.abs(this.stickX);
+    }
+
     get stickDirectionX() {
         return Math.sign(this.stickX);
     }
@@ -253,12 +257,24 @@ class GamepadController extends Controller {
         super();
     }
 
+    roundAxis(axis: number) {
+        const value = Math.abs(axis);
+        const sign = Math.sign(axis);
+        if (value > 0.75) {
+            return 1 * sign;
+        } else if (value > 0.25) {
+            return 0.5 * sign;
+        } else {
+            return 0;
+        }
+    }
+
     update() {
         this.input('attack', this.gamepad.buttons[1].value);
         this.input('defend', this.gamepad.buttons[5].value);
         this.input('jump', this.gamepad.buttons[3].value);
-        this.input('stickX', Math.round(this.gamepad.axes[0]));
-        this.input('stickY', Math.round(this.gamepad.axes[1]));
+        this.input('stickX', this.roundAxis(this.gamepad.axes[0]));
+        this.input('stickY', this.roundAxis(this.gamepad.axes[1]));
     }
 }
 

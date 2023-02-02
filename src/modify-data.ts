@@ -118,6 +118,7 @@ export const modifyData = (data: any) => {
         }
 
         data.bmp.walking_speedz = 7;
+        data.bmp.running_speed += 2;
 
 
         // Mod woody teleport to see animation
