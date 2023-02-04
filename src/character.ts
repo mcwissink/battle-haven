@@ -200,7 +200,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         }
                         this.mechanics.force(this.direction * this.data.data.bmp.walking_speed);
                         this.next.setDirectionFromValue(this.controller.stickDirectionX)
-                        console.log(this.controller.stickMagnitudeX);
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.standing);
                         }

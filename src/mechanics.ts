@@ -42,7 +42,7 @@ const project = (axis: Vector, corners: Vector[]): Vector => {
 };
 
 const overlap = ([min1, max1]: Vector, [min2, max2]: Vector) => {
-    if (!(max1 > min2 && max2 > min1)) {
+    if (max1 < min2 || max2 < min1) {
         return 0;
     }
     return max1 > max2 ? max2 - min1 : min2 - max1;
@@ -70,32 +70,50 @@ export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
 
 export const collide2 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
     // minimum translation vector
+    let minVMult = Infinity;
     let mtv: Vector = [0, 0];
-    let minDistance = Infinity;
 
     const normals = getNormals(m1.shape.corners).concat(getNormals(m2.shape.corners));
     for (const axis of normals) {
-        const shape1Corners = m1.shape.corners;
-        m1.shape.position[0] += m1.velocity[0];
-        m1.shape.position[1] += m1.velocity[1];
-
-        const ov = overlap(
-            project(axis, shape1Corners.concat(m1.shape.corners)),
-            project(axis, m2.shape.corners)
-        );
-
-        m1.shape.position[0] -= m1.velocity[0];
-        m1.shape.position[1] -= m1.velocity[1];
+        const project1 = project(axis, m1.shape.corners);
+        const project2 = project(axis, m2.shape.corners);
+        const v = dot(axis, m1.velocity);
+        const ov = overlap(project1, project2);
         if (!ov) {
-            return;
-        }
-        const tv: Vector = [axis[0] * ov, axis[1] * ov]
-        if (Math.abs(ov) < minDistance) {
-            minDistance = Math.abs(ov);
-            mtv = tv;
+            if (v > 0 && project2[0] >= project1[1]) {
+                const vMult = (project2[0] - project1[1]) / v;
+                if (vMult < 1) {
+                    if (vMult < minVMult) {
+                        minVMult = vMult;
+                        mtv = axis;
+                    }
+                } else {
+                    return;
+                }
+            } else if (v < 0 && project2[1] <= project1[0]) {
+                const vMult = (project2[1] - project1[0]) / v;
+                if (vMult < 1) {
+                    if (vMult < minVMult) {
+                        minVMult = vMult;
+                        mtv = axis;
+                    }
+                } else {
+                    return;
+                }
+            } else {
+                return;
+            }
         }
     }
-    return mtv;
+
+    if (minVMult < 1) {
+        const test = dot(mtv, m1.velocity);
+        m1.position[0] += m1.velocity[0] * minVMult * 0.99;
+        m1.position[1] += m1.velocity[1] * minVMult * 0.99;
+        m1.velocity[0] -= mtv[0] * test;
+        m1.velocity[1] -= mtv[1] * test;
+        return mtv;
+    }
 };
 
 export class Shape {
@@ -232,12 +250,5 @@ export class Mechanics {
         ctx.strokeStyle = this.isOverlapping ? 'orange' : 'blue';
         this.shape.render(ctx);
         ctx.strokeStyle = 'red';
-        if (this.velocity[0] || this.velocity[1]) {
-            // this.position[0] += this.velocity[0];
-            // this.position[1] += this.velocity[1];
-            // this.shape.render(ctx);
-            // this.position[0] -= this.velocity[0];
-            // this.position[1] -= this.velocity[1];
-        }
     }
 }

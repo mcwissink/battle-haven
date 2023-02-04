@@ -23,7 +23,6 @@ export class Scene {
     effectsPool: Effect[] = [];
     platforms: Mechanics[];
     update(dx: number) {
-        this.entities.forEach(entity => entity.mechanicsUpdate(dx));
         this.entities.forEach(entity => {
             if (entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) {
                 return;
@@ -33,22 +32,6 @@ export class Scene {
             let isIgnoringPassthrough = false;
             this.platforms.forEach((platform) => {
                 let mtv = collide2(entity.mechanics, platform)
-                // One-way platforms
-                if (mtv && platform.passthrough) {
-                    if (
-                        entity.mechanics.ignorePassthrough
-                    ) {
-                        isIgnoringPassthrough = true;
-                        mtv = undefined;
-                    }
-                }
-                if (mtv) {
-                    console.log('collide', mtv);
-                    entity.mechanics.position[0] += mtv[0] + entity.mechanics.velocity[0];
-                    entity.mechanics.position[1] += mtv[1] + entity.mechanics.velocity[1];
-                    entity.mechanics.velocity[0] = 0;
-                    entity.mechanics.velocity[1] = 0;
-                }
                 const mtv2 = collide(entity.environment, platform.shape)
                 if (mtv2) {
                     if (platform.passthrough && entity.mechanics.ignorePassthrough) {
@@ -86,6 +69,8 @@ export class Scene {
                 entity.mechanics.ignorePassthrough = false;
             }
         });
+
+        this.entities.forEach(entity => entity.mechanicsUpdate(dx));
 
         this.entities.forEach(entity => entity.stateUpdate());
 
