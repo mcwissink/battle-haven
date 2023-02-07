@@ -90,7 +90,7 @@ export const collide2 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
                 } else {
                     return;
                 }
-            } else if (v < 0 && project2[1] <= project1[0]) {
+            } else if (v < 0 && project1[1] >= project2[0]) {
                 const vMult = (project2[1] - project1[0]) / v;
                 if (vMult < 1) {
                     if (vMult < minVMult) {
@@ -113,6 +113,82 @@ export const collide2 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
         m1.velocity[0] -= mtv[0] * test;
         m1.velocity[1] -= mtv[1] * test;
         return mtv;
+    }
+};
+
+export const collide3 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
+    let maxOverlapStart = -Infinity;
+    let minOverlapEnd = Infinity;
+    let collisionVector: Vector = [0, 0];
+
+    const normals = getNormals(m1.shape.corners).concat(getNormals(m2.shape.corners));
+    for (const axis of normals) {
+        const [min1, max1] = project(axis, m1.shape.corners);
+        const [min2, max2] = project(axis, m2.shape.corners);
+        const velocityDifference = dot(axis, [
+            m2.collisionVelocity[0] - m1.collisionVelocity[0],
+            m2.collisionVelocity[1] - m1.collisionVelocity[1]
+        ]);
+
+        if (velocityDifference > 0) {
+            if (max1 < min2) {
+                return;
+            } else {
+                if ((min1 <= min2 && min2 <= max1) || (min2 <= min1 && min1 <= max2)) {
+                    minOverlapEnd = Math.min(minOverlapEnd, (max1 - min2) / velocityDifference);
+                } else {
+                    const maxOverlapStartAxis = (min1 - max2) / velocityDifference;
+                    if (maxOverlapStartAxis > 1) {
+                        return;
+                    }
+                    if (maxOverlapStartAxis > maxOverlapStart) {
+                        maxOverlapStart = maxOverlapStartAxis;
+                        collisionVector = axis;
+                    }
+                    minOverlapEnd = Math.min(minOverlapEnd, (max1 - min2) / velocityDifference);
+                }
+                if (minOverlapEnd < maxOverlapStart) {
+                    return;
+                }
+            }
+        } else if (velocityDifference < 0) {
+            if (max2 < min1) {
+                return;
+            } else {
+                if ((min2 <= min1 && min1 <= max2) || (min1 <= min2 && min2 <= max1)) {
+                    minOverlapEnd = Math.min(minOverlapEnd, (max2 - min1) / -velocityDifference);
+                } else {
+                    const maxOverlapStartAxis = (min2 - max1) / -velocityDifference;
+                    if (maxOverlapStartAxis > 1) {
+                        return;
+                    }
+                    if (maxOverlapStartAxis > maxOverlapStart) {
+                        maxOverlapStart = maxOverlapStartAxis;
+                        collisionVector = axis;
+                    }
+                    minOverlapEnd = Math.min(minOverlapEnd, (max2 - min1) / -velocityDifference);
+                }
+                if (minOverlapEnd < maxOverlapStart) {
+                    return;
+                }
+            }
+        } else {
+            if (!((min2 <= min1 && min1 <= max2) || (min1 <= min2 && min2 <= max1))) {
+                return;
+            }
+        }
+    }
+
+    if (minOverlapEnd !== Infinity && maxOverlapStart !== -Infinity) {
+        m1.didCollide = true;
+        m1.collisionVelocity[0] = m1.collisionVelocity[0] * maxOverlapStart * 0.99;
+        m1.collisionVelocity[1] = m1.collisionVelocity[1] * maxOverlapStart * 0.99;
+        const collisionForce = dot(collisionVector, m1.velocity);
+        console.log(1, m1.velocity);
+        m1.velocity[0] -= collisionVector[0] * collisionForce * 1.01;
+        m1.velocity[1] -= collisionVector[1] * collisionForce * 1.01;
+        console.log(2, m1.velocity);
+        return collisionVector;
     }
 };
 
@@ -200,7 +276,9 @@ export class Mechanics {
     public position: Vector;
     public passthrough?: Vector;
     public velocity: Vector = [0, 0];
+    public collisionVelocity: Vector = [0, 0];
     public isGrounded = false;
+    public didCollide = false;
     public isOverlapping = false;
     public ignorePassthrough = false;
     public mass;
@@ -237,6 +315,10 @@ export class Mechanics {
     }
 
     update() {
+        if (this.didCollide) {
+            this.position[0] += this.collisionVelocity[0];
+            this.position[1] += this.collisionVelocity[1];
+        }
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
         if (this.isGrounded) {

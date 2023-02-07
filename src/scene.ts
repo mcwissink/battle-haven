@@ -2,7 +2,7 @@ import { BattleHaven } from './battle-haven';
 import { Character } from './character';
 import { Effect } from './effect';
 import { Entity } from './entity';
-import { collide, collide2, difference, dot, Mechanics, minimum, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
+import { collide, collide3, difference, dot, Mechanics, minimum, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
 import { Interaction } from './types';
 
 export class Scene {
@@ -11,7 +11,7 @@ export class Scene {
             new Mechanics(this.game, new Rectangle(200, 3), { position: [500, 245], passthrough: UP_VECTOR }),
             new Mechanics(this.game, new Rectangle(200, 3), { position: [800, 150], passthrough: UP_VECTOR }),
             new Mechanics(this.game, new Rectangle(200, 3), { position: [1100, 245], passthrough: UP_VECTOR }),
-            new Mechanics(this.game, new Rectangle(1000, 100), { position: [800, 400] }),
+            new Mechanics(this.game, new Rectangle(1000, 120), { position: [800, 400] }),
             new Mechanics(this.game, new Rectangle(150, 600), { position: [5, 210] }),
             new Mechanics(this.game, new Rectangle(1500, 100), { position: [800, 510] }),
             new Mechanics(this.game, new Rectangle(150, 600), { position: [1600, 210] }),
@@ -27,11 +27,23 @@ export class Scene {
             if (entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) {
                 return;
             }
+            entity.mechanics.didCollide = false;
+            entity.mechanics.collisionVelocity = [...entity.mechanics.velocity];
+            this.platforms.forEach((platform) => {
+                collide3(entity.mechanics, platform)
+            });
+        });
+
+        this.entities.forEach(entity => entity.mechanicsUpdate(dx));
+
+        this.entities.forEach(entity => {
+            if (entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) {
+                return;
+            }
             let isGrounded = false;
             let isOverlapping = false;
             let isIgnoringPassthrough = false;
             this.platforms.forEach((platform) => {
-                let mtv = collide2(entity.mechanics, platform)
                 const mtv2 = collide(entity.environment, platform.shape)
                 if (mtv2) {
                     if (platform.passthrough && entity.mechanics.ignorePassthrough) {
@@ -42,13 +54,13 @@ export class Scene {
                         return;
                     }
                     isOverlapping = true;
-                    if (!entity.mechanics.isOverlapping && mtv) {
+                    if (!entity.mechanics.isOverlapping && entity.mechanics.didCollide) {
                         entity.mechanics.isOverlapping = true;
                         entity.event('collide');
                     }
 
                     isGrounded = dot(UP_VECTOR, normalize(mtv2)) === 1;
-                    if (isGrounded && !entity.mechanics.isGrounded && mtv) {
+                    if (isGrounded && !entity.mechanics.isGrounded && entity.mechanics.didCollide) {
                         const [vx, vy] = entity.mechanics.velocity;
                         entity.mechanics.velocity[1] = 0;
                         entity.mechanics.isGrounded = true;
@@ -69,8 +81,6 @@ export class Scene {
                 entity.mechanics.ignorePassthrough = false;
             }
         });
-
-        this.entities.forEach(entity => entity.mechanicsUpdate(dx));
 
         this.entities.forEach(entity => entity.stateUpdate());
 
