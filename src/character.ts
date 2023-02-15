@@ -93,7 +93,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
 
         super(
             game,
-            new Mechanics(game, new Diamond(20, 40), { position: [port === 1 ? 350 : 1250, 100] }),
+            new Mechanics(game, new Diamond(25, 40), { position: [port === 1 ? 350 : 1250, 100] }),
             new Diamond(10, 42),
             new Sprite(data.spriteSheet),
             data.data.frame,

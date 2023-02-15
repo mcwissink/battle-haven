@@ -30,7 +30,7 @@ export class Scene {
             entity.mechanics.didCollide = false;
             entity.mechanics.collisionVelocity = [...entity.mechanics.velocity];
             this.platforms.forEach((platform) => {
-                collide3(entity.mechanics, platform)
+                collide3(entity.mechanics, platform);
             });
         });
 

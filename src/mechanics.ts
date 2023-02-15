@@ -125,13 +125,18 @@ export const collide3 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
     for (const axis of normals) {
         const [min1, max1] = project(axis, m1.shape.corners);
         const [min2, max2] = project(axis, m2.shape.corners);
+        const vel: Vector = [
+            m2.velocity[0] - m1.velocity[0],
+            m2.velocity[1] - m1.velocity[1]
+        ];
         const velocityDifference = dot(axis, [
-            m2.collisionVelocity[0] - m1.collisionVelocity[0],
-            m2.collisionVelocity[1] - m1.collisionVelocity[1]
+            m2.velocity[0] - m1.velocity[0],
+            m2.velocity[1] - m1.velocity[1]
         ]);
 
         if (velocityDifference > 0) {
-            if (max1 < min2) {
+
+            if (max1 < min2 || (m2.passthrough && (m1.ignorePassthrough || dot(normalize(vel), m2.passthrough) < 0))) {
                 return;
             } else {
                 if ((min1 <= min2 && min2 <= max1) || (min2 <= min1 && min1 <= max2)) {
@@ -152,7 +157,7 @@ export const collide3 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
                 }
             }
         } else if (velocityDifference < 0) {
-            if (max2 < min1) {
+            if (max2 < min1 || (m2.passthrough && (m1.ignorePassthrough || dot(normalize(vel), m2.passthrough) < 0))) {
                 return;
             } else {
                 if ((min2 <= min1 && min1 <= max2) || (min1 <= min2 && min2 <= max1)) {
@@ -169,6 +174,7 @@ export const collide3 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
                     minOverlapEnd = Math.min(minOverlapEnd, (max2 - min1) / -velocityDifference);
                 }
                 if (minOverlapEnd < maxOverlapStart) {
+
                     return;
                 }
             }
@@ -181,13 +187,11 @@ export const collide3 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
 
     if (minOverlapEnd !== Infinity && maxOverlapStart !== -Infinity) {
         m1.didCollide = true;
-        m1.collisionVelocity[0] = m1.collisionVelocity[0] * maxOverlapStart * 0.99;
-        m1.collisionVelocity[1] = m1.collisionVelocity[1] * maxOverlapStart * 0.99;
+        m1.collisionVelocity[0] = m1.collisionVelocity[0] * maxOverlapStart;
+        m1.collisionVelocity[1] = m1.collisionVelocity[1] * maxOverlapStart;
         const collisionForce = dot(collisionVector, m1.velocity);
-        console.log(1, m1.velocity);
         m1.velocity[0] -= collisionVector[0] * collisionForce * 1.01;
         m1.velocity[1] -= collisionVector[1] * collisionForce * 1.01;
-        console.log(2, m1.velocity);
         return collisionVector;
     }
 };
