@@ -199,11 +199,11 @@ interface KeyboardControllerConfig {
 
 class KeyboardController extends Controller {
     mapping: KeyboardControllerConfig['mapping'];
-    keyboardState: Record<string, boolean> = {
-        up: false,
-        down: false,
-        right: false,
-        left: false,
+    directionState = {
+        up: 0,
+        down: 0,
+        right: 0,
+        left: 0,
     }
     constructor(config: KeyboardControllerConfig) {
         super();
@@ -212,38 +212,37 @@ class KeyboardController extends Controller {
     key(key: string, active: boolean) {
         const input = this.mapping[key];
         if (input) {
-            this.keyboardState[input] = active;
             switch (input) {
                 case 'up':
-                    if (active) {
-                        this.input('stickY', -1);
-                    } else if (!this.keyboardState.down) {
-                        this.input('stickY', 0);
-                    }
+                    this.directionState[input] = -Number(active);
+                    this.input(
+                        'stickY',
+                        this.directionState.up + this.directionState.down
+                    );
                     break;
                 case 'down':
-                    if (active) {
-                        this.input('stickY', 1);
-                    } else if (!this.keyboardState.up) {
-                        this.input('stickY', 0);
-                    }
+                    this.directionState[input] = Number(active);
+                    this.input(
+                        'stickY',
+                        this.directionState.up + this.directionState.down
+                    );
                     break;
                 case 'left':
-                    if (active) {
-                        this.input('stickX', -1);
-                    } else if (!this.keyboardState.right) {
-                        this.input('stickX', 0);
-                    }
+                    this.directionState[input] = -Number(active);
+                    this.input(
+                        'stickX',
+                        this.directionState.left + this.directionState.right
+                    );
                     break;
                 case 'right':
-                    if (active) {
-                        this.input('stickX', 1);
-                    } else if (!this.keyboardState.left) {
-                        this.input('stickX', 0);
-                    }
+                    this.directionState[input] = Number(active);
+                    this.input(
+                        'stickX',
+                        this.directionState.left + this.directionState.right
+                    );
                     break;
                 default:
-                    this.input(input, active ? 1 : 0);
+                    this.input(input, Number(active));
                     break;
             }
             return true;
