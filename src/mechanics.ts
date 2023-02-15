@@ -185,7 +185,11 @@ export const collide3 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
         }
     }
 
+
     if (minOverlapEnd !== Infinity && maxOverlapStart !== -Infinity) {
+        if (m2.passthrough && dot(collisionVector, m2.passthrough) !== 1) {
+            return;
+        }
         m1.didCollide = true;
         m1.collisionVelocity[0] = m1.collisionVelocity[0] * maxOverlapStart;
         m1.collisionVelocity[1] = m1.collisionVelocity[1] * maxOverlapStart;
