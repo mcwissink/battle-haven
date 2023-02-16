@@ -70,7 +70,8 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 this.mechanics.force(dvx);
             }
             if (dvy || !this.mechanics.isGrounded) {
-                this.mechanics.force(dvy, 1);
+                const direction = (dvy > 0 && this.mechanics.isGrounded) ? -1 : 1;
+                this.mechanics.force(direction * dvy, 1);
                 fall();
             } else {
                 this.next.setFrame(animation.injured);
