@@ -49,7 +49,7 @@ export class BattleHaven {
     tasks: Task[] = [];
     debug = {
         hitbox: false,
-        mechanics: true,
+        mechanics: false,
         stats: true,
         frames: false,
     }

@@ -18,7 +18,7 @@ export type Component = (game: BattleHaven) => Entries;
 const ENTRY_HEIGHT = 26;
 export class Menu {
     isOpen = true;
-    cursors = new Map<Port, EntryState>();
+    cursors = new Map<Controller, EntryState>();
     menuCursor: EntryState[] = [];
     entries: Entries;
     constructor(public game: BattleHaven, public component: Component) {

@@ -65,7 +65,6 @@ interface ControllerListener {
 }
 
 export class Controller {
-    port = -1;
     stickX = 0;
     stickY = 0;
     jump = 0;
@@ -75,6 +74,8 @@ export class Controller {
     listeners: ControllerListener = {
         input: [],
     }
+
+    constructor(public port: number, public config: ControllerConfig) { }
 
     on<T extends keyof ControllerListener>(event: T, callback: Flat<ControllerListener[T]>) {
         const index = this.listeners[event].indexOf(callback);
@@ -191,26 +192,19 @@ export class Controller {
     };
 
     update() { }
-}
 
-interface KeyboardControllerConfig {
-    mapping: Record<string, 'up' | 'down' | 'left' | 'right' | keyof ControllerState>;
+    key(_key: string, _active: boolean) { return false; }
 }
 
 class KeyboardController extends Controller {
-    mapping: KeyboardControllerConfig['mapping'];
     directionState = {
         up: 0,
         down: 0,
         right: 0,
         left: 0,
     }
-    constructor(config: KeyboardControllerConfig) {
-        super();
-        this.mapping = config.mapping;
-    }
     key(key: string, active: boolean) {
-        const input = this.mapping[key];
+        const input = this.config.mapping.keyboard[key];
         if (input) {
             switch (input) {
                 case 'up':
@@ -242,7 +236,7 @@ class KeyboardController extends Controller {
                     );
                     break;
                 default:
-                    this.input(input, Number(active));
+                    this.input(input as keyof ControllerState, Number(active));
                     break;
             }
             return true;
@@ -252,8 +246,11 @@ class KeyboardController extends Controller {
 }
 
 class GamepadController extends Controller {
-    constructor(public gamepad: Gamepad) {
-        super();
+    public mapping: Record<string, number>
+    constructor(port: number, config: ControllerConfig, public gamepad: Gamepad) {
+        super(port, config);
+        console.log(gamepad.id);
+        this.mapping = config.mapping.controller[gamepad.id] ?? DEFAULT_CONTROLLER_MAPPING;
     }
 
     roundAxis(axis: number) {
@@ -269,37 +266,22 @@ class GamepadController extends Controller {
     }
 
     update() {
-        this.input('attack', this.gamepad.buttons[1].value);
-        this.input('defend', this.gamepad.buttons[5].value);
-        this.input('jump', this.gamepad.buttons[3].value);
+        this.input('attack', this.gamepad.buttons[this.mapping.attack].value);
+        this.input('defend', this.gamepad.buttons[this.mapping.defend].value);
+        this.input('jump', this.gamepad.buttons[this.mapping.jump].value);
+        this.input('menu', this.gamepad.buttons[this.mapping.menu].value);
         this.input('stickX', this.roundAxis(this.gamepad.axes[0]));
         this.input('stickY', this.roundAxis(this.gamepad.axes[1]));
     }
 }
 
-const mappings = [
-    {
-        ArrowUp: 'up',
-        ArrowDown: 'down',
-        ArrowLeft: 'left',
-        ArrowRight: 'right',
-        z: 'defend',
-        x: 'jump',
-        c: 'attack',
-        Escape: 'menu',
-    },
-    {
-        i: 'up',
-        k: 'down',
-        j: 'left',
-        l: 'right',
-        a: 'defend',
-        s: 'jump',
-        d: 'attack',
+interface ControllerConfig {
+    name: string;
+    mapping: {
+        keyboard: Record<string, string>
+        controller: Record<string, Record<string, number>>
     }
-] as const;
-
-export type Port = Controller;
+}
 
 interface ManagerListener {
     connect: Array<(controller: Controller) => void>
@@ -307,38 +289,92 @@ interface ManagerListener {
 
 type Flat<T> = T extends Array<infer K> ? K : T;
 
+const DEFAULT_CONTROLLER_MAPPING = {
+    defend: 5,
+    jump: 3,
+    attack: 0,
+    menu: 7,
+};
+const DEFAULT_CONFIGS: ControllerConfig[] = [
+    {
+        name: 'no name',
+        mapping: {
+            keyboard: {
+                ArrowUp: 'up',
+                ArrowDown: 'down',
+                ArrowLeft: 'left',
+                ArrowRight: 'right',
+                z: 'defend',
+                x: 'jump',
+                c: 'attack',
+                Escape: 'menu',
+            },
+            controller: {
+                '045e-028e-Microsoft X-Box 360 pad': {
+                    defend: 5,
+                    jump: 3,
+                    attack: 1,
+                    menu: 7,
+                },
+            }
+        }
+    },
+    {
+        name: 'no name',
+        mapping: {
+            keyboard: {
+                i: 'up',
+                k: 'down',
+                j: 'left',
+                l: 'right',
+                a: 'defend',
+                s: 'jump',
+                d: 'attack',
+            },
+            controller: {
+                '045e-028e-Microsoft X-Box 360 pad': {
+                    defend: 5,
+                    jump: 3,
+                    attack: 0,
+                    menu: 7,
+                },
+            }
+        }
+    },
+    { name: 'no name', mapping: { keyboard: {}, controller: {} } },
+    { name: 'no name', mapping: { keyboard: {}, controller: {} } }
+];
+
 class ControllerManager {
-    ports: [Port, Port, Port, Port] = [
+    ports: [Controller, Controller, Controller, Controller] = [
         ControllerManager.dummy,
         ControllerManager.dummy,
         ControllerManager.dummy,
-        ControllerManager.dummy,
+        ControllerManager.dummy
     ];
-    keyboardControllers: KeyboardController[] = [];
+    configs = DEFAULT_CONFIGS;
     gamepads: Record<number, number> = {};
     listeners: ManagerListener = {
         connect: [],
     }
-    static dummy = new Controller();
+    static dummy = new Controller(-1, DEFAULT_CONFIGS[0]);
     constructor() {
         window.addEventListener('keyup', (e) => {
-            if (!this.keyboardControllers.find((c) => c.key(e.key, false))) {
+            if (!this.ports.find((controller) => controller.key(e.key, false))) {
                 // If the key is not handled by an existing controller, register a new controller if a matching mapping is found
-                const mapping = mappings.find((m) => Object.keys(m).includes(e.key))
-                if (mapping) {
-                    const controller = new KeyboardController({ mapping })
-                    this.keyboardControllers.push(controller);
-                    this.connect(controller);
+                const config = this.configs.find((config) => Object.keys(config.mapping.keyboard).includes(e.key))
+                if (config) {
+                    this.connect((port) => new KeyboardController(port, config));
                 }
             };
         });
 
         window.addEventListener('keydown', (e) => {
-            this.keyboardControllers.find((c) => c.key(e.key, true));
+            this.ports.find((controller) => controller.key(e.key, true));
         });
 
         window.addEventListener("gamepadconnected", (e) => {
-            const port = this.connect(new GamepadController(e.gamepad));
+            const port = this.connect((port) => new GamepadController(port, this.configs[port], e.gamepad));
             if (port !== -1) {
                 this.gamepads[e.gamepad.index] = port;
             }
@@ -349,7 +385,7 @@ class ControllerManager {
         });
     }
 
-    get(port: number) {
+    get(port: number): Controller {
         return this.ports[port] ?? ControllerManager.dummy;
     }
 
@@ -357,11 +393,11 @@ class ControllerManager {
         this.listeners[event].push(callback);
     }
 
-    connect(controller: Controller) {
-        const port = this.ports.indexOf(ControllerManager.dummy);
+    connect(buildController: (port: number) => Controller) {
+        const port = this.ports.findIndex((controller) => controller === ControllerManager.dummy);
         if (port !== -1) {
+            const controller = buildController(port)
             this.ports[port] = controller;
-            controller.port = port;
             this.listeners.connect.forEach((callback) => callback(controller));
             return port;
         }
