@@ -330,6 +330,7 @@ const DEFAULT_CONFIGS: ControllerConfig[] = [
                 a: 'defend',
                 s: 'jump',
                 d: 'attack',
+                Escape: 'menu',
             },
             controller: {
                 '045e-028e-Microsoft X-Box 360 pad': {

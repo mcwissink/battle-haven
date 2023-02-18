@@ -21,6 +21,7 @@ export const mainMenu = (game: BattleHaven) => {
         entries: [
             {
                 text: 'select character',
+                multiple: true,
                 entries: [
                     { text: 'woody', click: selectCharacter(0) },
                     { text: 'davis', click: selectCharacter(1) },

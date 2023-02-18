@@ -1,5 +1,5 @@
 import { BattleHaven } from './battle-haven';
-import { Controller, controllers, Port } from './controller';
+import { Controller, controllers } from './controller';
 import { mod } from './utils';
 
 type EntryState = {
@@ -7,22 +7,23 @@ type EntryState = {
     index: number;
 }
 
-export interface Entries {
+export interface Page {
     text: string;
-    entries?: Array<Entries>;
+    multiple?: boolean;
+    entries?: Array<Page>;
     click?: (context: { port: number }) => void;
 }
 
-export type Component = (game: BattleHaven) => Entries;
+export type Component = (game: BattleHaven) => Page;
 
 const ENTRY_HEIGHT = 26;
 export class Menu {
     isOpen = true;
     cursors = new Map<Controller, EntryState>();
-    menuCursor: EntryState[] = [];
-    entries: Entries;
+    pageCursor: EntryState[] = [];
+    menu: Page;
     constructor(public game: BattleHaven, public component: Component) {
-        this.entries = component(game);
+        this.menu = component(game);
         controllers.on('connect', (controller) => {
             controller.on('input', this.input);
             this.cursors.set(controller, {
@@ -37,9 +38,9 @@ export class Menu {
         if (cursor) {
             switch (input) {
                 case 'attack': {
-                    const selectedEntry = this.activeEntries[cursor.index];
+                    const selectedEntry = this.entries[cursor.index];
                     if (selectedEntry.entries) {
-                        this.menuCursor.push({
+                        this.pageCursor.push({
                             index: cursor.index,
                             port: -1,
                         });
@@ -50,39 +51,48 @@ export class Menu {
                     return true;
                 }
                 case 'defend': {
-                    const globalCursor = this.menuCursor.pop();
-                    if (globalCursor) {
-                        this.cursors.forEach((cursor) => cursor.index = globalCursor.index);
+                    const pageCursorEntry = this.pageCursor.pop();
+                    if (pageCursorEntry) {
+                        this.setIndex(cursor, pageCursorEntry.index);
                     }
                     return true;
                 }
                 case 'down': {
-                    cursor.index = mod(cursor.index + 1, this.activeEntries.length);
+                    this.setIndex(cursor, mod(cursor.index + 1, this.entries.length));
                     return true;
                 }
                 case 'up': {
-                    cursor.index = mod(cursor.index - 1, this.activeEntries.length);
+                    this.setIndex(cursor, mod(cursor.index - 1, this.entries.length));
                     return true;
                 }
             }
         }
     }
 
+    setIndex(cursor: EntryState, index: number) {
+        if (this.page.multiple) {
+            cursor.index = index;
+        } else {
+            this.cursors.forEach((cursor) => cursor.index = index);
+        }
+    }
+
     setEntries(component: Component) {
-        this.entries = component(this.game);
-        this.menuCursor = [];
+        this.menu = component(this.game);
+        this.pageCursor = [];
         this.cursors.forEach(cursor => cursor.index = 0);
     }
+
     traverseEntries(cursor: EntryState[]) {
-        return cursor.reduce<Entries>((acc, c) => {
+        return cursor.reduce<Page>((acc, c) => {
             return acc.entries?.[c.index] ?? acc;
-        }, this.entries);
+        }, this.menu);
     }
-    get title() {
-        return this.traverseEntries(this.menuCursor).text;
+    get page() {
+        return this.traverseEntries(this.pageCursor);
     }
-    get activeEntries() {
-        return this.traverseEntries(this.menuCursor).entries ?? [];
+    get entries() {
+        return this.page.entries ?? [];
     }
     open() {
         controllers.ports.forEach((controller) => {
@@ -108,44 +118,73 @@ export class Menu {
         }
     }
     render(ctx: CanvasRenderingContext2D) {
+        ctx.save();
         if (!this.isOpen) {
             return;
         }
         ctx.font = '20px mono';
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(0, 0, 1600, 900);
+
+        ctx.translate(400, 200);
 
         ctx.fillStyle = 'rgba(0, 0, 0, 1)';
         ctx.fillRect(
             0,
             ENTRY_HEIGHT,
-            this.title.length * 12 + 20,
+            this.page.text.length * 12 + 20,
             -ENTRY_HEIGHT
         );
-        const width = this.activeEntries.reduce((acc, entry) => Math.max(acc, entry.text.length), 0);
-        this.activeEntries.forEach((_, index) => {
-            ctx.fillRect(
-                0,
-                (index + 2) * ENTRY_HEIGHT,
-                width * 12 + 100,
-                -ENTRY_HEIGHT);
-        });
 
         ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-        ctx.fillText(this.title, 10, 20);
-        this.activeEntries.forEach((entry, index) => {
-            ctx.fillText(
-                entry.text,
-                80,
-                (index + 2) * ENTRY_HEIGHT - 6
+        ctx.fillText(this.page.text, 10, 20);
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+        ctx.fillRect(
+            0,
+            ENTRY_HEIGHT,
+            800,
+            ENTRY_HEIGHT * this.entries.length + 36,
+        );
+
+        ctx.translate(10, 10 + ENTRY_HEIGHT * 2);
+
+        controllers.ports.forEach((controller, port) => {
+            const cursor = this.cursors.get(controller) ?? (port ? undefined : { index: 0 });
+            if (!cursor && !this.page.multiple) {
+                return;
+            }
+            ctx.save();
+            if (this.page.multiple) {
+                ctx.translate(200 * port, 0);
+            }
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+            this.entries.forEach((entry, index) => {
+                ctx.fillText(
+                    entry.text,
+                    40,
+                    index * ENTRY_HEIGHT
+                );
+            });
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+            ctx.strokeRect(
+                0,
+                -ENTRY_HEIGHT,
+                this.page.multiple ? 180 : 780,
+                ENTRY_HEIGHT * this.entries.length + 16 
             );
+
+            if (cursor) {
+                ctx.fillText(
+                    '>',
+                    12,
+                    cursor.index * ENTRY_HEIGHT
+                );
+            }
+            ctx.restore();
         });
-        this.cursors.forEach((cursor) => {
-            ctx.fillText(
-                String(cursor.port),
-                cursor.port * 16 + 12,
-                (cursor.index + 2) * ENTRY_HEIGHT - 6,
-            );
-        });
+        ctx.restore();
     }
 }

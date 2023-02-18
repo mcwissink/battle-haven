@@ -210,7 +210,7 @@ export class Scene {
             -cameraHalfHeight + (cameraHalfHeight / scale)
         );
 
-        if (this.entities.some((entity) => entity.hitStop && !entity.isKilled)) {
+        if (this.entities.some((entity) => entity.hitStop && !this.game.menu.isOpen)) {
             ctx.translate(this.shakeValue(), this.shakeValue());
         }
     }
@@ -257,6 +257,8 @@ export class Scene {
                     grounded: String(Number(entity.mechanics.isGrounded)),
                     state: String(entity.frameData.state),
                 };
+
+                ctx.font = '20px mono';
                 Object.entries(stats).forEach(([label, value], index) => {
                     ctx.fillText(
                         `${label}: ${value.padStart(10 - label.length, ' ')}`,
