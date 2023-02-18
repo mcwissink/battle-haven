@@ -5,13 +5,20 @@ import { mod } from './utils';
 type EntryState = {
     port: number;
     index: number;
+    path: PathEntry[];
+}
+
+interface PathEntry {
+    index: number;
 }
 
 export interface Page {
     text: string;
-    multiple?: boolean;
+    isSplit?: boolean;
+    isConfirmed?: boolean;
     entries?: Array<Page>;
     click?: (context: { port: number }) => void;
+    confirm?: (context: Array<{ port: number, index: number }>) => void;
 }
 
 export type Component = (game: BattleHaven) => Page;
@@ -20,7 +27,7 @@ const ENTRY_HEIGHT = 26;
 export class Menu {
     isOpen = true;
     cursors = new Map<Controller, EntryState>();
-    pageCursor: EntryState[] = [];
+    globalPath: PathEntry[] = [];
     menu: Page;
     constructor(public game: BattleHaven, public component: Component) {
         this.menu = component(game);
@@ -29,6 +36,7 @@ export class Menu {
             this.cursors.set(controller, {
                 index: 0,
                 port: controller.port,
+                path: [],
             });
         });
     }
@@ -38,31 +46,52 @@ export class Menu {
         if (cursor) {
             switch (input) {
                 case 'attack': {
-                    const selectedEntry = this.entries[cursor.index];
+                    const selectedEntry = this.getEntries(cursor)[cursor.index];
                     if (selectedEntry.entries) {
-                        this.pageCursor.push({
-                            index: cursor.index,
-                            port: -1,
-                        });
-                        this.cursors.forEach((cursor) => cursor.index = 0);
+                        if (this.globalPage.isSplit) {
+                            cursor.path.push({ index: cursor.index });
+                        } else {
+                            this.globalPath.push({ index: cursor.index });
+                        }
+                        this.setIndex(cursor, 0);
                     } else if (selectedEntry.click) {
                         selectedEntry.click({ port: controller.port });
+                    }
+                    if (this.globalPage.confirm) {
+                        let isConfirmed = true;
+                        const context: Array<{ port: number; index: number }> = [];
+                        this.cursors.forEach((cursor) => {
+                            isConfirmed = Boolean(this.getPage(cursor).isConfirmed) && isConfirmed;
+                            if (isConfirmed) {
+                                context.push({
+                                    port: cursor.port,
+                                    index: cursor.path[cursor.path.length - 1].index
+                                });
+                            } 
+                        });
+                        if (isConfirmed) {
+                            this.globalPage.confirm(context);
+                        }
                     }
                     return true;
                 }
                 case 'defend': {
-                    const pageCursorEntry = this.pageCursor.pop();
-                    if (pageCursorEntry) {
-                        this.setIndex(cursor, pageCursorEntry.index);
+                    const pathEntry = cursor.path.pop()
+                    if (pathEntry) {
+                        this.setIndex(cursor, pathEntry.index);
+                    } else {
+                        const globalPathEntry = this.globalPath.pop();
+                        this.cursors.forEach((cursor) => cursor.path = []);
+                        this.setIndex(cursor, globalPathEntry?.index ?? 0);
                     }
                     return true;
                 }
                 case 'down': {
-                    this.setIndex(cursor, mod(cursor.index + 1, this.entries.length));
+                    this.setIndex(cursor, mod(cursor.index + 1, this.getEntries(cursor).length));
                     return true;
                 }
                 case 'up': {
-                    this.setIndex(cursor, mod(cursor.index - 1, this.entries.length));
+                    this.setIndex(cursor, mod(cursor.index - 1, this.getEntries(cursor).length));
                     return true;
                 }
             }
@@ -70,7 +99,7 @@ export class Menu {
     }
 
     setIndex(cursor: EntryState, index: number) {
-        if (this.page.multiple) {
+        if (this.globalPage.isSplit) {
             cursor.index = index;
         } else {
             this.cursors.forEach((cursor) => cursor.index = index);
@@ -79,20 +108,23 @@ export class Menu {
 
     setEntries(component: Component) {
         this.menu = component(this.game);
-        this.pageCursor = [];
+        this.globalPath = [];
         this.cursors.forEach(cursor => cursor.index = 0);
     }
 
-    traverseEntries(cursor: EntryState[]) {
+    traverseEntries(cursor: PathEntry[]) {
         return cursor.reduce<Page>((acc, c) => {
             return acc.entries?.[c.index] ?? acc;
         }, this.menu);
     }
-    get page() {
-        return this.traverseEntries(this.pageCursor);
+    get globalPage() {
+        return this.traverseEntries(this.globalPath);
     }
-    get entries() {
-        return this.page.entries ?? [];
+    getPage(cursor: EntryState) {
+        return this.traverseEntries(this.globalPath.concat(cursor.path));
+    }
+    getEntries(cursor: EntryState) {
+        return this.getPage(cursor).entries ?? [];
     }
     open() {
         controllers.ports.forEach((controller) => {
@@ -108,6 +140,8 @@ export class Menu {
                 controller.off('input', this.input);
             }
         });
+        this.globalPath = [];
+        this.cursors.forEach((cursor) => cursor.path = []);
         this.isOpen = false;
     }
     toggle() {
@@ -132,35 +166,39 @@ export class Menu {
         ctx.fillRect(
             0,
             ENTRY_HEIGHT,
-            this.page.text.length * 12 + 20,
+            this.globalPage.text.length * 12 + 20,
             -ENTRY_HEIGHT
         );
 
         ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-        ctx.fillText(this.page.text, 10, 20);
+        ctx.fillText(this.globalPage.text, 10, 20);
 
         ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+        const maxEntryLength = controllers.ports.reduce((acc, controller) => {
+            const cursor = this.cursors.get(controller);
+            return cursor ? Math.max(this.getEntries(cursor).length, acc) : acc;
+        }, this.globalPage.entries?.length || 0);
         ctx.fillRect(
             0,
             ENTRY_HEIGHT,
             800,
-            ENTRY_HEIGHT * this.entries.length + 36,
+            ENTRY_HEIGHT * maxEntryLength + 36,
         );
 
         ctx.translate(10, 10 + ENTRY_HEIGHT * 2);
 
         controllers.ports.forEach((controller, port) => {
-            const cursor = this.cursors.get(controller) ?? (port ? undefined : { index: 0 });
-            if (!cursor && !this.page.multiple) {
+            const cursor = this.cursors.get(controller) ?? (port ? undefined : { index: 0, port: -1, path: [] });
+            if (!cursor) {
                 return;
             }
             ctx.save();
-            if (this.page.multiple) {
+            if (this.globalPage.isSplit) {
                 ctx.translate(200 * port, 0);
             }
 
             ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-            this.entries.forEach((entry, index) => {
+            this.getEntries(cursor).forEach((entry, index) => {
                 ctx.fillText(
                     entry.text,
                     40,
@@ -172,8 +210,8 @@ export class Menu {
             ctx.strokeRect(
                 0,
                 -ENTRY_HEIGHT,
-                this.page.multiple ? 180 : 780,
-                ENTRY_HEIGHT * this.entries.length + 16 
+                this.globalPage.isSplit ? 180 : 780,
+                ENTRY_HEIGHT * this.getEntries(cursor).length + 16 
             );
 
             if (cursor) {

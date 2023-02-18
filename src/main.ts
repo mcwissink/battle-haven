@@ -2,35 +2,40 @@ import { BattleHaven } from './battle-haven';
 import { Character } from './character';
 import { controllers } from './controller';
 import { loadData } from './data-loader';
+import { Page } from './menu';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
-export const mainMenu = (game: BattleHaven) => {
-    const selectCharacter = (oid: number) => ({ port }: { port: number }) => {
-        const existingCharacter = game.scene.entities.find((entity) => entity.port === port);
-        if (existingCharacter) {
-            game.destroy(existingCharacter);
-        }
-        const character = new Character(game, port, game.data.entities[oid]);
-        game.scene.entities.push(character);
-        game.scene.characters.push(character);
-    };
+const READY: Page[] = [{ text: 'Ready' }];
 
+export const mainMenu = (game: BattleHaven): Page => {
     return {
         text: 'main menu',
         entries: [
             {
                 text: 'select character',
-                multiple: true,
+                isSplit: true,
+                confirm: (context) => {
+                    context.forEach(({ port, index: oid }) => {
+                        const existingCharacter = game.scene.entities.find((entity) => entity.port === port);
+                        if (existingCharacter) {
+                            game.destroy(existingCharacter);
+                        }
+                        const character = new Character(game, port, game.data.entities[oid]);
+                        game.scene.entities.push(character);
+                        game.scene.characters.push(character);
+                        game.menu.close();
+                    });
+                },
                 entries: [
-                    { text: 'woody', click: selectCharacter(0) },
-                    { text: 'davis', click: selectCharacter(1) },
-                    { text: 'louis', click: selectCharacter(2) },
-                    { text: 'deep', click: selectCharacter(3) },
-                    { text: 'freeze', click: selectCharacter(4) },
-                    { text: 'firen', click: selectCharacter(5) },
-                    { text: 'rudolf', click: selectCharacter(6) },
-                    { text: 'dennis', click: selectCharacter(7) },
+                    { text: 'woody', entries: READY, isConfirmed: true },
+                    { text: 'davis', entries: READY, isConfirmed: true },
+                    { text: 'louis', entries: READY, isConfirmed: true },
+                    { text: 'deep', entries: READY, isConfirmed: true },
+                    { text: 'freeze', entries: READY, isConfirmed: true },
+                    { text: 'firen', entries: READY, isConfirmed: true },
+                    { text: 'rudolf', entries: READY, isConfirmed: true },
+                    { text: 'dennis', entries: READY, isConfirmed: true },
                 ],
             },
             {
@@ -46,7 +51,7 @@ export const mainMenu = (game: BattleHaven) => {
 
 
 
-export const gameOverMenu = (game: BattleHaven) => ({
+export const gameOverMenu = (game: BattleHaven): Page => ({
     text: 'game over',
     entries: [
         {

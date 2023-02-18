@@ -249,7 +249,6 @@ class GamepadController extends Controller {
     public mapping: Record<string, number>
     constructor(port: number, config: ControllerConfig, public gamepad: Gamepad) {
         super(port, config);
-        console.log(gamepad.id);
         this.mapping = config.mapping.controller[gamepad.id] ?? DEFAULT_CONTROLLER_MAPPING;
     }
 
