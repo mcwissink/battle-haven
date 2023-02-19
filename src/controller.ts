@@ -171,7 +171,6 @@ export class Controller {
         const comboInput = this.getComboInput(control, magnitude);
 
         if (comboInput) {
-            this.listeners.input.forEach((callback) => callback(comboInput, this));
             this.buffer.push(comboInput);
             // detect combo
             combos.forEach((combo) => {
@@ -192,6 +191,8 @@ export class Controller {
                     };
                 }
             });
+
+            this.listeners.input.forEach((callback) => callback(comboInput, this));
         }
         this[control] = magnitude;
     };

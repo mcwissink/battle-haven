@@ -1,6 +1,6 @@
 import { BattleHaven } from './battle-haven';
 import { Character } from './character';
-import { controllers, KeyboardController } from './controller';
+import { controllers } from './controller';
 import { loadData } from './data-loader';
 import { Page } from './menu';
 
@@ -48,21 +48,33 @@ export const mainMenu = (game: BattleHaven): Page => {
                     {
                         text: 'controllers',
                         isSplit: true,
-                        entries: ({ controller }) => (
-                            Object.entries(controller.mapping).map(([target, source]) => ({
+                        disableButtonNavigation: true,
+                        entries: ({ controller }) => [
+                            ...Object.entries(controller.mapping).map(([target, source]) => ({
                                 text: `${target.padEnd(7)}: ${source}`,
                                 click: () => controllers.updateMapping(controller, target),
-                            }))
-                        )
-                    }
+                            })),
+                            {
+                                text: 'back',
+                            },
+                        ]
+                    },
+                    {
+                        text: 'back',
+                    },
                 ],
             },
             {
                 text: 'debug',
-                entries: Object.keys(game.debug).map((key) => ({
-                    text: key,
-                    click: () => game.toggleDebug(key as any)
-                })),
+                entries: [
+                    ...Object.keys(game.debug).map((key) => ({
+                        text: `debug ${key}`,
+                        click: () => game.toggleDebug(key as any)
+                    })),
+                    {
+                        text: 'back',
+                    },
+                ],
             },
         ]
     }

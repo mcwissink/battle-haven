@@ -58,8 +58,10 @@ export class BattleHaven {
             if (this.debug.frames) {
                 this.wait = 2;
             } else {
-                this.menu.toggle()
-                this.wait = 2;
+                if (!this.menu.isOpen) {
+                    this.menu.open()
+                    this.wait = 2;
+                }
             }
         },
     }

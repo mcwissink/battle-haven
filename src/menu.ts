@@ -16,6 +16,7 @@ export interface Page {
     text: string;
     isSplit?: boolean;
     isConfirmed?: boolean;
+    disableButtonNavigation?: boolean;
     entries?: Array<Page> | ((context: { controller: Controller }) => Array<Page>);
     click?: (context: { port: number }) => void;
     confirm?: (context: Array<{ port: number, index: number }>) => void;
@@ -44,6 +45,16 @@ export class Menu {
     input = (input: string, controller: Controller) => {
         const cursor = this.cursors.get(controller);
         if (cursor) {
+            const goBack = () => {
+                const pathEntry = cursor.path.pop()
+                if (pathEntry) {
+                    this.setIndex(cursor, pathEntry.index);
+                } else {
+                    const globalPathEntry = this.globalPath.pop();
+                    this.cursors.forEach((cursor) => cursor.path = []);
+                    this.setIndex(cursor, globalPathEntry?.index ?? 0);
+                }
+            }
             switch (input) {
                 case 'attack': {
                     const selectedEntry = this.getActiveEntries(cursor)[cursor.index];
@@ -56,6 +67,8 @@ export class Menu {
                         this.setIndex(cursor, 0);
                     } else if (selectedEntry.click) {
                         selectedEntry.click({ port: controller.port });
+                    } else if (selectedEntry.text === 'back') {
+                        goBack();
                     }
                     if (this.globalPage.confirm) {
                         let isConfirmed = true;
@@ -73,29 +86,34 @@ export class Menu {
                             this.globalPage.confirm(context);
                         }
                     }
-                    return true;
+                    break;
                 }
                 case 'defend': {
-                    const pathEntry = cursor.path.pop()
-                    if (pathEntry) {
-                        this.setIndex(cursor, pathEntry.index);
-                    } else {
-                        const globalPathEntry = this.globalPath.pop();
-                        this.cursors.forEach((cursor) => cursor.path = []);
-                        this.setIndex(cursor, globalPathEntry?.index ?? 0);
+                    if (!this.globalPage.disableButtonNavigation) {
+                        goBack();
                     }
-                    return true;
+                    break;
                 }
                 case 'down': {
                     this.setIndex(cursor, mod(cursor.index + 1, this.getActiveEntries(cursor).length));
-                    return true;
+                    break;
                 }
                 case 'up': {
                     this.setIndex(cursor, mod(cursor.index - 1, this.getActiveEntries(cursor).length));
-                    return true;
+                    break;
+                }
+                case 'menu': {
+                    if (!this.globalPage.disableButtonNavigation) {
+                        this.close();
+                    }
+                    break;
                 }
             }
         }
+
+        // Clear any combos built in menu
+        controller.processCombo(() => true);
+        controller.clearComboBuffer();
     }
 
     setIndex(cursor: EntryState, index: number) {
