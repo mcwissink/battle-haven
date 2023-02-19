@@ -40,6 +40,15 @@ export const mainMenu = (game: BattleHaven): Page => {
             },
             {
                 text: 'settings',
+                entries: [
+                    {
+                        text: 'fullscreen',
+                        click: () => document.fullscreenElement ? document.exitFullscreen() : canvas.requestFullscreen(),
+                    }
+                ],
+            },
+            {
+                text: 'debug',
                 entries: Object.keys(game.debug).map((key) => ({
                     text: `debug ${key}`,
                     click: () => game.toggleDebug(key as any)
@@ -88,8 +97,8 @@ loadData().then((data) => {
                 speed: 50,
             },
             hitStop: 3,
-            gravity: 1.7,
-            friction: 1,
+            gravity: 2,
+            friction: 1.5,
             health: 750,
         }
     );

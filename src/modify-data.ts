@@ -140,6 +140,9 @@ export const modifyData = (data: any) => {
             }
         });
 
+        // Remove grab from walk
+        modifyFrames([5, 8], (frameData) => delete frameData.itr);
+
         modifyFrames([215], (frameData) => frameData.state = 20);
         // Allow action out of stop_running
         modifyFrames([218], (frameData) => frameData.state = 0);

@@ -95,7 +95,8 @@ export class BattleHaven {
             });
         });
         const dx = time - this.previousTime;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (!--this.wait) {
             if (!this.menu.isOpen || this.debug.frames) {
