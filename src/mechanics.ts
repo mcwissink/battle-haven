@@ -121,7 +121,7 @@ export interface CollisionResolution {
     velocityCorrection: Vector;
 }
 
-export const collide3 = (m1: Mechanics, m2: Mechanics): CollisionResolution | undefined => {
+export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResolution | undefined => {
     let maxOverlapStart = -Infinity;
     let minOverlapEnd = Infinity;
     let collisionVector: Vector = [0, 0];
@@ -131,12 +131,12 @@ export const collide3 = (m1: Mechanics, m2: Mechanics): CollisionResolution | un
         const [min1, max1] = project(axis, m1.shape.corners);
         const [min2, max2] = project(axis, m2.shape.corners);
         const vel: Vector = [
-            m2.velocity[0] - m1.velocity[0],
-            m2.velocity[1] - m1.velocity[1]
+            m2.velocity[0] - m1.velocity[0] * time,
+            m2.velocity[1] - m1.velocity[1] * time
         ];
         const velocityDifference = dot(axis, [
-            m2.velocity[0] - m1.velocity[0],
-            m2.velocity[1] - m1.velocity[1]
+            m2.velocity[0] - m1.velocity[0] * time,
+            m2.velocity[1] - m1.velocity[1] * time
         ]);
 
         if (velocityDifference > 0) {
@@ -148,7 +148,7 @@ export const collide3 = (m1: Mechanics, m2: Mechanics): CollisionResolution | un
                     minOverlapEnd = Math.min(minOverlapEnd, (max1 - min2) / velocityDifference);
                 } else {
                     const maxOverlapStartAxis = (min1 - max2) / velocityDifference;
-                    if (maxOverlapStartAxis > 1) {
+                    if (maxOverlapStartAxis > time) {
                         return;
                     }
                     if (maxOverlapStartAxis > maxOverlapStart) {
@@ -169,7 +169,7 @@ export const collide3 = (m1: Mechanics, m2: Mechanics): CollisionResolution | un
                     minOverlapEnd = Math.min(minOverlapEnd, (max2 - min1) / -velocityDifference);
                 } else {
                     const maxOverlapStartAxis = (min2 - max1) / -velocityDifference;
-                    if (maxOverlapStartAxis > 1) {
+                    if (maxOverlapStartAxis > time) {
                         return;
                     }
                     if (maxOverlapStartAxis > maxOverlapStart) {
@@ -196,7 +196,10 @@ export const collide3 = (m1: Mechanics, m2: Mechanics): CollisionResolution | un
             return;
         }
         m1.didCollide = true;
-        const collisionForce = -dot(collisionVector, m1.velocity);
+        const collisionForce = -dot(collisionVector, [
+            m1.velocity[0] * time,
+            m1.velocity[1] * time,
+        ]);
         return {
             time: maxOverlapStart,
             velocityCorrection: [
@@ -331,14 +334,9 @@ export class Mechanics {
     update() {
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
+        this.velocity[1] += this.mass * this.game.config.gravity;
         if (this.isGrounded) {
             this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), this.game.config.friction);
-        } else {
-            this.velocity[1] += this.mass * this.game.config.gravity;
-        }
-        if (this.didCollide) {
-        console.log(2, this.position);
-        console.log(2, this.velocity);
         }
     }
 

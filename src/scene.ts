@@ -22,30 +22,31 @@ export class Scene {
     effects: Effect[] = [];
     effectsPool: Effect[] = [];
     platforms: Mechanics[];
+    collisionStep(entity: Entity, time = 1) {
+        let earliestCollision: CollisionResolution | undefined;
+        this.platforms.forEach((platform) => {
+            const collision = collide3(entity.mechanics, platform, time);
+            if (collision && (!earliestCollision || collision.time <= earliestCollision.time)) {
+                earliestCollision = collision;
+            }
+        });
+        if (earliestCollision) {
+            entity.mechanics.position[0] += entity.mechanics.velocity[0] * earliestCollision.time * 0.99;
+            entity.mechanics.position[1] += entity.mechanics.velocity[1] * earliestCollision.time * 0.99;
+            entity.mechanics.velocity[0] += earliestCollision.velocityCorrection[0];
+            entity.mechanics.velocity[1] += earliestCollision.velocityCorrection[1];
+            // TODO: Change 1 to time - earliestCollision.time and figure out how to make that work
+            // We need to handle the corner case and group collisions
+            this.collisionStep(entity, 1);
+        }
+    }
     update(dx: number) {
         this.entities.forEach(entity => {
             if (entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) {
                 return;
             }
             entity.mechanics.didCollide = false;
-            let earliestCollision: CollisionResolution | undefined;
-            this.platforms.forEach((platform) => {
-                const collision = collide3(entity.mechanics, platform);
-                if (collision) {
-                    if (earliestCollision && collision.time <= earliestCollision.time) {
-                        earliestCollision = collision;
-                    }
-                    if (!earliestCollision) {
-                        earliestCollision = collision;
-                    }
-                }
-            });
-            if (earliestCollision) {
-                entity.mechanics.position[0] += entity.mechanics.velocity[0] * earliestCollision.time;
-                entity.mechanics.position[1] += entity.mechanics.velocity[1] * earliestCollision.time;
-                entity.mechanics.velocity[0] += earliestCollision.velocityCorrection[0];
-                entity.mechanics.velocity[1] += earliestCollision.velocityCorrection[1];
-            }
+            this.collisionStep(entity);
         });
 
         this.entities.forEach(entity => entity.mechanicsUpdate(dx));
