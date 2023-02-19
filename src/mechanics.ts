@@ -131,16 +131,12 @@ export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResol
         const [min1, max1] = project(axis, m1.shape.corners);
         const [min2, max2] = project(axis, m2.shape.corners);
         const vel: Vector = [
-            m2.velocity[0] - m1.velocity[0] * time,
-            m2.velocity[1] - m1.velocity[1] * time
+            m2.velocity[0] - m1.velocity[0],
+            m2.velocity[1] - m1.velocity[1]
         ];
-        const velocityDifference = dot(axis, [
-            m2.velocity[0] - m1.velocity[0] * time,
-            m2.velocity[1] - m1.velocity[1] * time
-        ]);
+        const velocityDifference = dot(axis, vel);
 
         if (velocityDifference > 0) {
-
             if (max1 < min2 || (m2.passthrough && (m1.ignorePassthrough || dot(normalize(vel), m2.passthrough) < 0))) {
                 return;
             } else {
@@ -197,8 +193,8 @@ export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResol
         }
         m1.didCollide = true;
         const collisionForce = -dot(collisionVector, [
-            m1.velocity[0] * time,
-            m1.velocity[1] * time,
+            m1.velocity[0],
+            m1.velocity[1],
         ]);
         return {
             time: maxOverlapStart,
