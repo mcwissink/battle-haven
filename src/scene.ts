@@ -2,7 +2,7 @@ import { BattleHaven } from './battle-haven';
 import { Character } from './character';
 import { Effect } from './effect';
 import { Entity } from './entity';
-import { collide, collide3, difference, dot, Mechanics, minimum, normalize, Rectangle, UP_VECTOR, Vector } from './mechanics';
+import { collide, collide3, difference, dot, Mechanics, minimum, normalize, Rectangle, UP_VECTOR, Vector, CollisionResolution } from './mechanics';
 import { Interaction } from './types';
 
 export class Scene {
@@ -28,10 +28,24 @@ export class Scene {
                 return;
             }
             entity.mechanics.didCollide = false;
-            entity.mechanics.collisionVelocity = [...entity.mechanics.velocity];
+            let earliestCollision: CollisionResolution | undefined;
             this.platforms.forEach((platform) => {
-                collide3(entity.mechanics, platform);
+                const collision = collide3(entity.mechanics, platform);
+                if (collision) {
+                    if (earliestCollision && collision.time <= earliestCollision.time) {
+                        earliestCollision = collision;
+                    }
+                    if (!earliestCollision) {
+                        earliestCollision = collision;
+                    }
+                }
             });
+            if (earliestCollision) {
+                entity.mechanics.position[0] += entity.mechanics.velocity[0] * earliestCollision.time;
+                entity.mechanics.position[1] += entity.mechanics.velocity[1] * earliestCollision.time;
+                entity.mechanics.velocity[0] += earliestCollision.velocityCorrection[0];
+                entity.mechanics.velocity[1] += earliestCollision.velocityCorrection[1];
+            }
         });
 
         this.entities.forEach(entity => entity.mechanicsUpdate(dx));
@@ -198,7 +212,7 @@ export class Scene {
             x * this.game.config.camera.speed,
             y * this.game.config.camera.speed
         ];
-        const minimumTranslation = minimum(cameraFullTranslation, cameraLimitedTranslation):
+        const minimumTranslation = minimum(cameraFullTranslation, cameraLimitedTranslation);
         this.cameraPosition[0] += minimumTranslation[0];
         this.cameraPosition[1] += minimumTranslation[1];
         ctx.translate(this.cameraPosition[0], this.cameraPosition[1]);

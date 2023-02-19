@@ -116,7 +116,12 @@ export const collide2 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
     }
 };
 
-export const collide3 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
+export interface CollisionResolution {
+    time: number;
+    velocityCorrection: Vector;
+}
+
+export const collide3 = (m1: Mechanics, m2: Mechanics): CollisionResolution | undefined => {
     let maxOverlapStart = -Infinity;
     let minOverlapEnd = Infinity;
     let collisionVector: Vector = [0, 0];
@@ -191,12 +196,14 @@ export const collide3 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
             return;
         }
         m1.didCollide = true;
-        m1.collisionVelocity[0] = m1.collisionVelocity[0] * maxOverlapStart;
-        m1.collisionVelocity[1] = m1.collisionVelocity[1] * maxOverlapStart;
-        const collisionForce = dot(collisionVector, m1.velocity);
-        m1.velocity[0] -= collisionVector[0] * collisionForce * 1.01;
-        m1.velocity[1] -= collisionVector[1] * collisionForce * 1.01;
-        return collisionVector;
+        const collisionForce = -dot(collisionVector, m1.velocity);
+        return {
+            time: maxOverlapStart,
+            velocityCorrection: [
+                collisionVector[0] * collisionForce * 1.01,
+                collisionVector[1] * collisionForce * 1.01
+            ],
+        };
     }
 };
 
@@ -284,7 +291,6 @@ export class Mechanics {
     public position: Vector;
     public passthrough?: Vector;
     public velocity: Vector = [0, 0];
-    public collisionVelocity: Vector = [0, 0];
     public isGrounded = false;
     public didCollide = false;
     public isOverlapping = false;
@@ -323,16 +329,16 @@ export class Mechanics {
     }
 
     update() {
-        if (this.didCollide) {
-            this.position[0] += this.collisionVelocity[0];
-            this.position[1] += this.collisionVelocity[1];
-        }
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
         if (this.isGrounded) {
             this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), this.game.config.friction);
         } else {
             this.velocity[1] += this.mass * this.game.config.gravity;
+        }
+        if (this.didCollide) {
+        console.log(2, this.position);
+        console.log(2, this.velocity);
         }
     }
 

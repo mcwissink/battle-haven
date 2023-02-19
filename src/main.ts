@@ -43,6 +43,7 @@ export const mainMenu = (game: BattleHaven): Page => {
                 entries: [
                     {
                         text: 'fullscreen',
+                        // TODO: Add listener on canvas to rescale when changing screen size
                         click: () => document.fullscreenElement ? document.exitFullscreen() : canvas.requestFullscreen(),
                     },
                     {
