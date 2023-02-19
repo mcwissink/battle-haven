@@ -1,6 +1,6 @@
 import { BattleHaven } from './battle-haven';
 import { Character } from './character';
-import { controllers } from './controller';
+import { controllers, KeyboardController } from './controller';
 import { loadData } from './data-loader';
 import { Page } from './menu';
 
@@ -44,13 +44,23 @@ export const mainMenu = (game: BattleHaven): Page => {
                     {
                         text: 'fullscreen',
                         click: () => document.fullscreenElement ? document.exitFullscreen() : canvas.requestFullscreen(),
+                    },
+                    {
+                        text: 'controllers',
+                        isSplit: true,
+                        entries: ({ controller }) => (
+                            Object.entries(controller.mapping).map(([target, source]) => ({
+                                text: `${target.padEnd(7)}: ${source}`,
+                                click: () => controllers.updateMapping(controller, target),
+                            }))
+                        )
                     }
                 ],
             },
             {
                 text: 'debug',
                 entries: Object.keys(game.debug).map((key) => ({
-                    text: `debug ${key}`,
+                    text: key,
                     click: () => game.toggleDebug(key as any)
                 })),
             },

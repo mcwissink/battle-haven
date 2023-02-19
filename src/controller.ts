@@ -65,6 +65,7 @@ interface ControllerListener {
 }
 
 export class Controller {
+    public mapping: Record<string, number | string> = {}
     stickX = 0;
     stickY = 0;
     jump = 0;
@@ -76,6 +77,10 @@ export class Controller {
     }
 
     constructor(public port: number, public config: ControllerConfig) { }
+
+    setConfig(config: ControllerConfig) {
+        this.config = config;
+    }
 
     on<T extends keyof ControllerListener>(event: T, callback: Flat<ControllerListener[T]>) {
         const index = this.listeners[event].indexOf(callback);
@@ -191,12 +196,25 @@ export class Controller {
         this[control] = magnitude;
     };
 
+    async getNextInput(): Promise<any> { }
+
     update() { }
 
     key(_key: string, _active: boolean) { return false; }
 }
 
-class KeyboardController extends Controller {
+export class KeyboardController extends Controller {
+    private resolveNextInput: ((value: string) => void) | null = null;
+    constructor(port: number, config: ControllerConfig) {
+        super(port, config);
+        this.setConfig(config);
+    }
+
+    setConfig(config: ControllerConfig) {
+        this.config = config;
+        this.mapping = this.config.mapping.keyboard;
+    }
+
     directionState = {
         up: 0,
         down: 0,
@@ -204,52 +222,79 @@ class KeyboardController extends Controller {
         left: 0,
     }
     key(key: string, active: boolean) {
-        const input = this.config.mapping.keyboard[key];
-        if (input) {
-            switch (input) {
-                case 'up':
-                    this.directionState[input] = -Number(active);
-                    this.input(
-                        'stickY',
-                        this.directionState.up + this.directionState.down
-                    );
-                    break;
-                case 'down':
-                    this.directionState[input] = Number(active);
-                    this.input(
-                        'stickY',
-                        this.directionState.up + this.directionState.down
-                    );
-                    break;
-                case 'left':
-                    this.directionState[input] = -Number(active);
-                    this.input(
-                        'stickX',
-                        this.directionState.left + this.directionState.right
-                    );
-                    break;
-                case 'right':
-                    this.directionState[input] = Number(active);
-                    this.input(
-                        'stickX',
-                        this.directionState.left + this.directionState.right
-                    );
-                    break;
-                default:
-                    this.input(input as keyof ControllerState, Number(active));
-                    break;
-            }
-            return true;
+        if (this.resolveNextInput && active) {
+            this.resolveNextInput(key);
         }
-        return false;
+        switch (key) {
+            case this.mapping.up:
+                this.directionState.up = -Number(active);
+                this.input(
+                    'stickY',
+                    this.directionState.up + this.directionState.down
+                );
+                return true;
+            case this.mapping.down:
+                this.directionState.down = Number(active);
+                this.input(
+                    'stickY',
+                    this.directionState.up + this.directionState.down
+                );
+                return true;
+            case this.mapping.left:
+                this.directionState.left = -Number(active);
+                this.input(
+                    'stickX',
+                    this.directionState.left + this.directionState.right
+                );
+                return true;
+            case this.mapping.right:
+                this.directionState.right = Number(active);
+                this.input(
+                    'stickX',
+                    this.directionState.left + this.directionState.right
+                );
+                return true;
+            case this.mapping.attack: 
+                this.input('attack', Number(active));
+                return true;
+            case this.mapping.defend: 
+                this.input('defend', Number(active));
+                return true;
+            case this.mapping.jump: 
+                this.input('jump', Number(active));
+                return true;
+            case this.mapping.menu: 
+                this.input('menu', Number(active));
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    async getNextInput() {
+        const input = new Promise((resolve) => {
+            this.resolveNextInput = resolve;
+        });
+        await input;
+        this.resolveNextInput = null;
+        return input;
     }
 }
 
 class GamepadController extends Controller {
-    public mapping: Record<string, number>
+    private resolveNextInput: ((value: number) => void) | null = null;
+    private snapshot: { buttons: number[] } = {
+        buttons: [],
+    };
+    public mapping: Record<string, number> = {};
     constructor(port: number, config: ControllerConfig, public gamepad: Gamepad) {
         super(port, config);
-        this.mapping = config.mapping.controller[gamepad.id] ?? DEFAULT_CONTROLLER_MAPPING;
+        this.setConfig(config);
+    }
+
+    setConfig(config: ControllerConfig) {
+        this.config = config;
+        this.mapping = config.mapping.controller[this.gamepad.id] ?? DEFAULT_CONTROLLER_MAPPING;
     }
 
     roundAxis(axis: number) {
@@ -265,12 +310,39 @@ class GamepadController extends Controller {
     }
 
     update() {
+        if (this.resolveNextInput) {
+            const index = this.gamepad.buttons.findIndex((button, i) => {
+                // Ensure buttons that were previously held down a first reset
+                if (this.snapshot.buttons[i]) {
+                    if (!button.value) {
+                        this.snapshot.buttons[i] = 0;
+                    }
+                    return false;
+                } else {
+                    return button.value;
+                }
+            });
+            if (index !== -1) {
+                this.resolveNextInput(index);
+            }
+            return;
+        }
         this.input('attack', this.gamepad.buttons[this.mapping.attack].value);
         this.input('defend', this.gamepad.buttons[this.mapping.defend].value);
         this.input('jump', this.gamepad.buttons[this.mapping.jump].value);
         this.input('menu', this.gamepad.buttons[this.mapping.menu].value);
         this.input('stickX', this.roundAxis(this.gamepad.axes[0]));
         this.input('stickY', this.roundAxis(this.gamepad.axes[1]));
+    }
+
+    async getNextInput() {
+        const input = new Promise((resolve) => {
+            this.snapshot.buttons = this.gamepad.buttons.map(({ value }) => value);
+            this.resolveNextInput = resolve;
+        });
+        await input;
+        this.resolveNextInput = null;
+        return input;
     }
 }
 
@@ -299,14 +371,14 @@ const DEFAULT_CONFIGS: ControllerConfig[] = [
         name: 'no name',
         mapping: {
             keyboard: {
-                ArrowUp: 'up',
-                ArrowDown: 'down',
-                ArrowLeft: 'left',
-                ArrowRight: 'right',
-                z: 'defend',
-                x: 'jump',
-                c: 'attack',
-                Escape: 'menu',
+                up: 'ArrowUp',
+                down: 'ArrowDown',
+                left: 'ArrowLeft',
+                right: 'ArrowRight',
+                defend: 'z',
+                jump: 'x',
+                attack: 'c',
+                menu: 'Escape',
             },
             controller: {
                 '045e-028e-Microsoft X-Box 360 pad': {
@@ -322,14 +394,14 @@ const DEFAULT_CONFIGS: ControllerConfig[] = [
         name: 'no name',
         mapping: {
             keyboard: {
-                i: 'up',
-                k: 'down',
-                j: 'left',
-                l: 'right',
-                a: 'defend',
-                s: 'jump',
-                d: 'attack',
-                Escape: 'menu',
+                up: 'i',
+                down: 'k',
+                left: 'j',
+                right: 'l',
+                defend: 'a',
+                jump: 's',
+                attack: 'd',
+                menu: 'Escape'
             },
             controller: {
                 '045e-028e-Microsoft X-Box 360 pad': {
@@ -362,7 +434,7 @@ class ControllerManager {
         window.addEventListener('keyup', (e) => {
             if (!this.ports.find((controller) => controller.key(e.key, false))) {
                 // If the key is not handled by an existing controller, register a new controller if a matching mapping is found
-                const config = this.configs.find((config) => Object.keys(config.mapping.keyboard).includes(e.key))
+                const config = this.configs.find((config) => Object.values(config.mapping.keyboard).includes(e.key))
                 if (config) {
                     this.connect((port) => new KeyboardController(port, config));
                 }
@@ -406,6 +478,10 @@ class ControllerManager {
 
     disconnect(port: number) {
         this.ports[port] = ControllerManager.dummy;
+    }
+
+    async updateMapping(controller: Controller, target: string) {
+        controller.mapping[target] = await controller.getNextInput();
     }
 }
 

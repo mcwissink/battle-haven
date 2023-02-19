@@ -16,7 +16,7 @@ export interface Page {
     text: string;
     isSplit?: boolean;
     isConfirmed?: boolean;
-    entries?: Array<Page>;
+    entries?: Array<Page> | ((context: { controller: Controller }) => Array<Page>);
     click?: (context: { port: number }) => void;
     confirm?: (context: Array<{ port: number, index: number }>) => void;
 }
@@ -46,7 +46,7 @@ export class Menu {
         if (cursor) {
             switch (input) {
                 case 'attack': {
-                    const selectedEntry = this.getEntries(cursor)[cursor.index];
+                    const selectedEntry = this.getActiveEntries(cursor)[cursor.index];
                     if (selectedEntry.entries) {
                         if (this.globalPage.isSplit) {
                             cursor.path.push({ index: cursor.index });
@@ -87,11 +87,11 @@ export class Menu {
                     return true;
                 }
                 case 'down': {
-                    this.setIndex(cursor, mod(cursor.index + 1, this.getEntries(cursor).length));
+                    this.setIndex(cursor, mod(cursor.index + 1, this.getActiveEntries(cursor).length));
                     return true;
                 }
                 case 'up': {
-                    this.setIndex(cursor, mod(cursor.index - 1, this.getEntries(cursor).length));
+                    this.setIndex(cursor, mod(cursor.index - 1, this.getActiveEntries(cursor).length));
                     return true;
                 }
             }
@@ -112,20 +112,32 @@ export class Menu {
         this.cursors.forEach(cursor => cursor.index = 0);
     }
 
-    traverseEntries(cursor: PathEntry[]) {
-        return cursor.reduce<Page>((acc, c) => {
-            return acc.entries?.[c.index] ?? acc;
+    traverseEntries(cursor: EntryState, path: PathEntry[]) {
+        return path.reduce<Page>((acc, p) => {
+            return this.getEntries(cursor, acc.entries)?.[p.index] ?? acc;
         }, this.menu);
     }
+
     get globalPage() {
-        return this.traverseEntries(this.globalPath);
+        const cursor = Array.from(this.cursors.values())[0];
+        return this.traverseEntries(cursor, this.globalPath);
     }
+
     getPage(cursor: EntryState) {
-        return this.traverseEntries(this.globalPath.concat(cursor.path));
+        return this.traverseEntries(cursor, this.globalPath.concat(cursor.path));
     }
-    getEntries(cursor: EntryState) {
-        return this.getPage(cursor).entries ?? [];
+
+    getEntries(cursor: EntryState, entries?: Page['entries']) {
+        if (typeof entries === 'function') {
+            return entries({ controller: controllers.get(cursor.port) });
+        }
+        return entries ?? [];
     }
+
+    getActiveEntries(cursor: EntryState): Array<Page> {
+        return this.getEntries(cursor, this.getPage(cursor).entries);
+    }
+
     open() {
         controllers.ports.forEach((controller) => {
             if (controller) {
@@ -176,7 +188,7 @@ export class Menu {
         ctx.fillStyle = 'rgba(0, 0, 0, 1)';
         const maxEntryLength = controllers.ports.reduce((acc, controller) => {
             const cursor = this.cursors.get(controller);
-            return cursor ? Math.max(this.getEntries(cursor).length, acc) : acc;
+            return cursor ? Math.max(this.getActiveEntries(cursor).length, acc) : acc;
         }, this.globalPage.entries?.length || 0);
         ctx.fillRect(
             0,
@@ -198,7 +210,7 @@ export class Menu {
             }
 
             ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-            this.getEntries(cursor).forEach((entry, index) => {
+            this.getActiveEntries(cursor).forEach((entry, index) => {
                 ctx.fillText(
                     entry.text,
                     40,
@@ -211,7 +223,7 @@ export class Menu {
                 0,
                 -ENTRY_HEIGHT,
                 this.globalPage.isSplit ? 180 : 780,
-                ENTRY_HEIGHT * this.getEntries(cursor).length + 16 
+                ENTRY_HEIGHT * this.getActiveEntries(cursor).length + 16 
             );
 
             if (cursor) {
