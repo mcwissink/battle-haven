@@ -212,7 +212,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     event: {
                         enter: () => {
                             this.controller.clearComboBuffer();
-                            this.mechanics.force(this.direction * this.data.data.bmp.running_speed * 1.2);
+                            this.mechanics.force(this.direction * this.data.data.bmp.running_speed * 1.5);
                         },
                         fall: () => this.next.setFrame(animation.airborn, 1),
                     },
