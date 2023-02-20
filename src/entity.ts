@@ -1,5 +1,4 @@
 import { BattleHaven } from './battle-haven';
-import { controllers } from './controller';
 import { Mechanics, Shape, Vector } from './mechanics';
 import { Sprite } from './sprite';
 import { Body, Combo, FrameData, Interaction0, Point } from './types';
@@ -152,7 +151,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     }
 
     get controller() {
-        return controllers.get(this.port);
+        return this.game.controllers.get(this.port);
     }
 
     getFrameElementPosition({ x, y, w = 0 }: Body | Point): Vector {

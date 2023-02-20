@@ -418,7 +418,7 @@ const DEFAULT_CONFIGS: ControllerConfig[] = [
     { name: 'no name', mapping: { keyboard: {}, controller: {} } }
 ];
 
-class ControllerManager {
+export class ControllerManager {
     ports: [Controller, Controller, Controller, Controller] = [
         ControllerManager.dummy,
         ControllerManager.dummy,
@@ -485,6 +485,4 @@ class ControllerManager {
         controller.mapping[target] = await controller.getNextInput();
     }
 }
-
-export const controllers = new ControllerManager();
 

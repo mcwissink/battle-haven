@@ -1,6 +1,5 @@
 import { BattleHaven } from './battle-haven';
 import { Character } from './character';
-import { controllers } from './controller';
 import { loadData } from './data-loader';
 import { Page } from './menu';
 
@@ -53,7 +52,7 @@ export const mainMenu = (game: BattleHaven): Page => {
                         entries: ({ controller }) => [
                             ...Object.entries(controller.mapping).map(([target, source]) => ({
                                 text: `${target.padEnd(7)}: ${source}`,
-                                click: () => controllers.updateMapping(controller, target),
+                                click: () => game.controllers.updateMapping(controller, target),
                             })),
                             {
                                 text: 'back',
@@ -89,7 +88,7 @@ export const gameOverMenu = (game: BattleHaven): Page => ({
         {
             text: 'rematch',
             click: () => {
-                controllers.ports.forEach((_, port) => {
+                game.controllers.ports.forEach((_, port) => {
                     const existingCharacter = game.scene.characters.find((entity) => entity.port === port);
                     if (existingCharacter) {
                         game.destroy(existingCharacter);

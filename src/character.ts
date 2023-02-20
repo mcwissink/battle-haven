@@ -34,7 +34,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         };
 
         const drop = () => {
-            if (this.controller.stickDirectionY === 1) {
+            if (this.controller.stickY === 1) {
                 this.mechanics.ignorePassthrough = true;
             }
         }

@@ -1,5 +1,5 @@
 import { BattleHaven } from './battle-haven';
-import { Controller, controllers } from './controller';
+import { Controller } from './controller';
 import { mod } from './utils';
 
 type EntryState = {
@@ -32,7 +32,7 @@ export class Menu {
     menu: Page;
     constructor(public game: BattleHaven, public component: Component) {
         this.menu = component(game);
-        controllers.on('connect', (controller) => {
+        game.controllers.on('connect', (controller) => {
             controller.on('input', this.input);
             this.cursors.set(controller, {
                 index: 0,
@@ -147,7 +147,7 @@ export class Menu {
 
     getEntries(cursor: EntryState, entries?: Page['entries']) {
         if (typeof entries === 'function') {
-            return entries({ controller: controllers.get(cursor.port) });
+            return entries({ controller: this.game.controllers.get(cursor.port) });
         }
         return entries ?? [];
     }
@@ -157,7 +157,7 @@ export class Menu {
     }
 
     open() {
-        controllers.ports.forEach((controller) => {
+        this.game.controllers.ports.forEach((controller) => {
             if (controller) {
                 controller.on('input', this.input);
             }
@@ -165,7 +165,7 @@ export class Menu {
         this.isOpen = true;
     }
     close() {
-        controllers.ports.forEach((controller) => {
+        this.game.controllers.ports.forEach((controller) => {
             if (controller) {
                 controller.off('input', this.input);
             }
@@ -204,7 +204,7 @@ export class Menu {
         ctx.fillText(this.globalPage.text, 10, 20);
 
         ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-        const maxEntryLength = controllers.ports.reduce((acc, controller) => {
+        const maxEntryLength = this.game.controllers.ports.reduce((acc, controller) => {
             const cursor = this.cursors.get(controller);
             return cursor ? Math.max(this.getActiveEntries(cursor).length, acc) : acc;
         }, this.globalPage.entries?.length || 0);
@@ -217,7 +217,7 @@ export class Menu {
 
         ctx.translate(10, 10 + ENTRY_HEIGHT * 2);
 
-        controllers.ports.forEach((controller, port) => {
+        this.game.controllers.ports.forEach((controller, port) => {
             const cursor = this.cursors.get(controller) ?? (port ? undefined : { index: 0, port: -1, path: [] });
             if (!cursor) {
                 return;

@@ -37,7 +37,7 @@ export class Scene {
             entity.mechanics.velocity[1] += earliestCollision.velocityCorrection[1];
             // TODO: Change 1 to time - earliestCollision.time and figure out how to make that work
             // We need to handle the corner case and group collisions
-            this.collisionStep(entity, 1);
+            this.collisionStep(entity);
         }
     }
     update(dx: number) {

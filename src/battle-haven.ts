@@ -1,5 +1,5 @@
 import { Character } from './character';
-import { controllers } from './controller';
+import { ControllerManager } from './controller';
 import { GameData } from './data-loader';
 import { Effect } from './effect';
 import { Entity } from './entity';
@@ -46,10 +46,11 @@ export class BattleHaven {
     scene: Scene;
     public audio: Audio;
     public menu: Menu;
+    public controllers: ControllerManager;
     tasks: Task[] = [];
     debug = {
         hitbox: false,
-        mechanics: true,
+        mechanics: false,
         stats: true,
         frames: false,
     }
@@ -76,6 +77,7 @@ export class BattleHaven {
         }
         this.ctx = ctx;
         this.scene = new Scene(this);
+        this.controllers = new ControllerManager();
         this.menu = new Menu(this, () => ({ text: '', entries: [] }));
         this.audio = new Audio(data.soundpacks);
     }
@@ -86,7 +88,7 @@ export class BattleHaven {
 
     wait = 2;
     update: FrameRequestCallback = (time) => {
-        controllers.ports.forEach((controller) => {
+        this.controllers.ports.forEach((controller) => {
             controller.update();
             controller.processCombo(combo => {
                 const systemCombo = this.combo[combo.name];
