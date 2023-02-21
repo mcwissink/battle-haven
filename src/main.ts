@@ -119,7 +119,7 @@ loadData().then((data) => {
                 speed: 50,
             },
             hitStop: 3,
-            gravity: 2,
+            gravity: 1.7,
             friction: 1.5,
             health: 750,
         }

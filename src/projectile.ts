@@ -59,6 +59,7 @@ export class Projectile extends Entity {
                             if (entity.type === 'character') {
                                 this.parent = entity;
                                 this.next.setFrame(animation.rebounding);
+                                this.game.audio.play(data.data.bmp.weapon_broken_sound);
                             } else {
                                 this.next.setFrame(20);
                             }

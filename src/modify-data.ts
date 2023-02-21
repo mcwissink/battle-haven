@@ -159,7 +159,7 @@ export const modifyData = (data: any) => {
         frameData.centerx++;
         frameData.centery++;
         if (frameData.dvy !== 550) {
-            frameData.dvy *= 1.4;
+            frameData.dvy *= 2;
         }
     });
 
