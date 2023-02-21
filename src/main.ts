@@ -1,11 +1,26 @@
 import { BattleHaven } from './battle-haven';
+import { Mechanics, Rectangle, UP_VECTOR } from './mechanics';
 import { Character } from './character';
 import { loadData } from './data-loader';
 import { Page } from './menu';
+import { Scene } from './scene';
+import { EntityData } from './data-loader';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
 const READY: Page[] = [{ text: 'Ready' }];
+
+const level = (game: BattleHaven) => ({
+    platforms: [
+        new Mechanics(game, new Rectangle(200, 3), { position: [500, 245], passthrough: UP_VECTOR }),
+        new Mechanics(game, new Rectangle(200, 3), { position: [800, 150], passthrough: UP_VECTOR }),
+        new Mechanics(game, new Rectangle(200, 3), { position: [1100, 245], passthrough: UP_VECTOR }),
+        new Mechanics(game, new Rectangle(1000, 120), { position: [800, 400] }),
+        new Mechanics(game, new Rectangle(150, 600), { position: [5, 210] }),
+        new Mechanics(game, new Rectangle(1500, 100), { position: [800, 510] }),
+        new Mechanics(game, new Rectangle(150, 600), { position: [1600, 210] }),
+    ],
+});
 
 export const mainMenu = (game: BattleHaven): Page => {
     return {
@@ -15,11 +30,8 @@ export const mainMenu = (game: BattleHaven): Page => {
                 text: 'select character',
                 isSplit: true,
                 confirm: (context) => {
+                    game.scene = new Scene(game, level(game));
                     context.forEach(({ port, index: oid }) => {
-                        const existingCharacter = game.scene.entities.find((entity) => entity.port === port);
-                        if (existingCharacter) {
-                            game.destroy(existingCharacter);
-                        }
                         const character = new Character(game, port, game.data.entities[oid]);
                         game.scene.entities.push(character);
                         game.scene.characters.push(character);
@@ -88,17 +100,21 @@ export const gameOverMenu = (game: BattleHaven): Page => ({
         {
             text: 'rematch',
             click: () => {
-                game.controllers.ports.forEach((_, port) => {
-                    const existingCharacter = game.scene.characters.find((entity) => entity.port === port);
-                    if (existingCharacter) {
-                        game.destroy(existingCharacter);
-                        const character = new Character(game, port, existingCharacter.data);
-                        game.scene.entities.push(character);
-                        game.scene.characters.push(character);
-                        game.menu.setEntries(mainMenu);
-                        game.menu.close();
+                const characters = game.controllers.ports.reduce<Record<number, EntityData>>((acc, _, port) => {
+                    const character = game.scene.characters.find((entity) => entity.port === port);
+                    if (character) {
+                        acc[port] = character.data;
                     }
+                    return acc;
+                }, {});
+                game.scene = new Scene(game, level(game));
+                Object.entries(characters).forEach(([port, data]) => {
+                    const character = new Character(game, Number(port), data);
+                    game.scene.entities.push(character);
+                    game.scene.characters.push(character);
                 });
+                game.menu.setEntries(mainMenu);
+                game.menu.close();
             }
         },
         { text: 'main menu', click: () => game.menu.setEntries(mainMenu) }

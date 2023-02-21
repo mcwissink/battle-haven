@@ -2,29 +2,22 @@ import { BattleHaven } from './battle-haven';
 import { Character } from './character';
 import { Effect } from './effect';
 import { Entity } from './entity';
-import { collide, collide3, difference, dot, Mechanics, minimum, normalize, Rectangle, UP_VECTOR, Vector, CollisionResolution } from './mechanics';
+import { collide, collide3, difference, dot, Mechanics, minimum, normalize, UP_VECTOR, Vector, CollisionResolution } from './mechanics';
 import { Interaction } from './types';
 
+interface Level {
+    platforms: Mechanics[];
+}
+
 export class Scene {
-    constructor(public game: BattleHaven) {
-        this.platforms = [
-            new Mechanics(this.game, new Rectangle(200, 3), { position: [500, 245], passthrough: UP_VECTOR }),
-            new Mechanics(this.game, new Rectangle(200, 3), { position: [800, 150], passthrough: UP_VECTOR }),
-            new Mechanics(this.game, new Rectangle(200, 3), { position: [1100, 245], passthrough: UP_VECTOR }),
-            new Mechanics(this.game, new Rectangle(1000, 120), { position: [800, 400] }),
-            new Mechanics(this.game, new Rectangle(150, 600), { position: [5, 210] }),
-            new Mechanics(this.game, new Rectangle(1500, 100), { position: [800, 510] }),
-            new Mechanics(this.game, new Rectangle(150, 600), { position: [1600, 210] }),
-        ];
-    }
+    constructor(public game: BattleHaven, public level: Level) { }
     entities: Entity[] = [];
     characters: Character[] = [];
     effects: Effect[] = [];
     effectsPool: Effect[] = [];
-    platforms: Mechanics[];
     collisionStep(entity: Entity, time = 1) {
         let earliestCollision: CollisionResolution | undefined;
-        this.platforms.forEach((platform) => {
+        this.level.platforms.forEach((platform) => {
             const collision = collide3(entity.mechanics, platform, time);
             if (collision && (!earliestCollision || collision.time <= earliestCollision.time)) {
                 earliestCollision = collision;
@@ -58,7 +51,7 @@ export class Scene {
             let isGrounded = false;
             let isOverlapping = false;
             let isIgnoringPassthrough = false;
-            this.platforms.forEach((platform) => {
+            this.level.platforms.forEach((platform) => {
                 const mtv2 = collide(entity.environment, platform.shape)
                 if (mtv2) {
                     if (platform.passthrough && entity.mechanics.ignorePassthrough) {
@@ -234,11 +227,10 @@ export class Scene {
 
     shakeValue = () => Math.sin(Date.now()) * (Math.random() > 0.5 ? -1 : 1) * this.game.config.camera.shake;
 
-
     render(ctx: CanvasRenderingContext2D) {
         ctx.save();
         this.camera(ctx);
-        this.platforms.forEach(platform => platform.render(ctx));
+        this.level.platforms.forEach(platform => platform.render(ctx));
         this.entities.forEach(entity => entity.render(ctx));
         this.effects.forEach(effect => effect.render(ctx));
         ctx.restore();

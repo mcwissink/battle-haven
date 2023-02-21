@@ -76,7 +76,7 @@ export class BattleHaven {
             throw new Error('Failed to get context');
         }
         this.ctx = ctx;
-        this.scene = new Scene(this);
+        this.scene = new Scene(this, { platforms: [] });
         this.controllers = new ControllerManager();
         this.menu = new Menu(this, () => ({ text: '', entries: [] }));
         this.audio = new Audio(data.soundpacks);
