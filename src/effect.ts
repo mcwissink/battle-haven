@@ -30,7 +30,6 @@ export class Effect extends Entity {
                     mass: 0,
                 }
             ),
-            new Rectangle(12, 12),
             new Sprite(data.spriteSheet),
             data.data.frame,
             {
