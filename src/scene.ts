@@ -24,6 +24,12 @@ export class Scene {
             }
         });
         if (earliestCollision) {
+            let isGrounded = dot(UP_VECTOR, normalize(earliestCollision.velocityCorrection)) === 1;
+            if (isGrounded && !entity.mechanics.isGrounded) {
+                const [vx, vy] = entity.mechanics.velocity;
+                entity.event('land', { vx, vy });
+                entity.mechanics.isGrounded = true;
+            }
             entity.mechanics.position[0] += entity.mechanics.velocity[0] * earliestCollision.time * 0.99;
             entity.mechanics.position[1] += entity.mechanics.velocity[1] * earliestCollision.time * 0.99;
             entity.mechanics.velocity[0] += earliestCollision.velocityCorrection[0];
@@ -40,6 +46,11 @@ export class Scene {
             }
             entity.mechanics.didCollide = false;
             this.collisionStep(entity);
+
+            if (!entity.mechanics.didCollide && entity.mechanics.isGrounded) {
+                entity.event('fall');
+                entity.mechanics.isGrounded = false;
+            }
         });
 
         this.entities.forEach(entity => entity.mechanicsUpdate(dx));
@@ -48,7 +59,6 @@ export class Scene {
             if (entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) {
                 return;
             }
-            let isGrounded = false;
             let isOverlapping = false;
             let isIgnoringPassthrough = false;
             this.level.platforms.forEach((platform) => {
@@ -66,24 +76,10 @@ export class Scene {
                         entity.mechanics.isOverlapping = true;
                         entity.event('collide');
                     }
-
-                    isGrounded = dot(UP_VECTOR, normalize(mtv2)) === 1;
-                    if (isGrounded && !entity.mechanics.isGrounded && entity.mechanics.didCollide) {
-                        const [vx, vy] = entity.mechanics.velocity;
-                        entity.mechanics.velocity[1] = 0;
-                        entity.mechanics.isGrounded = true;
-                        entity.event('land', { vx, vy });
-                    }
                 }
             });
             if (!isOverlapping) {
                 entity.mechanics.isOverlapping = false;
-            }
-            if (!isGrounded) {
-                if (entity.mechanics.isGrounded) {
-                    entity.event('fall');
-                }
-                entity.mechanics.isGrounded = false;
             }
             if (!isIgnoringPassthrough && entity.mechanics.ignorePassthrough) {
                 entity.mechanics.ignorePassthrough = false;
