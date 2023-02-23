@@ -47,7 +47,7 @@ export class Scene {
     }
     update(dx: number) {
         this.entities.forEach(entity => {
-            if (entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) {
+            if ((entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) || entity.hitStop) {
                 return;
             }
 

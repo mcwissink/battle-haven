@@ -49,7 +49,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         const landInjured: EventHandlers['land'] = ({ vy }) => {
             this.game.audio.play('1/016');
             if (vy > 6) {
-                this.mechanics.force(-2, 1);
+                this.mechanics.force(-5, 1);
             } else {
                 this.next.setFrame(this.direction !== Math.sign(this.mechanics.velocity[0]) ? 230 : 231, 1);
             }
