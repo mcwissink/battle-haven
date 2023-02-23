@@ -31,7 +31,6 @@ export class Projectile extends Entity {
                     mass: 0,
                 }
             ),
-            new Rectangle(2, 2),
             new Sprite(data.spriteSheet),
             data.data.frame,
             {

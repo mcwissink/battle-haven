@@ -128,13 +128,11 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     constructor(
         public game: BattleHaven,
         public mechanics: Mechanics,
-        public environment: Shape,
         public sprite: Sprite,
         public frames: Frames,
         public states: Record<number | 'default', EntityState<Frame> | undefined>,
         public offsetY = 0,
     ) {
-        this.environment.follow(this.mechanics.position);
         this.health = this.game.config.health;
     }
 
@@ -304,7 +302,6 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         }
         if (this.game.debug.mechanics) {
             this.mechanics.render(ctx);
-            this.environment.render(ctx);
         }
     }
 
