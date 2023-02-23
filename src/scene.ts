@@ -24,12 +24,17 @@ export class Scene {
             }
         });
         if (earliestCollision) {
-            let isGrounded = dot(UP_VECTOR, normalize(earliestCollision.velocityCorrection)) === 1;
-            if (isGrounded && !entity.mechanics.isGrounded) {
+            if (!entity.mechanics.isOverlapping) {
+                entity.mechanics.isOverlapping = true;
+                entity.event('collide');
+            }
+
+            if (dot(UP_VECTOR, normalize(earliestCollision.velocityCorrection)) === 1 && !entity.mechanics.isGrounded) {
                 const [vx, vy] = entity.mechanics.velocity;
                 entity.event('land', { vx, vy });
                 entity.mechanics.isGrounded = true;
             }
+
             entity.mechanics.position[0] += entity.mechanics.velocity[0] * earliestCollision.time * 0.99;
             entity.mechanics.position[1] += entity.mechanics.velocity[1] * earliestCollision.time * 0.99;
             entity.mechanics.velocity[0] += earliestCollision.velocityCorrection[0];
@@ -37,6 +42,7 @@ export class Scene {
             // TODO: Change 1 to time - earliestCollision.time and figure out how to make that work
             // We need to handle the corner case and group collisions
             this.collisionStep(entity);
+            return true;
         }
     }
     update(dx: number) {
@@ -44,47 +50,22 @@ export class Scene {
             if (entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) {
                 return;
             }
-            entity.mechanics.didCollide = false;
-            this.collisionStep(entity);
 
-            if (!entity.mechanics.didCollide && entity.mechanics.isGrounded) {
-                entity.event('fall');
-                entity.mechanics.isGrounded = false;
+            if (!this.collisionStep(entity)) {
+                if (entity.mechanics.isGrounded) {
+                    entity.event('fall');
+                    entity.mechanics.isGrounded = false;
+                }
+
+                if (entity.mechanics.isOverlapping) {
+                    entity.mechanics.isOverlapping = false;
+                }
             }
+
+            entity.mechanics.ignorePassthrough = false;
         });
 
         this.entities.forEach(entity => entity.mechanicsUpdate(dx));
-
-        this.entities.forEach(entity => {
-            if (entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) {
-                return;
-            }
-            let isOverlapping = false;
-            let isIgnoringPassthrough = false;
-            this.level.platforms.forEach((platform) => {
-                const mtv2 = collide(entity.environment, platform.shape)
-                if (mtv2) {
-                    if (platform.passthrough && entity.mechanics.ignorePassthrough) {
-                        if (entity.mechanics.isGrounded) {
-                            entity.event('drop');
-                        }
-                        isIgnoringPassthrough = true;
-                        return;
-                    }
-                    isOverlapping = true;
-                    if (!entity.mechanics.isOverlapping && entity.mechanics.didCollide) {
-                        entity.mechanics.isOverlapping = true;
-                        entity.event('collide');
-                    }
-                }
-            });
-            if (!isOverlapping) {
-                entity.mechanics.isOverlapping = false;
-            }
-            if (!isIgnoringPassthrough && entity.mechanics.ignorePassthrough) {
-                entity.mechanics.ignorePassthrough = false;
-            }
-        });
 
         this.entities.forEach(entity => entity.stateUpdate());
 

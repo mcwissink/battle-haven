@@ -191,7 +191,6 @@ export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResol
         if (m2.passthrough && dot(collisionVector, m2.passthrough) !== 1) {
             return;
         }
-        m1.didCollide = true;
         const collisionForce = -dot(collisionVector, [
             m1.velocity[0],
             m1.velocity[1],
@@ -291,7 +290,6 @@ export class Mechanics {
     public passthrough?: Vector;
     public velocity: Vector = [0, 0];
     public isGrounded = false;
-    public didCollide = false;
     public isOverlapping = false;
     public ignorePassthrough = false;
     public mass;
