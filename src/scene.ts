@@ -29,7 +29,7 @@ export class Scene {
                 entity.event('collide');
             }
 
-            if (dot(UP_VECTOR, normalize(earliestCollision.velocityCorrection)) === 1 && !entity.mechanics.isGrounded) {
+            if (dot(UP_VECTOR, normalize(earliestCollision.velocityCorrection)) > 0.5 && !entity.mechanics.isGrounded) {
                 const [vx, vy] = entity.mechanics.velocity;
                 entity.event('land', { vx, vy });
                 entity.mechanics.isGrounded = true;
