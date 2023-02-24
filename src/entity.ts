@@ -125,6 +125,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         drop: [],
     }
     public port = -1;
+    public shadow: Sprite;
     constructor(
         public game: BattleHaven,
         public mechanics: Mechanics,
@@ -134,6 +135,17 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         public offsetY = 0,
     ) {
         this.health = this.game.config.health;
+        this.shadow = new Sprite({
+            images: [this.game.data.shadow],
+            dimensions: () => ({
+                imageOffset: 0,
+                relativeOffset: 0,
+                rows: 0,
+                columns: 0,
+                width: 37,
+                height: 9,
+            }),
+        });
     }
 
     translateFrame(frame: Frame | Defaults) {
@@ -288,10 +300,23 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     }
 
     render(ctx: CanvasRenderingContext2D) {
+        // Shadow
+        ctx.save();
+        const scale = Math.max(0, 1 - this.mechanics.distanceToFloor * 0.005);
+        ctx.translate(
+            this.mechanics.position[0] - 18 * scale,
+            this.mechanics.position[1] + this.mechanics.distanceToFloor + this.mechanics.shape.halfHeight - 4,
+        );
+        ctx.scale(scale, scale);
+        this.shadow.render(ctx, 0, 0);
+        ctx.restore();
+
+        // Sprite
         const shiver = hitShiver[this.frameData.state] ?? 0;
         const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
         const offsetX = this.direction === 1 ? this.frameData.centerx : this.sprite.dimensions.width - this.frameData.centerx;
         const offsetY = this.frameData.centery - this.offsetY;
+
         this.sprite.render(
             ctx,
             this.mechanics.position[0] - offsetX + modX,

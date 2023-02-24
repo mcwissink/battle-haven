@@ -12,9 +12,9 @@ const READY: Page[] = [{ text: 'Ready' }];
 
 const level = (game: BattleHaven) => ({
     platforms: [
-        new Mechanics(game, new Rectangle(200, 3), { position: [500, 245], passthrough: UP_VECTOR }),
-        new Mechanics(game, new Rectangle(200, 3), { position: [800, 150], passthrough: UP_VECTOR }),
-        new Mechanics(game, new Rectangle(200, 3), { position: [1100, 245], passthrough: UP_VECTOR }),
+        new Mechanics(game, new Rectangle(200, 20), { position: [500, 245], passthrough: UP_VECTOR }),
+        new Mechanics(game, new Rectangle(200, 20), { position: [800, 150], passthrough: UP_VECTOR }),
+        new Mechanics(game, new Rectangle(200, 20), { position: [1100, 245], passthrough: UP_VECTOR }),
         new Mechanics(game, new Rectangle(1000, 120), { position: [800, 400] }),
         new Mechanics(game, new Rectangle(150, 600), { position: [5, 210] }),
         new Mechanics(game, new Rectangle(1500, 100), { position: [800, 510] }),

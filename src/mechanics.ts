@@ -121,6 +121,16 @@ export interface CollisionResolution {
     velocityCorrection: Vector;
 }
 
+export const distance = (axis: Vector, m1: Mechanics, m2: Mechanics) => {
+    const perpendicularAxis = perpendicular(axis);
+    if (overlap(project(perpendicularAxis, m1.shape.corners), project(perpendicularAxis, m2.shape.corners))) {
+        const [min1] = project(axis, m1.shape.corners);
+        const [, max2] = project(axis, m2.shape.corners);
+        return min1 - max2;
+    }
+    return Infinity;
+}
+
 export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResolution | undefined => {
     let maxOverlapStart = -Infinity;
     let minOverlapEnd = Infinity;
@@ -207,6 +217,8 @@ export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResol
 
 export class Shape {
     public _corners: Vector[] = [];
+    public halfWidth = 0;
+    public halfHeight = 0;
     public position: Vector = [0, 0];
     public previousPosition: Vector = [0, 0];
     constructor(position?: Vector) {
@@ -288,6 +300,7 @@ export class Rectangle extends Shape {
 export class Mechanics {
     public position: Vector;
     public passthrough?: Vector;
+    public distanceToFloor: number = 0;
     public velocity: Vector = [0, 0];
     public isGrounded = false;
     public isOverlapping = false;
@@ -338,5 +351,14 @@ export class Mechanics {
         ctx.strokeStyle = this.isOverlapping ? 'orange' : 'blue';
         this.shape.render(ctx);
         ctx.strokeStyle = 'red';
+        if (this.distanceToFloor !== Infinity) {
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.lineTo(this.position[0], this.position[1] + this.shape.halfHeight);
+            ctx.lineTo(this.position[0], this.position[1] + this.shape.halfHeight + this.distanceToFloor);
+            ctx.closePath();
+            ctx.stroke();
+            
+        }
     }
 }

@@ -2,7 +2,7 @@ import { BattleHaven } from './battle-haven';
 import { Character } from './character';
 import { Effect } from './effect';
 import { Entity } from './entity';
-import { collide, collide3, difference, dot, Mechanics, minimum, normalize, UP_VECTOR, Vector, CollisionResolution } from './mechanics';
+import { distance, collide3, difference, dot, Mechanics, minimum, normalize, UP_VECTOR, Vector, CollisionResolution } from './mechanics';
 import { Interaction } from './types';
 
 interface Level {
@@ -51,6 +51,7 @@ export class Scene {
                 return;
             }
 
+            entity.mechanics.distanceToFloor = Infinity;
             if (!this.collisionStep(entity)) {
                 if (entity.mechanics.isGrounded) {
                     entity.event('fall');
@@ -66,6 +67,15 @@ export class Scene {
         });
 
         this.entities.forEach(entity => entity.mechanicsUpdate(dx));
+
+        this.entities.forEach(entity => {
+            this.level.platforms.forEach(platform => {
+                const distanceToFloor = distance(UP_VECTOR, entity.mechanics, platform);
+                if (distanceToFloor > 0 && distanceToFloor < entity.mechanics.distanceToFloor) {
+                    entity.mechanics.distanceToFloor = distanceToFloor;
+                }
+            });
+        });
 
         this.entities.forEach(entity => entity.stateUpdate());
 
@@ -207,7 +217,12 @@ export class Scene {
     render(ctx: CanvasRenderingContext2D) {
         ctx.save();
         this.camera(ctx);
+        // Fake 3D look
+        ctx.save();
+        ctx.translate(0, -10);
         this.level.platforms.forEach(platform => platform.render(ctx));
+        ctx.restore();
+
         this.entities.forEach(entity => entity.render(ctx));
         this.effects.forEach(effect => effect.render(ctx));
         ctx.restore();

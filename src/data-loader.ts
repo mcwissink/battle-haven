@@ -130,12 +130,14 @@ const loadEntity = (data: any): EntityData => {
 };
 
 export type GameData = {
-    entities: Record<string, EntityData>,
-    soundpacks: Record<string, SoundPack>,
+    shadow: HTMLImageElement;
+    entities: Record<string, EntityData>;
+    soundpacks: Record<string, SoundPack>;
 };
 
 export const loadData = async () => {
     const gameData: GameData = {
+        shadow: loadImage('./data/shadow.png'),
         entities: {},
         soundpacks: {},
     }
