@@ -319,7 +319,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 },
                 [State.crouching]: {
                     combo: {
-                        // hit_a: animation.dash_go,
+                        hit_a: animation.fly,
                     },
                     event: {
                         fall: () => this.next.setFrame(animation.airborn),
@@ -400,6 +400,16 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                                 this.mechanics.position[1] = nearestCharacter.mechanics.position[1];
                             }
                         },
+                    },
+                },
+                [State.fly]: {
+                    event: {
+                        enter: () => {
+                            this.mechanics.force(-1, 1);
+                        },
+                    },
+                    update: () => {
+                        this.mechanics.velocity[1] -= this.game.config.gravity;
                     },
                 },
                 [State.catching]: {

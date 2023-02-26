@@ -91,6 +91,56 @@ const buildCustomFrames = (rollingPics: number[]) => ({
             kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
         }
     },
+    399: {
+        name: "fly",
+        pic: rollingPics[0], state: 24, wait: 1, next: 400, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260, hit_Ua: 70,
+        wpoint: {
+            kind: 1, x: 38, y: 75, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+        },
+        itr: {
+            kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
+        }
+    },
+    400: {
+        name: "fly",
+        pic: rollingPics[0], state: 24, wait: 1, next: 401, dvx: 0, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260, hit_Ua: 70,
+        wpoint: {
+            kind: 1, x: 38, y: 75, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+        },
+        itr: {
+            kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
+        }
+    },
+    401: {
+        name: "fly",
+        pic: rollingPics[1], state: 24, wait: 1, next: 402, dvx: 0, dvy: 0, dvz: 0, centerx: 34, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260, hit_Ua: 70,
+        wpoint: {
+            kind: 1, x: 43, y: 47, weaponact: 31, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+        },
+        itr: {
+            kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
+        }
+    },
+    402: {
+        name: "fly",
+        pic: rollingPics[2], state: 24, wait: 1, next: 403, dvx: 0, dvy: 0, dvz: 0, centerx: 34, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260, hit_Ua: 70,
+        wpoint: {
+            kind: 1, x: 20, y: 61, weaponact: 25, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+        },
+        itr: {
+            kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
+        }
+    },
+    403: {
+        name: "fly",
+        pic: rollingPics[3], state: 24, wait: 1, next: 400, dvx: 0, dvy: 0, dvz: 0, centerx: 38, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260, hit_Ua: 70,
+        wpoint: {
+            kind: 1, x: 35, y: 74, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+        },
+        itr: {
+            kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
+        }
+    },
 });
 
 export const modifyData = (data: any) => {

@@ -65,6 +65,7 @@ export enum State {
     doubleJumping = 21,
     drop = 22,
     dashGo = 23,
+    fly = 24,
     teleport = 400,
 }
 

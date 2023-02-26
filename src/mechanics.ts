@@ -305,6 +305,7 @@ export class Mechanics {
     public isGrounded = false;
     public isOverlapping = false;
     public ignorePassthrough = false;
+    public friction = 0;
     public mass;
     constructor(
         public game: BattleHaven,
@@ -323,6 +324,7 @@ export class Mechanics {
         this.position = position;
         this.passthrough = passthrough;
         this.shape.follow(this.position);
+        this.friction = this.game.config.friction;
     }
 
     force(force: number, axis = 0, acceleration = force * Math.sign(force)) {
