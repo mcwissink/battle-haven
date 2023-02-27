@@ -407,10 +407,10 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     event: {
                         enter: () => {
                             this.mechanics.isGrounded = false;
-                            this.mechanics.force(this.controller.stickX * 70);
-                            this.mechanics.force(this.controller.stickY * 70, 1);
+                            this.mechanics.force(this.controller.stickX * 50);
+                            this.mechanics.force(this.controller.stickY * 50, 1);
                             this.mechanics.gravity = 0;
-                            this.mechanics.airFriction = 0.7;
+
                         },
                         leave: () => {
                             this.mechanics.gravity = this.game.config.gravity;
@@ -418,9 +418,15 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         },
                     },
                     update: () => {
-                        if (this.frame === 403) {
-                            this.next.setFrame(animation.standing, 1);
+                        if (this.frame === 401) {
+                            this.mechanics.airFriction = 0.5;
                         }
+                        if (this.frame === 403) {
+                            this.next.setFrame(212, 1);
+                        }
+
+                        this.mechanics.force(this.controller.stickX * 10);
+                        this.mechanics.force(this.controller.stickY * 10, 1);
                     },
                 },
                 [State.catching]: {
