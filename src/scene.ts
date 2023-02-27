@@ -45,6 +45,18 @@ export class Scene {
             return true;
         }
     }
+
+    getDistanceToFloor(entity: Entity) {
+        let minDistanceToFloor = Infinity;
+        this.level.platforms.forEach(platform => {
+            const distanceToFloor = distance(UP_VECTOR, entity.mechanics, platform);
+            if (distanceToFloor > 0 && distanceToFloor < minDistanceToFloor) {
+                minDistanceToFloor = distanceToFloor;
+            }
+        });
+        return minDistanceToFloor;
+    }
+
     update(dx: number) {
         this.entities.forEach(entity => {
             if ((entity.type === 'projectile' && !entity.frameData.dvx && !entity.frameData.dvy) || entity.hitStop) {
@@ -69,12 +81,7 @@ export class Scene {
         this.entities.forEach(entity => entity.mechanicsUpdate(dx));
 
         this.entities.forEach(entity => {
-            this.level.platforms.forEach(platform => {
-                const distanceToFloor = distance(UP_VECTOR, entity.mechanics, platform);
-                if (distanceToFloor > 0 && distanceToFloor < entity.mechanics.distanceToFloor) {
-                    entity.mechanics.distanceToFloor = distanceToFloor;
-                }
-            });
+            entity.mechanics.distanceToFloor = this.getDistanceToFloor(entity);
         });
 
         this.entities.forEach(entity => entity.stateUpdate());

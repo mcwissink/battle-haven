@@ -267,7 +267,9 @@ export class Mechanics {
     public isGrounded = false;
     public isOverlapping = false;
     public ignorePassthrough = false;
+    public gravity = 0;
     public friction = 0;
+    public airFriction = 0;
     public mass;
     constructor(
         public game: BattleHaven,
@@ -287,6 +289,7 @@ export class Mechanics {
         this.passthrough = passthrough;
         this.shape.follow(this.position);
         this.friction = this.game.config.friction;
+        this.gravity = this.game.config.gravity;
     }
 
     force(force: number, axis = 0, acceleration = force * Math.sign(force)) {
@@ -305,9 +308,12 @@ export class Mechanics {
     update() {
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
-        this.velocity[1] += this.mass * this.game.config.gravity;
+        this.velocity[1] += this.mass * this.gravity;
         if (this.isGrounded) {
-            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), this.game.config.friction);
+            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), this.friction);
+        } else {
+            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), this.airFriction);
+            this.velocity[1] += -Math.sign(this.velocity[1]) * Math.min(Math.abs(this.velocity[1]), this.airFriction);
         }
     }
 

@@ -405,11 +405,18 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.fly]: {
                     event: {
                         enter: () => {
-                            this.mechanics.force(-1, 1);
+                            this.mechanics.force(-30, 1);
+                            this.mechanics.gravity = 0;
+                            this.mechanics.airFriction = 5;
+                        },
+                        leave: () => {
+                            this.mechanics.gravity = this.game.config.gravity;
+                            this.mechanics.airFriction = 0;
                         },
                     },
                     update: () => {
-                        this.mechanics.velocity[1] -= this.game.config.gravity;
+                        this.mechanics.force(this.controller.stickX * 40);
+                        this.mechanics.force(this.controller.stickY * 40, 1);
                     },
                 },
                 [State.catching]: {

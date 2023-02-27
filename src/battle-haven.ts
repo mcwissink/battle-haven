@@ -104,9 +104,9 @@ export class BattleHaven {
 
         if (!--this.wait) {
             if (!this.menu.isOpen || this.debug.frames) {
-                this.scene.update(dx);
                 this.processTasks();
 
+                this.scene.update(dx);
                 this.scene.entities.forEach(entity => entity.update(dx));
                 this.scene.effects.forEach(effect => effect.update(dx));
             }
