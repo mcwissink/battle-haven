@@ -301,6 +301,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.defend]: {
                     combo: {
                         hit_d: animation.fly,
+                        hit_a: animation.grab,
                     },
                     event: {
                         attacked: ({ dvx, dvy }) => {

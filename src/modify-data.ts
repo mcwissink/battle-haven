@@ -141,6 +141,17 @@ const buildCustomFrames = (rollingPics: number[]) => ({
             kind: 7, x: 36, y: 54, w: 13, h: 25, vrest: 1
         }
     },
+    404: {
+        name: "grab",
+        pic: 51, state: 0, wait: 10, next: 999, dvx: 0, dvy: 0, dvz: 0, centerx: 38, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260, hit_Ua: 70,
+        wpoint: {
+            kind: 1, x: 35, y: 74, weaponact: 22, attacking: 0, cover: 1, dvx: 0, dvy: 0, dvz: 0
+        },
+        itr: {
+            kind: 1, x: 40, y: 16, w: 25, h: 65,
+            catchingact: [120, 120], caughtact: [130, 130]
+        },
+    },
 });
 
 export const modifyData = (data: any) => {
@@ -189,6 +200,15 @@ export const modifyData = (data: any) => {
                 frameData.hit_a = frames[index + 1];
             }
         });
+
+        // Lower cpoint on grab
+        Object.keys(data.frame).map((frame, index, frames) => {
+            const frameData = data.frame[frame];
+            if (frameData.cpoint) {
+                frameData.cpoint.y += 15;
+            }
+        });
+
 
         // Remove grab from walk
         modifyFrames([5, 8], (frameData) => delete frameData.itr);
