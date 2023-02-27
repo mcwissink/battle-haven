@@ -309,7 +309,9 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             this.mechanics.position[1] + this.mechanics.distanceToFloor + this.mechanics.shape.halfHeight - 4,
         );
         ctx.scale(scale, scale);
-        this.shadow.render(ctx, 0, 0);
+        if (this.type !== 'effect') {
+            this.shadow.render(ctx, 0, 0);
+        }
         ctx.restore();
 
         // Sprite

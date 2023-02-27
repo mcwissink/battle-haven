@@ -299,6 +299,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.defend]: {
+                    combo: {
+                        hit_d: animation.fly,
+                    },
                     event: {
                         attacked: ({ dvx, dvy }) => {
                             this.hitStop = this.game.config.hitStop * 2;
@@ -318,9 +321,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.crouching]: {
-                    combo: {
-                        hit_a: animation.fly,
-                    },
                     event: {
                         fall: () => this.next.setFrame(animation.airborn),
                     },
@@ -405,9 +405,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.fly]: {
                     event: {
                         enter: () => {
-                            this.mechanics.force(-30, 1);
+                            this.mechanics.isGrounded = false;
+                            this.mechanics.force(this.controller.stickX * 70);
+                            this.mechanics.force(this.controller.stickY * 70, 1);
                             this.mechanics.gravity = 0;
-                            this.mechanics.airFriction = 0.8;
+                            this.mechanics.airFriction = 0.7;
                         },
                         leave: () => {
                             this.mechanics.gravity = this.game.config.gravity;
@@ -415,8 +417,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         },
                     },
                     update: () => {
-                        this.mechanics.force(this.controller.stickX * 40);
-                        this.mechanics.force(this.controller.stickY * 40, 1);
+                        if (this.frame === 403) {
+                            this.next.setFrame(animation.standing, 1);
+                        }
                     },
                 },
                 [State.catching]: {
