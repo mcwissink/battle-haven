@@ -132,11 +132,11 @@ loadData().then((data) => {
                 shake: 2,
                 follow: 1,
                 zoom: 90,
-                speed: 50,
+                speed: 80,
             },
             hitStop: 3,
             gravity: 1.7,
-            friction: 1.5,
+            friction: 0.8,
             health: 750,
         }
     );

@@ -407,11 +407,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         enter: () => {
                             this.mechanics.force(-30, 1);
                             this.mechanics.gravity = 0;
-                            this.mechanics.airFriction = 5;
+                            this.mechanics.airFriction = 0.8;
                         },
                         leave: () => {
                             this.mechanics.gravity = this.game.config.gravity;
-                            this.mechanics.airFriction = 0;
+                            this.mechanics.airFriction = 1;
                         },
                     },
                     update: () => {

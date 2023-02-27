@@ -269,7 +269,7 @@ export class Mechanics {
     public ignorePassthrough = false;
     public gravity = 0;
     public friction = 0;
-    public airFriction = 0;
+    public airFriction = 1;
     public mass;
     constructor(
         public game: BattleHaven,
@@ -310,10 +310,10 @@ export class Mechanics {
         this.position[1] += this.velocity[1];
         this.velocity[1] += this.mass * this.gravity;
         if (this.isGrounded) {
-            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), this.friction);
+            this.velocity[0] *= Math.abs(this.velocity[0]) < 1 ? 0 : this.friction;
         } else {
-            this.velocity[0] += -Math.sign(this.velocity[0]) * Math.min(Math.abs(this.velocity[0]), this.airFriction);
-            this.velocity[1] += -Math.sign(this.velocity[1]) * Math.min(Math.abs(this.velocity[1]), this.airFriction);
+            this.velocity[0] *= this.airFriction;
+            this.velocity[1] *= this.airFriction;
         }
     }
 
