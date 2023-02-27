@@ -26,13 +26,6 @@ export const normalize = ([x, y]: Vector): Vector => {
 
 export const dot = (vector1: Vector, vector2: Vector) => vector1[0] * vector2[0] + vector1[1] * vector2[1];
 
-// TODO: remove duplicate axes
-const getNormals = (corners: Vector[]) => corners.reduce<Vector[]>((normals, corner, index) => {
-    const previousCorner = index === 0 ? corners[corners.length - 1] : corners[index - 1];
-    normals.push(normalize(perpendicular([corner[0] - previousCorner[0], corner[1] - previousCorner[1]])));
-    return normals;
-}, []);
-
 const project = (axis: Vector, corners: Vector[]): Vector => {
     const cornerProjections = corners.map(corner => dot(corner, axis));
     return [
@@ -53,7 +46,7 @@ export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
     let mtv: Vector = [0, 0];
     let minDistance = Infinity;
 
-    const normals = getNormals(shape1.corners).concat(getNormals(shape2.corners));
+    const normals = shape1.normals.concat(shape2.normals);
     for (const axis of normals) {
         const ov = overlap(project(axis, shape1.corners), project(axis, shape2.corners));
         if (!ov) {
@@ -68,54 +61,6 @@ export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
     return mtv;
 };
 
-export const collide2 = (m1: Mechanics, m2: Mechanics): Vector | undefined => {
-    // minimum translation vector
-    let minVMult = Infinity;
-    let mtv: Vector = [0, 0];
-
-    const normals = getNormals(m1.shape.corners).concat(getNormals(m2.shape.corners));
-    for (const axis of normals) {
-        const project1 = project(axis, m1.shape.corners);
-        const project2 = project(axis, m2.shape.corners);
-        const v = dot(axis, m1.velocity);
-        const ov = overlap(project1, project2);
-        if (!ov) {
-            if (v > 0 && project2[0] >= project1[1]) {
-                const vMult = (project2[0] - project1[1]) / v;
-                if (vMult < 1) {
-                    if (vMult < minVMult) {
-                        minVMult = vMult;
-                        mtv = axis;
-                    }
-                } else {
-                    return;
-                }
-            } else if (v < 0 && project1[1] >= project2[0]) {
-                const vMult = (project2[1] - project1[0]) / v;
-                if (vMult < 1) {
-                    if (vMult < minVMult) {
-                        minVMult = vMult;
-                        mtv = axis;
-                    }
-                } else {
-                    return;
-                }
-            } else {
-                return;
-            }
-        }
-    }
-
-    if (minVMult < 1) {
-        const test = dot(mtv, m1.velocity);
-        m1.position[0] += m1.velocity[0] * minVMult * 0.99;
-        m1.position[1] += m1.velocity[1] * minVMult * 0.99;
-        m1.velocity[0] -= mtv[0] * test;
-        m1.velocity[1] -= mtv[1] * test;
-        return mtv;
-    }
-};
-
 export interface CollisionResolution {
     time: number;
     velocityCorrection: Vector;
@@ -124,9 +69,19 @@ export interface CollisionResolution {
 export const distance = (axis: Vector, m1: Mechanics, m2: Mechanics) => {
     const perpendicularAxis = perpendicular(axis);
     if (overlap(project(perpendicularAxis, m1.shape.corners), project(perpendicularAxis, m2.shape.corners))) {
-        const [min1] = project(axis, m1.shape.corners);
-        const [, max2] = project(axis, m2.shape.corners);
-        return min1 - max2;
+        let maxDistance = 0;
+        const normals = m2.shape.normals;
+        for (const axis of normals) {
+            if (dot(axis, UP_VECTOR) > 0) {
+                const [min1] = project(axis, m1.shape.corners);
+                const [, max2] = project(axis, m2.shape.corners);
+                const distance = min1 - max2;
+                if (distance > maxDistance) {
+                    maxDistance = distance;
+                }
+            }
+        }
+        return maxDistance;
     }
     return Infinity;
 }
@@ -136,7 +91,7 @@ export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResol
     let minOverlapEnd = Infinity;
     let collisionVector: Vector = [0, 0];
 
-    const normals = getNormals(m1.shape.corners).concat(getNormals(m2.shape.corners));
+    const normals = m1.shape.normals.concat(m2.shape.normals);
     for (const axis of normals) {
         const [min1, max1] = project(axis, m1.shape.corners);
         const [min2, max2] = project(axis, m2.shape.corners);
@@ -229,11 +184,18 @@ export class Shape {
 
     follow(position: Vector) {
         this.position = position;
-        this.corners;
     }
 
     get corners() {
         return this._corners;
+    }
+
+    get normals() {
+        return this.corners.reduce<Vector[]>((normals, corner, index) => {
+            const previousCorner = index === 0 ? this._corners[this._corners.length - 1] : this._corners[index - 1];
+            normals.push(normalize(perpendicular([corner[0] - previousCorner[0], corner[1] - previousCorner[1]])));
+            return normals;
+        }, []);
     }
 
     render(ctx: CanvasRenderingContext2D) {
