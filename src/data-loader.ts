@@ -5,6 +5,7 @@ import { deepBall } from './data/deep-ball';
 import { dennis } from './data/dennis';
 import { dennisBall } from './data/dennis-ball';
 import { dennisChase } from './data/dennis-chase';
+import { doubleJumpCloud } from './data/double_jump_cloud';
 import { effect0 } from './data/effect-0';
 import { effect1 } from './data/effect-1';
 import { firen } from './data/firen';
@@ -45,9 +46,10 @@ const entityDataMapping: Record<string, any> = {
     211: firenFlame,
     212: freezeColumn,
     215: dennisChase,
-    316: jumpCloud,
     300: effect0,
     301: effect1,
+    316: jumpCloud,
+    317: doubleJumpCloud,
 }
 
 export interface EntityData {

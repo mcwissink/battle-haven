@@ -24,6 +24,17 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             if (this.controller.stickY > 0) {
                 return animation.drop
             } else {
+
+                this.game.spawn({
+                    kind: 1,
+                    x: 0,
+                    y: 0,
+                    action: 999,
+                    dvx: 0,
+                    dvy: 0,
+                    oid: 317,
+                    facing: this.direction,
+                }, this);
                 return animation.double_jump;
             }
         };
