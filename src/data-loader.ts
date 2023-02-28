@@ -14,6 +14,7 @@ import { freeze } from './data/freeze';
 import { freezeBall } from './data/freeze-ball';
 import { freezeColumn } from './data/freeze-column';
 import { wind } from './data/henry_louis_rudolf_wind';
+import { jumpCloud } from './data/jump_cloud.ts';
 import { louis } from './data/louis';
 import { rudolf } from './data/rudolf';
 import { rudolfWeapon } from './data/rudolf-weapon';
@@ -44,6 +45,7 @@ const entityDataMapping: Record<string, any> = {
     211: firenFlame,
     212: freezeColumn,
     215: dennisChase,
+    316: jumpCloud,
     300: effect0,
     301: effect1,
 }

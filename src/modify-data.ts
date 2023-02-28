@@ -209,7 +209,6 @@ export const modifyData = (data: any) => {
             }
         });
 
-
         // Remove grab from walk
         modifyFrames([5, 8], (frameData) => delete frameData.itr);
 

@@ -44,7 +44,19 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             drop();
         }
 
-        const land = () => this.next.setFrame(animation.crouch, 1);
+        const land = () => {
+            this.next.setFrame(animation.crouch, 1);
+            this.game.spawn({
+                kind: 1,
+                x: this.mechanics.velocity[0],
+                y: this.mechanics.shape.halfHeight,
+                action: 999,
+                dvx: 0,
+                dvy: 0,
+                oid: 316,
+                facing: this.direction,
+            }, this);
+        }
 
         const landInjured: EventHandlers['land'] = ({ vy }) => {
             this.game.audio.play('1/016');
