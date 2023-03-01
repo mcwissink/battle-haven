@@ -221,7 +221,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             }
                             this.enterWalking = false;
                         }
-                        this.mechanics.force(this.direction * this.data.data.bmp.walking_speed);
+                        this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.walking_speed);
                         this.next.setDirectionFromValue(this.controller.stickDirectionX)
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.standing);
@@ -245,7 +245,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                     nextFrame: () => this.animator.oscillate(9, 11),
                     update: () => {
-                        this.mechanics.force(this.direction * this.data.data.bmp.running_speed);
+                        this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.running_speed);
                         this.next.setDirectionFromValue(this.controller.stickDirectionX)
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.stop_running);
