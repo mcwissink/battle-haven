@@ -308,7 +308,7 @@ export class Mechanics {
     update() {
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
-        this.velocity[1] += this.mass * this.gravity;
+        this.velocity[1] += this.mass * this.gravity * (this.velocity[1] > 0 ? 1.5 : 1);
         if (this.isGrounded) {
             this.velocity[0] *= Math.abs(this.velocity[0]) < 1 ? 0 : this.friction;
         } else {
