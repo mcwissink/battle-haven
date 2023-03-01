@@ -266,7 +266,7 @@ export class Scene {
                     state: String(entity.frameData.state),
                 };
 
-                ctx.font = '20px mono';
+                ctx.font = '20px monospace';
                 Object.entries(stats).forEach(([label, value], index) => {
                     ctx.fillText(
                         `${label}: ${value.padStart(10 - label.length, ' ')}`,

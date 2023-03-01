@@ -186,7 +186,7 @@ export class Menu {
         if (!this.isOpen) {
             return;
         }
-        ctx.font = '20px mono';
+        ctx.font = '20px monospace';
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(0, 0, 1600, 900);
 
