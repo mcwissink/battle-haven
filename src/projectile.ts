@@ -1,7 +1,7 @@
 import { BattleHaven, SpawnTask } from './battle-haven';
 import { animation, EntityData } from './data-loader';
 import { Entity } from "./entity";
-import { Mechanics, Rectangle } from './mechanics';
+import { Mechanics, Rectangle, collide } from './mechanics';
 import { Sprite } from './sprite';
 
 export class Projectile extends Entity {
@@ -82,8 +82,8 @@ export class Projectile extends Entity {
                 }
             }
         );
-        this.next.frame = spawnTask.opoint.action;
-        this.next.direction = direction;
+        this.frame = spawnTask.opoint.action;
+        this.direction = direction;
         this.parent = spawnTask.parent.parent || spawnTask.parent;
         if (spawnTask.opoint.dvx) {
             this.mechanics.force(direction * spawnTask.opoint.dvx)
@@ -91,6 +91,14 @@ export class Projectile extends Entity {
         if (spawnTask.opoint.dvy) {
             this.mechanics.force(spawnTask.opoint.dvy, 1)
         }
+        // Ensure projectiles aren't spawned in a collision
+        this.game.scene.level.platforms.forEach((platform) => {
+            const mtv = collide(this.mechanics.shape, platform.shape);
+            if (mtv) {
+                this.mechanics.position[0] += mtv[0] * 1.01;
+                this.mechanics.position[1] += mtv[1] * 1.01;
+            }
+        });
     }
 
     canAttack(entity: Entity) {
