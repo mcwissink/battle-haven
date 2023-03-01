@@ -24,17 +24,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             if (this.controller.stickY > 0) {
                 return animation.drop
             } else {
-
-                this.game.spawn({
-                    kind: 1,
-                    x: 0,
-                    y: 0,
-                    action: 999,
-                    dvx: 0,
-                    dvy: 0,
-                    oid: 317,
-                    facing: this.direction,
-                }, this);
                 return animation.double_jump;
             }
         };
@@ -271,10 +260,21 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.doubleJumping]: {
                     event: {
                         enter: () => {
+
                             const direction = this.controller.stickDirectionX;
                             const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
                             this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
                             this.mechanics.velocity[1] = this.data.data.bmp.jump_height * 1.1;
+                            this.game.spawn({
+                                kind: 1,
+                                x: 0,
+                                y: 0,
+                                action: 999,
+                                dvx: 0,
+                                dvy: 0,
+                                oid: 317,
+                                facing: this.direction,
+                            }, this);
                         },
                     },
                     combo: {
