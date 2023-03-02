@@ -180,6 +180,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         hit_d: animation.defend,
                         hit_j: animation.jump,
                         hit_ja: animation.walking,
+                        hit_Fd: animation.transmission,
                     },
                     update: () => {
                         drop();
@@ -325,6 +326,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     combo: {
                         hit_d: animation.fly,
                         hit_a: animation.grab,
+                        hit_Fd: animation.transmission,
                     },
                     event: {
                         attacked: ({ dvx, dvy }) => {

@@ -152,6 +152,17 @@ const buildCustomFrames = (rollingPics: number[]) => ({
             catchingact: [120, 120], caughtact: [130, 130]
         },
     },
+    405: {
+        name: "transmission",
+        pic: 60, state: 4, wait: 1, next: 406, dvx: 100, dvy: -1, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260, hit_Ua: 70,
+    },
+    406: {
+        name: "transmission",
+        pic: 60, state: 4, wait: 1, next: 999, dvx: -1, dvy: 0, dvz: 0, centerx: 39, centery: 79, hit_a: 0, hit_d: 0, hit_j: 0, hit_Da: 260, hit_Ua: 70,
+        itr: {
+            kind: 0, x: -200, y: 6, w: 200, h: 40, dvx: 13, dvy: -10, fall: 70, vrest: 10, bdefend: 60, injury: 55
+        },
+    },
 });
 
 export const modifyData = (data: any) => {
