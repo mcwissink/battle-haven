@@ -32,14 +32,6 @@ export class Menu {
     menu: Page;
     constructor(public game: BattleHaven, public component: Component) {
         this.menu = component(game);
-        game.controllers.on('connect', (controller) => {
-            controller.on('input', this.input);
-            this.cursors.set(controller, {
-                index: 0,
-                port: controller.port,
-                path: [],
-            });
-        });
     }
 
     input = (input: string, controller: Controller) => {
@@ -157,6 +149,14 @@ export class Menu {
     }
 
     open() {
+        this.game.controllers.on('connect', (controller) => {
+            controller.on('input', this.input);
+            this.cursors.set(controller, {
+                index: this.globalPage.isSplit ? 0 : Array.from(this.cursors.values())[0]?.index ?? 0,
+                port: controller.port,
+                path: [],
+            });
+        });
         this.game.controllers.ports.forEach((controller) => {
             if (controller) {
                 controller.on('input', this.input);
@@ -182,10 +182,11 @@ export class Menu {
         }
     }
     render(ctx: CanvasRenderingContext2D) {
-        ctx.save();
         if (!this.isOpen) {
             return;
         }
+
+        ctx.save();
         ctx.font = '20px monospace';
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(0, 0, 1600, 900);

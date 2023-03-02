@@ -468,6 +468,13 @@ export class ControllerManager {
         this.listeners[event].push(callback);
     }
 
+    off<T extends keyof ManagerListener>(event: T, callback: Flat<ManagerListener[T]>) {
+        const index = this.listeners[event].indexOf(callback);
+        if (index !== -1) {
+            this.listeners[event].splice(index, 1);
+        }
+    }
+
     connect(buildController: (port: number) => Controller) {
         const port = this.ports.findIndex((controller) => controller === ControllerManager.dummy);
         if (port !== -1) {

@@ -473,7 +473,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                                 this.catching.mechanics.force(this.frameData.cpoint.throwvx * this.direction, 0, Infinity);
                             }
                             if (this.frameData.cpoint.throwvy) {
-                                this.catching.mechanics.force(this.frameData.cpoint.throwvy * 2, 1, Infinity);
+                                // TODO: force didn't work here
+                                this.catching.mechanics.velocity[1] = this.frameData.cpoint.throwvy;
+                                console.log(this.catching.mechanics.velocity);
                             }
                             this.catching.next.setFrame(this.frameData.cpoint.vaction);
                             if (this.frameData.cpoint.taction && this.controller.stickDirectionX && this.controller.attack) {

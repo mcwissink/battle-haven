@@ -78,8 +78,8 @@ export class BattleHaven {
         this.ctx = ctx;
         this.scene = new Scene(this, { platforms: [] });
         this.controllers = new ControllerManager();
-        this.menu = new Menu(this, () => ({ text: '', entries: [] }));
         this.audio = new Audio(data.soundpacks);
+        this.menu = new Menu(this, () => ({ text: '', entries: [] }));
     }
 
     start() {
@@ -185,5 +185,6 @@ export class BattleHaven {
 
     toggleDebug = (key: keyof typeof this.debug) => {
         this.debug[key] = !this.debug[key];
+        this.menu.close();
     }
 }
