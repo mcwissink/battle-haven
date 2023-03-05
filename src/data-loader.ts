@@ -1,56 +1,7 @@
-import { davis } from './data/davis';
-import { davisBall } from './data/davis-ball';
-import { deep } from './data/deep';
-import { deepBall } from './data/deep-ball';
-import { dennis } from './data/dennis';
-import { dennisBall } from './data/dennis-ball';
-import { dennisChase } from './data/dennis-chase';
-import { doubleJumpCloud } from './data/double_jump_cloud';
-import { effect0 } from './data/effect-0';
-import { effect1 } from './data/effect-1';
-import { firen } from './data/firen';
-import { firenBall } from './data/firen-ball';
-import { firenFlame } from './data/firen-flame';
-import { freeze } from './data/freeze';
-import { freezeBall } from './data/freeze-ball';
-import { freezeColumn } from './data/freeze-column';
-import { wind } from './data/henry_louis_rudolf_wind';
-import { jumpCloud } from './data/jump_cloud.ts';
-import { louis } from './data/louis';
-import { rudolf } from './data/rudolf';
-import { rudolfWeapon } from './data/rudolf-weapon';
-import { soundpack } from './data/soundpack';
-import { woody } from './data/woody';
-import { woodyBall } from './data/woody-ball';
 import { modifyData } from './modify-data';
 import { SoundPack } from './sound';
 import { SpriteSheet } from './sprite';
-
-const entityDataMapping: Record<string, any> = {
-    0: woody,
-    1: davis,
-    2: louis,
-    3: deep,
-    4: freeze,
-    5: firen,
-    6: rudolf,
-    7: dennis,
-    202: rudolfWeapon,
-    203: deepBall,
-    204: wind,
-    205: dennisBall,
-    206: woodyBall,
-    207: davisBall,
-    209: freezeBall,
-    210: firenBall,
-    211: firenFlame,
-    212: freezeColumn,
-    215: dennisChase,
-    300: effect0,
-    301: effect1,
-    316: jumpCloud,
-    317: doubleJumpCloud,
-}
+import { data } from './data/index';
 
 export interface EntityData {
     data: any;
@@ -146,13 +97,13 @@ export const loadData = async () => {
         soundpacks: {},
     }
 
-    Object.entries(entityDataMapping).forEach(([key, data]) => {
+    Object.entries(data.entities).forEach(([key, data]) => {
         gameData.entities[key] = loadEntity(data);
     });
 
     gameData.soundpacks[1] = {
-        audio: await loadAudio(`${soundpack.file}.mp3`),
-        mapping: soundpack.sound,
+        audio: await loadAudio(`${data.soundpack.file}.mp3`),
+        mapping: data.soundpack.sound,
     };
 
     return gameData;
