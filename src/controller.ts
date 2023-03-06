@@ -12,7 +12,6 @@ const combos = [
     { sequence: ['defend', 'up', 'jump'], name: 'hit_Uj', },
     { sequence: ['defend', 'down', 'attack'], name: 'hit_Da', },
     { sequence: ['defend', 'down', 'jump'], name: 'hit_Dj', },
-    { sequence: ['defend', 'jump', 'attack'], name: 'hit_ja', },
     { sequence: ['defend', 'left', 'defend'], name: 'hit_Fd', },
     { sequence: ['defend', 'right', 'defend'], name: 'hit_Fd', },
     // { sequence: ['up', 'up', 'attack'], name: 'debug_hitbox', },
@@ -191,6 +190,7 @@ export class Controller {
                         name: combo.name,
                         direction,
                     };
+                    console.log(combo.name);
                 }
             });
 
@@ -384,6 +384,12 @@ const DEFAULT_CONFIGS: ControllerConfig[] = [
                 menu: 'Escape',
             },
             controller: {
+                '0079-1844-mayflash limited MAYFLASH GameCube Controller Adapter': {
+                    defend: 5,
+                    jump: 3,
+                    attack: 1,
+                    menu: 9,
+                },
                 '045e-028e-Microsoft X-Box 360 pad': {
                     defend: 5,
                     jump: 3,
@@ -407,6 +413,12 @@ const DEFAULT_CONFIGS: ControllerConfig[] = [
                 menu: 'Escape'
             },
             controller: {
+                '0079-1844-mayflash limited MAYFLASH GameCube Controller Adapter': {
+                    defend: 5,
+                    jump: 3,
+                    attack: 1,
+                    menu: 9,
+                },
                 '045e-028e-Microsoft X-Box 360 pad': {
                     defend: 5,
                     jump: 3,

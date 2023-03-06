@@ -179,7 +179,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         hit_a: animation.punch,
                         hit_d: animation.defend,
                         hit_j: animation.jump,
-                        hit_ja: animation.walking,
                         hit_Fd: animation.transmission,
                     },
                     update: () => {
@@ -304,7 +303,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         enter: () => {
                             if (this.frame === animation.dash) {
                                 this.mechanics.isGrounded = false;
-                                this.mechanics.force(this.data.data.bmp.dash_distance * this.direction);
+                                this.mechanics.force(this.data.data.bmp.dash_distance * (this.controller.stickDirectionX || this.direction));
                                 this.mechanics.velocity[1] = this.data.data.bmp.dash_height;
                             }
                         },
@@ -317,8 +316,8 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     update: () => {
                         airMove();
                         const direction = this.controller.stickDirectionX || this.direction;
-                        if (direction !== this.direction && this.frame !== 214) {
-                            this.next.setFrame(214, 0, direction);
+                        if ((direction !== this.direction || Math.sign(this.mechanics.velocity[0]) !== this.direction) && this.frame !== 214) {
+                            this.next.setFrame(214, 0, this.direction);
                         }
                     },
                 },
@@ -347,6 +346,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                 },
                 [State.crouching]: {
+                    combo: {
+                        hit_j: animation.dash,
+                    },
                     event: {
                         fall: () => this.next.setFrame(animation.airborn),
                     },
@@ -475,7 +477,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             if (this.frameData.cpoint.throwvy) {
                                 // TODO: force didn't work here
                                 this.catching.mechanics.velocity[1] = this.frameData.cpoint.throwvy;
-                                console.log(this.catching.mechanics.velocity);
                             }
                             this.catching.next.setFrame(this.frameData.cpoint.vaction);
                             if (this.frameData.cpoint.taction && this.controller.stickDirectionX && this.controller.attack) {
