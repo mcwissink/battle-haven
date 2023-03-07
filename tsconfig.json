@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
-        "libs": ["esnext"],
-        "target": "es2019",
+        "target": "esnext",
         "strict": true
-    }
+    },
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules", "dist"]
 }
