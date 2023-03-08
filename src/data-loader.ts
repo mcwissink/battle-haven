@@ -84,8 +84,21 @@ const loadEntity = (data: any): EntityData => {
     }
 };
 
+const loadStage = (stage: any) => {
+    return {
+        ...stage,
+        layer: stage.layer.map((layer: any) => ({
+            ...layer,
+            spriteSheet: {
+                images: loadImage(layer.pic)
+            }
+        })),
+    }
+};
+
 export type GameData = {
     shadow: HTMLImageElement;
+    stages: any;
     entities: Record<string, EntityData>;
     soundpacks: Record<string, SoundPack>;
 };
@@ -94,6 +107,7 @@ export const loadData = async () => {
     const gameData: GameData = {
         shadow: loadImage('./data/shadow.png'),
         entities: {},
+        stages: data.stages,
         soundpacks: {},
     }
 
