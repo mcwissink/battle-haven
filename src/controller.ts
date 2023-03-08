@@ -211,7 +211,6 @@ export class Controller {
                         name: combo.name,
                         direction,
                     };
-                    console.log(combo.name);
                 }
             });
 
@@ -486,6 +485,8 @@ const DEFAULT_CONFIGS: ControllerConfig[] = [
     },
 ];
 
+const clone = (obj: any) => JSON.parse(JSON.stringify(obj));
+
 type SavedControllerConfigs = Record<string, ControllerConfig>;
 
 export class ControllerManager {
@@ -506,8 +507,12 @@ export class ControllerManager {
             ControllerManager.dummy,
         ];
         window.addEventListener("keyup", (e) => {
+            this.ports.find((controller) => controller.key(e.key, false));
+        });
+
+        window.addEventListener("keydown", (e) => {
             if (
-                !this.ports.find((controller) => controller.key(e.key, false))
+                !this.ports.find((controller) => controller.key(e.key, true))
             ) {
                 // If the key is not handled by an existing controller, register a new controller if a matching mapping is found
                 const config = DEFAULT_CONFIGS.find((config) =>
@@ -515,14 +520,10 @@ export class ControllerManager {
                 );
                 if (config) {
                     this.connect(
-                        (port) => new KeyboardController(port, config)
+                        (port) => new KeyboardController(port, clone(config))
                     );
                 }
             }
-        });
-
-        window.addEventListener("keydown", (e) => {
-            this.ports.find((controller) => controller.key(e.key, true));
         });
 
         window.addEventListener("gamepadconnected", (e) => {
@@ -530,7 +531,7 @@ export class ControllerManager {
                 (port) =>
                     new GamepadController(
                         port,
-                        DEFAULT_CONFIGS[port],
+                        clone(DEFAULT_CONFIGS[port]),
                         e.gamepad
                     )
             );
@@ -586,17 +587,18 @@ export class ControllerManager {
 
     saveConfig(port: number) {
         const configs = this.loadConfigs();
-        const config = this.configs[port];
-        const name =
+        const config = this.ports[port].config;
+        config.name =
             config.name === DEFAULT_CONTROLLER_NAME
                 ? (Math.random() + 1).toString(36).substring(4)
                 : config.name;
-        configs[name] = config;
+        configs[config.name] = config;
         this.configs = configs;
         localStorage.setItem(
             ControllerManager.configKey,
             JSON.stringify(configs)
         );
+        this.setConfig(port, config.name);
     }
 
     getConfigNames() {
@@ -609,6 +611,7 @@ export class ControllerManager {
 
     clearConfig(port: number) {
         this.ports[port].setConfig(DEFAULT_CONFIGS[port]);
+        console.log('set the config');
     }
 
     disconnect(port: number) {

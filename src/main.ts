@@ -76,7 +76,6 @@ export const mainMenu = (game: BattleHaven): Page => {
                     {
                         text: "controllers",
                         isSplit: true,
-                        disableButtonNavigation: true,
                         entries: ({ controller }) => [
                             {
                                 text: `tag: ${controller.config.name}`,
@@ -105,6 +104,7 @@ export const mainMenu = (game: BattleHaven): Page => {
                             },
                             {
                                 text: "edit",
+                                disableButtonNavigation: true,
                                 entries: [
                                     ...Object.entries(controller.mapping).map(
                                         ([target, source]) => ({
@@ -120,10 +120,11 @@ export const mainMenu = (game: BattleHaven): Page => {
                                     ),
                                     {
                                         text: "save",
-                                        click: () =>
+                                        click: () => {
                                             game.controllers.saveConfig(
                                                 controller.port
-                                            ),
+                                            );
+                                        }
                                     },
                                     {
                                         text: "back",
