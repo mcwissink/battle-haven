@@ -22,62 +22,64 @@ export type Interaction0 = Body & {
     bdefend: number;
     injury: number;
     effect?: number;
-}
+};
 
 export type Interaction =
     | Interaction0
     | (Body & {
-        kind: 1;
-        catchingact: number[];
-        caughtact: number[];
-    })
+          kind: 1;
+          catchingact: number[];
+          caughtact: number[];
+      })
     | (Body & {
-        kind: 3;
-        catchingact: number[];
-        caughtact: number[];
-    })
+          kind: 3;
+          catchingact: number[];
+          caughtact: number[];
+      });
 
-export type CatchPoint = Point & {
-    kind: 1;
-    injury: number;
-    vaction: number;
-    aaction: number;
-    jaction: number;
-    taction: number;
-    throwvx: number;
-    throwvy: number;
-    throwvz: number;
-    hurtable: number;
-    throwinjury: number;
-    decrease: number;
-    dircontrol: number;
-    cover: number;
-} | Point & {
-    kind: 2;
-    fronthurtact: number;
-    backhurtact: number;
-}
+export type CatchPoint =
+    | (Point & {
+          kind: 1;
+          injury: number;
+          vaction: number;
+          aaction: number;
+          jaction: number;
+          taction: number;
+          throwvx: number;
+          throwvy: number;
+          throwvz: number;
+          hurtable: number;
+          throwinjury: number;
+          decrease: number;
+          dircontrol: number;
+          cover: number;
+      })
+    | (Point & {
+          kind: 2;
+          fronthurtact: number;
+          backhurtact: number;
+      });
 
 export type ObjectPoint = Point & {
-    kind: 1,
+    kind: 1;
     action: number;
     dvx: number;
     dvy: number;
     oid: number;
     facing: number;
-}
+};
 
 export type Combo =
-    | 'hit_a'
-    | 'hit_d'
-    | 'hit_j'
-    | 'hit_Fa'
-    | 'hit_Fj'
-    | 'hit_Ua'
-    | 'hit_Uj'
-    | 'hit_Da'
-    | 'hit_jj'
-    | 'hit_Dj';
+    | "hit_a"
+    | "hit_d"
+    | "hit_j"
+    | "hit_Fa"
+    | "hit_Fj"
+    | "hit_Ua"
+    | "hit_Uj"
+    | "hit_Da"
+    | "hit_jj"
+    | "hit_Dj";
 
 export type FrameData = Record<Combo, number> & {
     name: string;
@@ -95,4 +97,4 @@ export type FrameData = Record<Combo, number> & {
     itr?: Interaction[];
     opoint: ObjectPoint;
     cpoint?: CatchPoint;
-}
+};

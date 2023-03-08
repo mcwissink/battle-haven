@@ -1,16 +1,16 @@
-import { Animator } from './animator';
-import { BattleHaven } from './battle-haven';
-import { animation, EntityData } from './data-loader';
+import { Animator } from "./animator";
+import { BattleHaven } from "./battle-haven";
+import { animation, EntityData } from "./data-loader";
 import { Effect, Entity, EventHandlers, State } from "./entity";
-import { gameOverMenu } from './main';
-import { Diamond, difference, Mechanics, normalize } from './mechanics';
-import { Sprite } from './sprite';
+import { gameOverMenu } from "./main";
+import { Diamond, difference, Mechanics, normalize } from "./mechanics";
+import { Sprite } from "./sprite";
 
 type CharacterFrameData = any;
 type CharacterFrame = number;
 
 export class Character extends Entity<CharacterFrameData, CharacterFrame> {
-    type = 'character';
+    type = "character";
     animator = new Animator();
     catching: Entity | null = null;
     // Testing
@@ -22,7 +22,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
     ) {
         const doubleJump = () => {
             if (this.controller.stickY > 0) {
-                return animation.drop
+                return animation.drop;
             } else {
                 return animation.double_jump;
             }
@@ -37,44 +37,62 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
             if (this.controller.stickY === 1) {
                 this.mechanics.ignorePassthrough = true;
             }
-        }
+        };
 
         const airMove = () => {
-            this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.walking_speedz, 0, 1);
+            this.mechanics.force(
+                this.controller.stickDirectionX *
+                    this.data.data.bmp.walking_speedz,
+                0,
+                1
+            );
             drop();
-        }
+        };
 
         const land = () => {
             this.next.setFrame(animation.crouch, 1);
-            this.game.spawn({
-                kind: 1,
-                x: this.mechanics.velocity[0],
-                y: this.mechanics.shape.halfHeight,
-                action: 999,
-                dvx: 0,
-                dvy: 0,
-                oid: 316,
-                facing: this.direction,
-            }, this);
-        }
+            this.game.spawn(
+                {
+                    kind: 1,
+                    x: this.mechanics.velocity[0],
+                    y: this.mechanics.shape.halfHeight,
+                    action: 999,
+                    dvx: 0,
+                    dvy: 0,
+                    oid: 316,
+                    facing: this.direction,
+                },
+                this
+            );
+        };
 
-        const landInjured: EventHandlers['land'] = ({ vy }) => {
-            this.game.audio.play('1/016');
+        const landInjured: EventHandlers["land"] = ({ vy }) => {
+            this.game.audio.play("1/016");
             if (vy > 8) {
                 this.mechanics.force(-5, 1);
             } else {
-                this.next.setFrame(this.direction !== Math.sign(this.mechanics.velocity[0]) ? 230 : 231, 1);
+                this.next.setFrame(
+                    this.direction !== Math.sign(this.mechanics.velocity[0])
+                        ? 230
+                        : 231,
+                    1
+                );
             }
-        }
+        };
 
-        const catching: EventHandlers['catching'] = ({ entity }) => {
+        const catching: EventHandlers["catching"] = ({ entity }) => {
             this.catching = entity;
             this.catching.next.direction = this.direction * -1;
-        }
+        };
 
-        const hit: EventHandlers['attacked'] = ({ dvx, dvy: dvyBase = 0, effect, injury }) => {
-            const dvy = (this.frame >= 223 && this.frame <= 226 ? -10 : dvyBase);
-            this.health -= injury
+        const hit: EventHandlers["attacked"] = ({
+            dvx,
+            dvy: dvyBase = 0,
+            effect,
+            injury,
+        }) => {
+            const dvy = this.frame >= 223 && this.frame <= 226 ? -10 : dvyBase;
+            this.health -= injury;
             this.hitStop = this.game.config.hitStop * 2;
             this.mechanics.velocity[0] *= 0.7;
             this.mechanics.velocity[1] *= 0.7;
@@ -82,7 +100,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 this.mechanics.force(dvx);
             }
             if (dvy || !this.mechanics.isGrounded) {
-                const direction = (dvy > 0 && this.mechanics.isGrounded) ? -1 : 1;
+                const direction = dvy > 0 && this.mechanics.isGrounded ? -1 : 1;
                 this.mechanics.force(direction * dvy, 1);
                 fall();
             } else {
@@ -92,21 +110,23 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 switch (effect) {
                     case Effect.ice:
                         this.next.setFrame(animation.ice, 3);
-                        this.game.audio.play('1/066')
+                        this.game.audio.play("1/066");
                         break;
                     case Effect.fire:
                         // this.next.setFrame(animation.fire, 3);
-                        this.game.audio.play('1/070')
+                        this.game.audio.play("1/070");
                         break;
                 }
             }
-        }
+        };
 
-        const noop = () => { };
+        const noop = () => {};
 
         super(
             game,
-            new Mechanics(game, new Diamond(25, 40), { position: [port === 1 ? 350 : 1250, 100] }),
+            new Mechanics(game, new Diamond(25, 40), {
+                position: [port === 1 ? 350 : 1250, 100],
+            }),
             new Sprite(data.spriteSheet),
             data.data.frame,
             {
@@ -116,17 +136,21 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             this.game.menu.setEntries(gameOverMenu);
                             this.game.menu.open();
                         },
-                        drop: () => this.mechanics.force(this.game.config.gravity * 4, 1),
+                        drop: () =>
+                            this.mechanics.force(
+                                this.game.config.gravity * 4,
+                                1
+                            ),
                         attacked: hit,
                         land,
-                    }
+                    },
                 },
                 [State.attack]: {
                     update: () => {
                         if (!this.mechanics.isGrounded) {
                             airMove();
                         }
-                    }
+                    },
                 },
                 [State.dashGo]: {
                     event: {
@@ -138,7 +162,8 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                     update: () => {
                         this.mechanics.isGrounded = false;
-                        const nearestCharacter = this.game.scene.getNearestCharacter(this);
+                        const nearestCharacter =
+                            this.game.scene.getNearestCharacter(this);
                         if (nearestCharacter) {
                             const [diffX, diffY] = difference(
                                 nearestCharacter.mechanics.position,
@@ -147,13 +172,26 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             this.next.setDirectionFromValue(diffX);
                             const distance = Math.hypot(diffX, diffY);
                             const vector = normalize([
-                                nearestCharacter.mechanics.position[0] - this.mechanics.position[0],
-                                nearestCharacter.mechanics.position[1] - this.mechanics.position[1]
+                                nearestCharacter.mechanics.position[0] -
+                                    this.mechanics.position[0],
+                                nearestCharacter.mechanics.position[1] -
+                                    this.mechanics.position[1],
                             ]);
-                            this.mechanics.force(Math.min(distance * 0.2, 30) * vector[0]);
-                            this.mechanics.force(Math.min(distance * 0.2, 30) * vector[1], 1);
-                            this.mechanics.position[0] += (nearestCharacter.mechanics.position[0] - this.mechanics.position[0]) * 0.3;
-                            this.mechanics.position[1] += (nearestCharacter.mechanics.position[1] - this.mechanics.position[1]) * 0.3;
+                            this.mechanics.force(
+                                Math.min(distance * 0.2, 30) * vector[0]
+                            );
+                            this.mechanics.force(
+                                Math.min(distance * 0.2, 30) * vector[1],
+                                1
+                            );
+                            this.mechanics.position[0] +=
+                                (nearestCharacter.mechanics.position[0] -
+                                    this.mechanics.position[0]) *
+                                0.3;
+                            this.mechanics.position[1] +=
+                                (nearestCharacter.mechanics.position[1] -
+                                    this.mechanics.position[1]) *
+                                0.3;
                         }
                     },
                 },
@@ -162,9 +200,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         land: noop,
                         attacked: ({ effect, ...data }) => {
                             hit(data);
-                            fall()
+                            fall();
                         },
-                    }
+                    },
                 },
                 [State.standing]: {
                     event: {
@@ -194,7 +232,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         catching,
                         enter: () => {
                             this.enterWalking = true;
-                        }
+                        },
                     },
                     combo: {
                         hit_a: animation.punch,
@@ -210,8 +248,13 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                             }
                             this.enterWalking = false;
                         }
-                        this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.walking_speed);
-                        this.next.setDirectionFromValue(this.controller.stickDirectionX)
+                        this.mechanics.force(
+                            this.controller.stickDirectionX *
+                                this.data.data.bmp.walking_speed
+                        );
+                        this.next.setDirectionFromValue(
+                            this.controller.stickDirectionX
+                        );
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.standing);
                         }
@@ -223,7 +266,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     event: {
                         enter: () => {
                             this.controller.clearComboBuffer();
-                            this.mechanics.force(this.direction * this.data.data.bmp.running_speed * 1.5);
+                            this.mechanics.force(
+                                this.direction *
+                                    this.data.data.bmp.running_speed *
+                                    1.5
+                            );
                         },
                         fall: () => this.next.setFrame(animation.airborn, 1),
                     },
@@ -234,8 +281,13 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                     nextFrame: () => this.animator.oscillate(9, 11),
                     update: () => {
-                        this.mechanics.force(this.controller.stickDirectionX * this.data.data.bmp.running_speed);
-                        this.next.setDirectionFromValue(this.controller.stickDirectionX)
+                        this.mechanics.force(
+                            this.controller.stickDirectionX *
+                                this.data.data.bmp.running_speed
+                        );
+                        this.next.setDirectionFromValue(
+                            this.controller.stickDirectionX
+                        );
                         if (!this.controller.stickDirectionX) {
                             this.next.setFrame(animation.stop_running);
                         }
@@ -245,8 +297,15 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     event: {
                         enter: (previousFrame) => {
                             if (previousFrame === 211) {
-                                this.mechanics.force(this.data.data.bmp.jump_distance * (Math.sign(this.mechanics.velocity[0]) || this.controller.stickDirectionX));
-                                this.mechanics.velocity[1] = this.data.data.bmp.jump_height * (this.controller.jump ? 1 : 0.6);
+                                this.mechanics.force(
+                                    this.data.data.bmp.jump_distance *
+                                        (Math.sign(
+                                            this.mechanics.velocity[0]
+                                        ) || this.controller.stickDirectionX)
+                                );
+                                this.mechanics.velocity[1] =
+                                    this.data.data.bmp.jump_height *
+                                    (this.controller.jump ? 1 : 0.6);
                             }
                         },
                     },
@@ -260,21 +319,31 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.doubleJumping]: {
                     event: {
                         enter: () => {
-
                             const direction = this.controller.stickDirectionX;
-                            const multiplier = Math.sign(this.mechanics.velocity[0]) === direction ? 0.7 : 0.3;
-                            this.mechanics.velocity[0] = Math.abs(this.mechanics.velocity[0] * multiplier) * direction;
-                            this.mechanics.velocity[1] = this.data.data.bmp.jump_height * 1.1;
-                            this.game.spawn({
-                                kind: 1,
-                                x: 0,
-                                y: 0,
-                                action: 999,
-                                dvx: 0,
-                                dvy: 0,
-                                oid: 317,
-                                facing: this.direction,
-                            }, this);
+                            const multiplier =
+                                Math.sign(this.mechanics.velocity[0]) ===
+                                direction
+                                    ? 0.7
+                                    : 0.3;
+                            this.mechanics.velocity[0] =
+                                Math.abs(
+                                    this.mechanics.velocity[0] * multiplier
+                                ) * direction;
+                            this.mechanics.velocity[1] =
+                                this.data.data.bmp.jump_height * 1.1;
+                            this.game.spawn(
+                                {
+                                    kind: 1,
+                                    x: 0,
+                                    y: 0,
+                                    action: 999,
+                                    dvx: 0,
+                                    dvy: 0,
+                                    oid: 317,
+                                    facing: this.direction,
+                                },
+                                this
+                            );
                         },
                     },
                     combo: {
@@ -287,7 +356,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.drop]: {
                     event: {
                         enter: () => {
-                            this.mechanics.velocity[0] = (this.controller.stickDirectionX || this.direction) * 20;
+                            this.mechanics.velocity[0] =
+                                (this.controller.stickDirectionX ||
+                                    this.direction) * 20;
                             this.mechanics.velocity[1] = 20;
                         },
                     },
@@ -303,8 +374,13 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         enter: () => {
                             if (this.frame === animation.dash) {
                                 this.mechanics.isGrounded = false;
-                                this.mechanics.force(this.data.data.bmp.dash_distance * (this.controller.stickDirectionX || this.direction));
-                                this.mechanics.velocity[1] = this.data.data.bmp.dash_height;
+                                this.mechanics.force(
+                                    this.data.data.bmp.dash_distance *
+                                        (this.controller.stickDirectionX ||
+                                            this.direction)
+                                );
+                                this.mechanics.velocity[1] =
+                                    this.data.data.bmp.dash_height;
                             }
                         },
                     },
@@ -315,8 +391,14 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                     update: () => {
                         airMove();
-                        const direction = this.controller.stickDirectionX || this.direction;
-                        if ((direction !== this.direction || Math.sign(this.mechanics.velocity[0]) !== this.direction) && this.frame !== 214) {
+                        const direction =
+                            this.controller.stickDirectionX || this.direction;
+                        if (
+                            (direction !== this.direction ||
+                                Math.sign(this.mechanics.velocity[0]) !==
+                                    this.direction) &&
+                            this.frame !== 214
+                        ) {
                             this.next.setFrame(214, 0, this.direction);
                         }
                     },
@@ -334,7 +416,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                                 this.mechanics.force(dvx * 0.4);
                             }
                             if (dvy && dvy < 0) {
-
                                 this.next.setFrame(animation.broken_defend, 3);
                             } else {
                                 this.next.setFrame(animation.defend, 3);
@@ -342,7 +423,9 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         },
                     },
                     update: () => {
-                        this.next.setDirectionFromValue(this.controller.stickDirectionX)
+                        this.next.setDirectionFromValue(
+                            this.controller.stickDirectionX
+                        );
                     },
                 },
                 [State.crouching]: {
@@ -358,22 +441,30 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 },
                 [State.lying]: {
                     event: {
-                        fall: () => this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2),
+                        fall: () =>
+                            this.next.setFrame(
+                                this.states[State.falling]!.nextFrame!(),
+                                2
+                            ),
                     },
                 },
                 [State.injured]: {
                     event: {
-                        fall: () => this.next.setFrame(this.states[State.falling]!.nextFrame!(), 2),
+                        fall: () =>
+                            this.next.setFrame(
+                                this.states[State.falling]!.nextFrame!(),
+                                2
+                            ),
                         attacked: (data) => {
                             hit(data);
                             if (this.frame < 222) {
                                 this.next.setFrame(222, 1);
-                            } else if (this.frame < 224, 1) {
+                            } else if ((this.frame < 224, 1)) {
                                 this.next.setFrame(224, 1);
                             } else if (this.frame < 226) {
                                 this.next.setFrame(224, 1);
                             }
-                        }
+                        },
                     },
                 },
                 [State.falling]: {
@@ -381,7 +472,10 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         land: landInjured,
                     },
                     nextFrame: () => {
-                        if (this.direction !== Math.sign(this.mechanics.velocity[0])) {
+                        if (
+                            this.direction !==
+                            Math.sign(this.mechanics.velocity[0])
+                        ) {
                             if (this.mechanics.velocity[1] > 6) {
                                 return 183;
                             } else if (this.mechanics.velocity[1] > 0) {
@@ -405,7 +499,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.burning]: {
                     event: {
                         land: landInjured,
-                    }
+                    },
                 },
                 [State.caught]: {
                     noMechanics: true,
@@ -422,10 +516,14 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 [State.teleport]: {
                     event: {
                         enter: () => {
-                            const nearestCharacter = this.game.scene.getNearestCharacter(this);
+                            const nearestCharacter =
+                                this.game.scene.getNearestCharacter(this);
                             if (nearestCharacter) {
-                                this.mechanics.position[0] = nearestCharacter.mechanics.position[0] - 100 * this.direction;
-                                this.mechanics.position[1] = nearestCharacter.mechanics.position[1];
+                                this.mechanics.position[0] =
+                                    nearestCharacter.mechanics.position[0] -
+                                    100 * this.direction;
+                                this.mechanics.position[1] =
+                                    nearestCharacter.mechanics.position[1];
                             }
                         },
                     },
@@ -435,9 +533,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         enter: () => {
                             this.mechanics.isGrounded = false;
                             this.mechanics.force(this.controller.stickX * 50);
-                            this.mechanics.force(this.controller.stickY * 50, 1);
+                            this.mechanics.force(
+                                this.controller.stickY * 50,
+                                1
+                            );
                             this.mechanics.gravity = 0;
-
                         },
                         leave: () => {
                             this.mechanics.gravity = this.game.config.gravity;
@@ -461,32 +561,58 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         catching,
                         leave: () => {
                             if (this.catching && this.frameData.cpoint) {
-                                this.catching?.next.setFrame(animation.falling, 5);
+                                this.catching?.next.setFrame(
+                                    animation.falling,
+                                    5
+                                );
                                 this.catching = null;
                             }
                         },
                     },
                     update: () => {
-                        if (this.catching && this.frameData.cpoint?.kind === 1) {
-                            const [x, y] = this.getFrameElementPosition(this.frameData.cpoint);
-                            this.catching.mechanics.position[0] = this.mechanics.position[0] + x;
-                            this.catching.mechanics.position[1] = this.mechanics.position[1] + y;
+                        if (
+                            this.catching &&
+                            this.frameData.cpoint?.kind === 1
+                        ) {
+                            const [x, y] = this.getFrameElementPosition(
+                                this.frameData.cpoint
+                            );
+                            this.catching.mechanics.position[0] =
+                                this.mechanics.position[0] + x;
+                            this.catching.mechanics.position[1] =
+                                this.mechanics.position[1] + y;
                             if (this.frameData.cpoint.throwvx) {
-                                this.catching.mechanics.force(this.frameData.cpoint.throwvx * this.direction, 0, Infinity);
+                                this.catching.mechanics.force(
+                                    this.frameData.cpoint.throwvx *
+                                        this.direction,
+                                    0,
+                                    Infinity
+                                );
                             }
                             if (this.frameData.cpoint.throwvy) {
                                 // TODO: force didn't work here
-                                this.catching.mechanics.velocity[1] = this.frameData.cpoint.throwvy;
+                                this.catching.mechanics.velocity[1] =
+                                    this.frameData.cpoint.throwvy;
                             }
-                            this.catching.next.setFrame(this.frameData.cpoint.vaction);
-                            if (this.frameData.cpoint.taction && this.controller.stickDirectionX && this.controller.attack) {
-                                this.next.setFrame(Math.abs(this.frameData.cpoint.taction) * this.direction * this.controller.stickDirectionX);
+                            this.catching.next.setFrame(
+                                this.frameData.cpoint.vaction
+                            );
+                            if (
+                                this.frameData.cpoint.taction &&
+                                this.controller.stickDirectionX &&
+                                this.controller.attack
+                            ) {
+                                this.next.setFrame(
+                                    Math.abs(this.frameData.cpoint.taction) *
+                                        this.direction *
+                                        this.controller.stickDirectionX
+                                );
                             }
                         }
-                    }
-                }
+                    },
+                },
             },
-            22,
+            22
         );
     }
 }

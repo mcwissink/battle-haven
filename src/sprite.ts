@@ -12,7 +12,6 @@ export interface SpriteSheet {
     dimensions: (frame: number) => Dimensions;
 }
 
-
 export class Sprite {
     x = 0;
     y = 0;
@@ -32,8 +31,11 @@ export class Sprite {
         this.dimensions = this.spriteSheet.dimensions(frame);
         this.frameOffsetImage = this.dimensions.imageOffset;
         const relativeFrame = frame - this.dimensions.relativeOffset;
-        this.frameOffsetX = (relativeFrame % this.dimensions.columns) * this.dimensions.width;
-        this.frameOffsetY = Math.floor(relativeFrame / (this.dimensions.columns)) * this.dimensions.height;
+        this.frameOffsetX =
+            (relativeFrame % this.dimensions.columns) * this.dimensions.width;
+        this.frameOffsetY =
+            Math.floor(relativeFrame / this.dimensions.columns) *
+            this.dimensions.height;
         this.directionX = direction;
     }
 

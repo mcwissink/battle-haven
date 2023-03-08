@@ -15,25 +15,21 @@ interface EffectFrameData {
 export type EffectFrames = Record<number, EffectFrameData>;
 
 export class Effect extends Entity {
-    type = 'effect';
+    type = "effect";
     constructor(
         public game: BattleHaven,
         public spawnTask: SpawnTask,
-        data: EntityData,
+        data: EntityData
     ) {
         super(
             game,
-            new Mechanics(
-                game,
-                new Rectangle(10, 10),
-                {
-                    mass: 0,
-                }
-            ),
+            new Mechanics(game, new Rectangle(10, 10), {
+                mass: 0,
+            }),
             new Sprite(data.spriteSheet),
             data.data.frame,
             {
-                default: {}
+                default: {},
             }
         );
         this.reset(spawnTask, data);

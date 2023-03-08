@@ -5,7 +5,10 @@ export class Animator {
     }
     oscillate(min: number, max: number): number {
         const range = max - min;
-        const offset = this.current >= range ? range - (this.current % range) : this.current;
+        const offset =
+            this.current >= range
+                ? range - (this.current % range)
+                : this.current;
         this.current = (this.current + 1) % (range * 2);
         return min + offset;
     }

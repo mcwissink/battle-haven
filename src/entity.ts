@@ -1,10 +1,10 @@
-import { BattleHaven } from './battle-haven';
-import { Mechanics, Shape, Vector } from './mechanics';
-import { Sprite } from './sprite';
-import { Body, Combo, FrameData, Interaction0, Point } from './types';
+import { BattleHaven } from "./battle-haven";
+import { Mechanics, Shape, Vector } from "./mechanics";
+import { Sprite } from "./sprite";
+import { Body, Combo, FrameData, Interaction0, Point } from "./types";
 
 type Event = {
-    land: { vx: number, vy: number };
+    land: { vx: number; vy: number };
     collide: null;
     fall: null;
     attacked: Interaction0 & { entity: Entity };
@@ -13,15 +13,17 @@ type Event = {
     catching: { entity: Entity };
     killed: null;
     drop: null;
-}
+};
 
 type EventQueue = {
     [E in keyof Event]: Array<Event[E]>;
-}
+};
 
 export type EventHandlers = {
-    [E in keyof Event]?: Event[E] extends null ? () => void : (data: Event[E]) => void;
-}
+    [E in keyof Event]?: Event[E] extends null
+        ? () => void
+        : (data: Event[E]) => void;
+};
 
 type EntityState<Frame extends number> = {
     combo?: Record<string, Frame | 999 | (() => Frame | 999)>;
@@ -32,7 +34,7 @@ type EntityState<Frame extends number> = {
     event?: EventHandlers & {
         enter?: (previousFrame: Frame | 0) => void;
         leave?: (nextFrame: Frame | 0) => void;
-    }
+    };
 };
 
 export enum Effect {
@@ -101,10 +103,13 @@ const hitShiver: Record<number, number> = {
     [State.falling]: 10,
     [State.defend]: 5,
     [State.brokenDefend]: 20,
-}
+};
 
-export class Entity<Frames extends Record<number, FrameData> = any, Frame extends number = any> {
-    type = 'entity';
+export class Entity<
+    Frames extends Record<number, FrameData> = any,
+    Frame extends number = any
+> {
+    type = "entity";
     parent?: Entity;
     direction = 1;
     frame: Frame | 0 = 0;
@@ -124,7 +129,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         attacked: [],
         killed: [],
         drop: [],
-    }
+    };
     public port = -1;
     public shadow: Sprite;
     constructor(
@@ -132,8 +137,11 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         public mechanics: Mechanics,
         public sprite: Sprite,
         public frames: Frames,
-        public states: Record<number | 'default', EntityState<Frame> | undefined>,
-        public offsetY = 0,
+        public states: Record<
+            number | "default",
+            EntityState<Frame> | undefined
+        >,
+        public offsetY = 0
     ) {
         this.health = this.game.config.health;
         this.shadow = new Sprite({
@@ -167,7 +175,8 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
 
     getFrameElementPosition({ x, y, w = 0 }: Body | Point): Vector {
         return [
-            (x - this.frameData.centerx) * this.direction + (this.direction === 1 ? 0 : -w),
+            (x - this.frameData.centerx) * this.direction +
+                (this.direction === 1 ? 0 : -w),
             y - this.frameData.centery + this.offsetY,
         ];
     }
@@ -180,7 +189,12 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     }
 
     canAttack(entity: Entity): boolean {
-        return this.parent !== entity && entity.parent !== this && !this.attackRest.has(entity) && (!this.parent || this.parent !== entity.parent);
+        return (
+            this.parent !== entity &&
+            entity.parent !== this &&
+            !this.attackRest.has(entity) &&
+            (!this.parent || this.parent !== entity.parent)
+        );
     }
 
     attacking(entity: Entity, rest: number) {
@@ -205,10 +219,14 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
     processFrame() {
         const state = this.state;
 
-        this.controller.processCombo(combo => {
+        this.controller.processCombo((combo) => {
             const comboName = combo.name as Combo;
-            const comboHandler = (this.frameData[comboName] || state?.combo?.[comboName]);
-            const frameFromCombo = typeof comboHandler === 'function' ? comboHandler() : comboHandler;
+            const comboHandler =
+                this.frameData[comboName] || state?.combo?.[comboName];
+            const frameFromCombo =
+                typeof comboHandler === "function"
+                    ? comboHandler()
+                    : comboHandler;
             if (frameFromCombo) {
                 this.next.setFrame(frameFromCombo, 0, combo.direction);
                 return true;
@@ -216,7 +234,11 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         });
 
         if (!this.hitStop && !this.next.frame && !--this.wait) {
-            this.next.setFrame(state?.nextFrame ? state.nextFrame() : this.frameData.next as Frame);
+            this.next.setFrame(
+                state?.nextFrame
+                    ? state.nextFrame()
+                    : (this.frameData.next as Frame)
+            );
         }
 
         if (this.next.direction) {
@@ -234,11 +256,16 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
             const previousFrame = this.frame;
             const previousFrameData = this.frameData;
             const nextFrameData = this.frames[translatedFrame];
-            const changedState = nextFrameData.state !== previousFrameData.state;
+            const changedState =
+                nextFrameData.state !== previousFrameData.state;
 
             if (!this.isFrozen(nextFrameData)) {
                 if (nextFrameData.dvx) {
-                    this.mechanics.force(nextFrameData.dvx * this.direction, 0, Infinity);
+                    this.mechanics.force(
+                        nextFrameData.dvx * this.direction,
+                        0,
+                        Infinity
+                    );
                 }
                 if (nextFrameData.dvy) {
                     this.mechanics.force(nextFrameData.dvy, 1);
@@ -252,7 +279,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
                 this.state?.event?.leave?.(translatedFrame);
             }
 
-            this.wait = (1 + nextFrameData.wait);
+            this.wait = 1 + nextFrameData.wait;
             this.frame = translatedFrame;
 
             if (changedState) {
@@ -296,7 +323,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         this.sprite.setFrame(this.frameData.pic, this.direction);
         if (this.health <= 0 && !this.isKilled) {
             this.isKilled = true;
-            this.event('killed');
+            this.event("killed");
         }
     }
 
@@ -306,25 +333,34 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         const scale = Math.max(0, 1 - this.mechanics.distanceToFloor * 0.005);
         ctx.translate(
             this.mechanics.position[0] - 18 * scale,
-            this.mechanics.position[1] + this.mechanics.distanceToFloor + this.mechanics.shape.halfHeight - 4,
+            this.mechanics.position[1] +
+                this.mechanics.distanceToFloor +
+                this.mechanics.shape.halfHeight -
+                4
         );
         ctx.scale(scale, scale);
-        if (this.type !== 'effect') {
+        if (this.type !== "effect") {
             this.shadow.render(ctx, 0, 0);
         }
         ctx.restore();
 
         // Sprite
         const shiver = hitShiver[this.frameData.state] ?? 0;
-        const modX = this.hitStop && shiver ? Math.sin((this.hitStop * Math.PI * 0.5) + 0.25) * shiver : 0;
-        const offsetX = this.direction === 1 ? this.frameData.centerx : this.sprite.dimensions.width - this.frameData.centerx;
+        const modX =
+            this.hitStop && shiver
+                ? Math.sin(this.hitStop * Math.PI * 0.5 + 0.25) * shiver
+                : 0;
+        const offsetX =
+            this.direction === 1
+                ? this.frameData.centerx
+                : this.sprite.dimensions.width - this.frameData.centerx;
         const offsetY = this.frameData.centery - this.offsetY;
 
         this.sprite.render(
             ctx,
             this.mechanics.position[0] - offsetX + modX,
-            this.mechanics.position[1] - offsetY,
-        )
+            this.mechanics.position[1] - offsetY
+        );
         if (this.game.debug.hitbox) {
             this.debugRender(ctx);
         }
@@ -342,7 +378,7 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
         const interaction = this.frameData.itr as any;
 
         if (body) {
-            ctx.fillStyle = 'rgba(0, 0, 255, 0.4)';
+            ctx.fillStyle = "rgba(0, 0, 255, 0.4)";
             body.forEach((b: any) => {
                 const [x, y] = this.getFrameElementPosition(b);
                 ctx.fillRect(
@@ -350,11 +386,11 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
                     this.mechanics.position[1] + y,
                     b.w,
                     b.h
-                )
+                );
             });
         }
         if (interaction) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+            ctx.fillStyle = "rgba(255, 0, 0, 0.4)";
             interaction.forEach((i: any) => {
                 const [x, y] = this.getFrameElementPosition(i);
                 ctx.fillRect(
@@ -362,9 +398,8 @@ export class Entity<Frames extends Record<number, FrameData> = any, Frame extend
                     this.mechanics.position[1] + y,
                     i.w,
                     i.h
-                )
+                );
             });
         }
     }
 }
-

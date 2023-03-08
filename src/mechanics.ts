@@ -6,32 +6,32 @@ export const UP_VECTOR: Vector = [0, -1];
 
 const perpendicular = ([x, y]: Vector): Vector => [y, -x];
 
-export const difference = (vector1: Vector, vector2: Vector): Vector => ([
+export const difference = (vector1: Vector, vector2: Vector): Vector => [
     vector2[0] - vector1[0],
     vector2[1] - vector1[1],
-]);
+];
 
 export const minimum = (vector1: Vector, vector2: Vector): Vector => {
-    if (Math.hypot(vector1[0], vector1[0]) < Math.hypot(vector2[0], vector2[1])) {
+    if (
+        Math.hypot(vector1[0], vector1[0]) < Math.hypot(vector2[0], vector2[1])
+    ) {
         return vector1;
     } else {
         return vector2;
     }
-}
+};
 
 export const normalize = ([x, y]: Vector): Vector => {
     const magnitude = Math.hypot(x, y) || 1;
     return [x / magnitude, y / magnitude];
-}
+};
 
-export const dot = (vector1: Vector, vector2: Vector) => vector1[0] * vector2[0] + vector1[1] * vector2[1];
+export const dot = (vector1: Vector, vector2: Vector) =>
+    vector1[0] * vector2[0] + vector1[1] * vector2[1];
 
 const project = (axis: Vector, corners: Vector[]): Vector => {
-    const cornerProjections = corners.map(corner => dot(corner, axis));
-    return [
-        Math.min(...cornerProjections),
-        Math.max(...cornerProjections),
-    ];
+    const cornerProjections = corners.map((corner) => dot(corner, axis));
+    return [Math.min(...cornerProjections), Math.max(...cornerProjections)];
 };
 
 const overlap = ([min1, max1]: Vector, [min2, max2]: Vector) => {
@@ -39,7 +39,7 @@ const overlap = ([min1, max1]: Vector, [min2, max2]: Vector) => {
         return 0;
     }
     return max1 > max2 ? max2 - min1 : min2 - max1;
-}
+};
 
 export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
     // minimum translation vector
@@ -48,11 +48,14 @@ export const collide = (shape1: Shape, shape2: Shape): Vector | undefined => {
 
     const normals = shape1.normals.concat(shape2.normals);
     for (const axis of normals) {
-        const ov = overlap(project(axis, shape1.corners), project(axis, shape2.corners));
+        const ov = overlap(
+            project(axis, shape1.corners),
+            project(axis, shape2.corners)
+        );
         if (!ov) {
             return;
         }
-        const tv: Vector = [axis[0] * ov, axis[1] * ov]
+        const tv: Vector = [axis[0] * ov, axis[1] * ov];
         if (Math.abs(ov) < minDistance) {
             minDistance = Math.abs(ov);
             mtv = tv;
@@ -68,7 +71,12 @@ export interface CollisionResolution {
 
 export const distance = (axis: Vector, m1: Mechanics, m2: Mechanics) => {
     const perpendicularAxis = perpendicular(axis);
-    if (overlap(project(perpendicularAxis, m1.shape.corners), project(perpendicularAxis, m2.shape.corners))) {
+    if (
+        overlap(
+            project(perpendicularAxis, m1.shape.corners),
+            project(perpendicularAxis, m2.shape.corners)
+        )
+    ) {
         let maxDistance = 0;
         const normals = m2.shape.normals;
         for (const axis of normals) {
@@ -84,9 +92,13 @@ export const distance = (axis: Vector, m1: Mechanics, m2: Mechanics) => {
         return maxDistance;
     }
     return Infinity;
-}
+};
 
-export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResolution | undefined => {
+export const collide3 = (
+    m1: Mechanics,
+    m2: Mechanics,
+    time = 1
+): CollisionResolution | undefined => {
     let maxOverlapStart = -Infinity;
     let minOverlapEnd = Infinity;
     let collisionVector: Vector = [0, 0];
@@ -97,18 +109,30 @@ export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResol
         const [min2, max2] = project(axis, m2.shape.corners);
         const vel: Vector = [
             m2.velocity[0] - m1.velocity[0],
-            m2.velocity[1] - m1.velocity[1]
+            m2.velocity[1] - m1.velocity[1],
         ];
         const velocityDifference = dot(axis, vel);
 
         if (velocityDifference > 0) {
-            if (max1 < min2 || (m2.passthrough && (m1.ignorePassthrough || dot(normalize(vel), m2.passthrough) < 0))) {
+            if (
+                max1 < min2 ||
+                (m2.passthrough &&
+                    (m1.ignorePassthrough ||
+                        dot(normalize(vel), m2.passthrough) < 0))
+            ) {
                 return;
             } else {
-                if ((min1 <= min2 && min2 <= max1) || (min2 <= min1 && min1 <= max2)) {
-                    minOverlapEnd = Math.min(minOverlapEnd, (max1 - min2) / velocityDifference);
+                if (
+                    (min1 <= min2 && min2 <= max1) ||
+                    (min2 <= min1 && min1 <= max2)
+                ) {
+                    minOverlapEnd = Math.min(
+                        minOverlapEnd,
+                        (max1 - min2) / velocityDifference
+                    );
                 } else {
-                    const maxOverlapStartAxis = (min1 - max2) / velocityDifference;
+                    const maxOverlapStartAxis =
+                        (min1 - max2) / velocityDifference;
                     if (maxOverlapStartAxis > time) {
                         return;
                     }
@@ -116,20 +140,35 @@ export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResol
                         maxOverlapStart = maxOverlapStartAxis;
                         collisionVector = axis;
                     }
-                    minOverlapEnd = Math.min(minOverlapEnd, (max1 - min2) / velocityDifference);
+                    minOverlapEnd = Math.min(
+                        minOverlapEnd,
+                        (max1 - min2) / velocityDifference
+                    );
                 }
                 if (minOverlapEnd < maxOverlapStart) {
                     return;
                 }
             }
         } else if (velocityDifference < 0) {
-            if (max2 < min1 || (m2.passthrough && (m1.ignorePassthrough || dot(normalize(vel), m2.passthrough) < 0))) {
+            if (
+                max2 < min1 ||
+                (m2.passthrough &&
+                    (m1.ignorePassthrough ||
+                        dot(normalize(vel), m2.passthrough) < 0))
+            ) {
                 return;
             } else {
-                if ((min2 <= min1 && min1 <= max2) || (min1 <= min2 && min2 <= max1)) {
-                    minOverlapEnd = Math.min(minOverlapEnd, (max2 - min1) / -velocityDifference);
+                if (
+                    (min2 <= min1 && min1 <= max2) ||
+                    (min1 <= min2 && min2 <= max1)
+                ) {
+                    minOverlapEnd = Math.min(
+                        minOverlapEnd,
+                        (max2 - min1) / -velocityDifference
+                    );
                 } else {
-                    const maxOverlapStartAxis = (min2 - max1) / -velocityDifference;
+                    const maxOverlapStartAxis =
+                        (min2 - max1) / -velocityDifference;
                     if (maxOverlapStartAxis > time) {
                         return;
                     }
@@ -137,20 +176,26 @@ export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResol
                         maxOverlapStart = maxOverlapStartAxis;
                         collisionVector = axis;
                     }
-                    minOverlapEnd = Math.min(minOverlapEnd, (max2 - min1) / -velocityDifference);
+                    minOverlapEnd = Math.min(
+                        minOverlapEnd,
+                        (max2 - min1) / -velocityDifference
+                    );
                 }
                 if (minOverlapEnd < maxOverlapStart) {
-
                     return;
                 }
             }
         } else {
-            if (!((min2 <= min1 && min1 <= max2) || (min1 <= min2 && min2 <= max1))) {
+            if (
+                !(
+                    (min2 <= min1 && min1 <= max2) ||
+                    (min1 <= min2 && min2 <= max1)
+                )
+            ) {
                 return;
             }
         }
     }
-
 
     if (minOverlapEnd !== Infinity && maxOverlapStart !== -Infinity) {
         if (m2.passthrough && dot(collisionVector, m2.passthrough) !== 1) {
@@ -164,7 +209,7 @@ export const collide3 = (m1: Mechanics, m2: Mechanics, time = 1): CollisionResol
             time: maxOverlapStart,
             velocityCorrection: [
                 collisionVector[0] * collisionForce * 1.01,
-                collisionVector[1] * collisionForce * 1.01
+                collisionVector[1] * collisionForce * 1.01,
             ],
         };
     }
@@ -192,8 +237,18 @@ export class Shape {
 
     get normals() {
         return this.corners.reduce<Vector[]>((normals, corner, index) => {
-            const previousCorner = index === 0 ? this._corners[this._corners.length - 1] : this._corners[index - 1];
-            normals.push(normalize(perpendicular([corner[0] - previousCorner[0], corner[1] - previousCorner[1]])));
+            const previousCorner =
+                index === 0
+                    ? this._corners[this._corners.length - 1]
+                    : this._corners[index - 1];
+            normals.push(
+                normalize(
+                    perpendicular([
+                        corner[0] - previousCorner[0],
+                        corner[1] - previousCorner[1],
+                    ])
+                )
+            );
             return normals;
         }, []);
     }
@@ -210,7 +265,7 @@ export class Shape {
         });
         ctx.closePath();
         ctx.stroke();
-    };
+    }
 }
 
 export class Diamond extends Shape {
@@ -262,7 +317,7 @@ export class Rectangle extends Shape {
 export class Mechanics {
     public position: Vector;
     public passthrough?: Vector;
-    public distanceToFloor: number = 0;
+    public distanceToFloor = 0;
     public velocity: Vector = [0, 0];
     public isGrounded = false;
     public isOverlapping = false;
@@ -279,9 +334,9 @@ export class Mechanics {
             position = [0, 0],
             passthrough,
         }: {
-            mass?: number,
-            passthrough?: Vector,
-            position?: Vector
+            mass?: number;
+            passthrough?: Vector;
+            position?: Vector;
         } = {}
     ) {
         this.mass = mass;
@@ -295,10 +350,7 @@ export class Mechanics {
     force(force: number, axis = 0, acceleration = force * Math.sign(force)) {
         const direction = Math.sign(force);
         const diff = force * direction - this.velocity[axis] * direction;
-        const applied = direction * Math.min(
-            diff > 0 ? diff : 0,
-            acceleration
-        )
+        const applied = direction * Math.min(diff > 0 ? diff : 0, acceleration);
         if (applied < 0 && axis) {
             this.velocity[axis] = 0;
         }
@@ -308,9 +360,11 @@ export class Mechanics {
     update() {
         this.position[0] += this.velocity[0];
         this.position[1] += this.velocity[1];
-        this.velocity[1] += this.mass * this.gravity * (this.velocity[1] > 0 ? 1.5 : 1);
+        this.velocity[1] +=
+            this.mass * this.gravity * (this.velocity[1] > 0 ? 1.5 : 1);
         if (this.isGrounded) {
-            this.velocity[0] *= Math.abs(this.velocity[0]) < 1 ? 0 : this.friction;
+            this.velocity[0] *=
+                Math.abs(this.velocity[0]) < 1 ? 0 : this.friction;
         } else {
             this.velocity[0] *= this.airFriction;
             this.velocity[1] *= this.airFriction;
@@ -318,17 +372,22 @@ export class Mechanics {
     }
 
     render(ctx: CanvasRenderingContext2D) {
-        ctx.strokeStyle = this.isOverlapping ? 'orange' : 'blue';
+        ctx.strokeStyle = this.isOverlapping ? "orange" : "blue";
         this.shape.render(ctx);
-        ctx.strokeStyle = 'red';
+        ctx.strokeStyle = "red";
         if (this.distanceToFloor !== Infinity) {
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.lineTo(this.position[0], this.position[1] + this.shape.halfHeight);
-            ctx.lineTo(this.position[0], this.position[1] + this.shape.halfHeight + this.distanceToFloor);
+            ctx.lineTo(
+                this.position[0],
+                this.position[1] + this.shape.halfHeight
+            );
+            ctx.lineTo(
+                this.position[0],
+                this.position[1] + this.shape.halfHeight + this.distanceToFloor
+            );
             ctx.closePath();
             ctx.stroke();
-            
         }
     }
 }

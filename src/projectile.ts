@@ -1,11 +1,11 @@
-import { BattleHaven, SpawnTask } from './battle-haven';
-import { animation, EntityData } from './data-loader';
+import { BattleHaven, SpawnTask } from "./battle-haven";
+import { animation, EntityData } from "./data-loader";
 import { Entity } from "./entity";
-import { Mechanics, Rectangle, collide } from './mechanics';
-import { Sprite } from './sprite';
+import { Mechanics, Rectangle, collide } from "./mechanics";
+import { Sprite } from "./sprite";
 
 export class Projectile extends Entity {
-    type = 'projectile';
+    type = "projectile";
     constructor(
         public game: BattleHaven,
         public spawnTask: SpawnTask,
@@ -15,22 +15,20 @@ export class Projectile extends Entity {
         if (spawnTask.opoint.facing === 1) {
             direction *= -1;
         }
-        const [x, y] = spawnTask.parent.getFrameElementPosition(spawnTask.opoint);
+        const [x, y] = spawnTask.parent.getFrameElementPosition(
+            spawnTask.opoint
+        );
         const killed = () => this.next.setFrame(this.frameData.hit_d);
-        const update = () => this.health -= this.frameData.hit_a;
+        const update = () => (this.health -= this.frameData.hit_a);
         super(
             game,
-            new Mechanics(
-                game,
-                new Rectangle(1, 1),
-                {
-                    position: [
-                        spawnTask.parent.mechanics.position[0] + x,
-                        spawnTask.parent.mechanics.position[1] + y,
-                    ],
-                    mass: 0,
-                }
-            ),
+            new Mechanics(game, new Rectangle(1, 1), {
+                position: [
+                    spawnTask.parent.mechanics.position[0] + x,
+                    spawnTask.parent.mechanics.position[1] + y,
+                ],
+                mass: 0,
+            }),
             new Sprite(data.spriteSheet),
             data.data.frame,
             {
@@ -46,19 +44,25 @@ export class Projectile extends Entity {
                             this.next.setFrame(20);
                             this.mechanics.velocity[0] = 0;
                             this.mechanics.velocity[1] = 0;
-                            this.game.audio.play(data.data.bmp.weapon_broken_sound);
+                            this.game.audio.play(
+                                data.data.bmp.weapon_broken_sound
+                            );
                         },
                         collide: () => {
                             this.mechanics.velocity[0] = 0;
                             this.next.setFrame(20);
-                            this.game.audio.play(data.data.bmp.weapon_broken_sound);
+                            this.game.audio.play(
+                                data.data.bmp.weapon_broken_sound
+                            );
                         },
                         attacked: ({ entity }) => {
                             this.mechanics.velocity[0] = 0;
-                            if (entity.type === 'character') {
+                            if (entity.type === "character") {
                                 this.parent = entity;
                                 this.next.setFrame(animation.rebounding);
-                                this.game.audio.play(data.data.bmp.weapon_broken_sound);
+                                this.game.audio.play(
+                                    data.data.bmp.weapon_broken_sound
+                                );
                             } else {
                                 this.next.setFrame(20);
                             }
@@ -75,21 +79,23 @@ export class Projectile extends Entity {
                 3005: {
                     event: {
                         collide: () => {
-                            this.next.setFrame(1000)
-                            this.game.audio.play(data.data.bmp.weapon_broken_sound);
+                            this.next.setFrame(1000);
+                            this.game.audio.play(
+                                data.data.bmp.weapon_broken_sound
+                            );
                         },
                     },
-                }
+                },
             }
         );
         this.frame = spawnTask.opoint.action;
         this.direction = direction;
         this.parent = spawnTask.parent.parent || spawnTask.parent;
         if (spawnTask.opoint.dvx) {
-            this.mechanics.force(direction * spawnTask.opoint.dvx)
+            this.mechanics.force(direction * spawnTask.opoint.dvx);
         }
         if (spawnTask.opoint.dvy) {
-            this.mechanics.force(spawnTask.opoint.dvy, 1)
+            this.mechanics.force(spawnTask.opoint.dvy, 1);
         }
         // Ensure projectiles aren't spawned in a collision
         this.game.scene.level.platforms.forEach((platform) => {
@@ -102,6 +108,12 @@ export class Projectile extends Entity {
     }
 
     canAttack(entity: Entity) {
-        return super.canAttack(entity) && !(entity.type === 'character' && entity.frameData.itr?.some(itr => itr.kind === 0));
+        return (
+            super.canAttack(entity) &&
+            !(
+                entity.type === "character" &&
+                entity.frameData.itr?.some((itr) => itr.kind === 0)
+            )
+        );
     }
 }
