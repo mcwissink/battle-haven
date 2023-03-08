@@ -257,16 +257,16 @@ export class KeyboardController extends Controller {
                     this.directionState.left + this.directionState.right
                 );
                 return true;
-            case this.mapping.attack: 
+            case this.mapping.attack:
                 this.input('attack', Number(active));
                 return true;
-            case this.mapping.defend: 
+            case this.mapping.defend:
                 this.input('defend', Number(active));
                 return true;
-            case this.mapping.jump: 
+            case this.mapping.jump:
                 this.input('jump', Number(active));
                 return true;
-            case this.mapping.menu: 
+            case this.mapping.menu:
                 this.input('menu', Number(active));
                 return true;
             default:
@@ -369,9 +369,26 @@ const DEFAULT_CONTROLLER_MAPPING = {
     attack: 0,
     menu: 7,
 };
+
+const DEFAULT_CONTROLLER_CONFIG = {
+    '0079-1844-mayflash limited MAYFLASH GameCube Controller Adapter': {
+        defend: 5,
+        jump: 3,
+        attack: 1,
+        menu: 9,
+    },
+    '045e-028e-Microsoft X-Box 360 pad': {
+        defend: 5,
+        jump: 3,
+        attack: 1,
+        menu: 7,
+    },
+};
+
+const DEFAULT_CONTROLLER_NAME = '__default__';
 const DEFAULT_CONFIGS: ControllerConfig[] = [
     {
-        name: 'no name',
+        name: DEFAULT_CONTROLLER_NAME,
         mapping: {
             keyboard: {
                 up: 'ArrowUp',
@@ -383,24 +400,11 @@ const DEFAULT_CONFIGS: ControllerConfig[] = [
                 attack: 'c',
                 menu: 'Escape',
             },
-            controller: {
-                '0079-1844-mayflash limited MAYFLASH GameCube Controller Adapter': {
-                    defend: 5,
-                    jump: 3,
-                    attack: 1,
-                    menu: 9,
-                },
-                '045e-028e-Microsoft X-Box 360 pad': {
-                    defend: 5,
-                    jump: 3,
-                    attack: 1,
-                    menu: 7,
-                },
-            }
+            controller: DEFAULT_CONTROLLER_CONFIG,
         }
     },
     {
-        name: 'no name',
+        name: DEFAULT_CONTROLLER_NAME,
         mapping: {
             keyboard: {
                 up: 'i',
@@ -412,44 +416,66 @@ const DEFAULT_CONFIGS: ControllerConfig[] = [
                 attack: 'd',
                 menu: 'Escape'
             },
-            controller: {
-                '0079-1844-mayflash limited MAYFLASH GameCube Controller Adapter': {
-                    defend: 5,
-                    jump: 3,
-                    attack: 1,
-                    menu: 9,
-                },
-                '045e-028e-Microsoft X-Box 360 pad': {
-                    defend: 5,
-                    jump: 3,
-                    attack: 0,
-                    menu: 7,
-                },
-            }
+            controller: DEFAULT_CONTROLLER_CONFIG,
         }
     },
-    { name: 'no name', mapping: { keyboard: {}, controller: {} } },
-    { name: 'no name', mapping: { keyboard: {}, controller: {} } }
+    {
+        name: DEFAULT_CONTROLLER_NAME,
+        mapping: {
+            keyboard: {
+                up: 't',
+                down: 'g',
+                left: 'f',
+                right: 'h',
+                defend: 'q',
+                jump: 'w',
+                attack: 'e',
+                menu: 'Escape'
+            },
+            controller: DEFAULT_CONTROLLER_CONFIG
+        }
+    },
+    {
+        name: DEFAULT_CONTROLLER_NAME,
+        mapping: {
+            keyboard: {
+                up: '1',
+                down: '2',
+                left: '3',
+                right: '4',
+                defend: '5',
+                jump: '6',
+                attack: '7',
+                menu: 'Escape'
+            },
+            controller: DEFAULT_CONTROLLER_CONFIG
+        }
+    }
 ];
 
+type SavedControllerConfigs = Record<string, ControllerConfig>;
+
 export class ControllerManager {
-    ports: [Controller, Controller, Controller, Controller] = [
-        ControllerManager.dummy,
-        ControllerManager.dummy,
-        ControllerManager.dummy,
-        ControllerManager.dummy
-    ];
-    configs = DEFAULT_CONFIGS;
+    static dummy = new Controller(-1, DEFAULT_CONFIGS[0]);
+    static configKey = 'controller/configs';
+    ports: [Controller, Controller, Controller, Controller];
+    configs: SavedControllerConfigs;
     gamepads: Record<number, number> = {};
     listeners: ManagerListener = {
         connect: [],
     }
-    static dummy = new Controller(-1, DEFAULT_CONFIGS[0]);
     constructor() {
+        this.configs = this.loadConfigs();
+        this.ports = [
+            ControllerManager.dummy,
+            ControllerManager.dummy,
+            ControllerManager.dummy,
+            ControllerManager.dummy,
+        ];
         window.addEventListener('keyup', (e) => {
             if (!this.ports.find((controller) => controller.key(e.key, false))) {
                 // If the key is not handled by an existing controller, register a new controller if a matching mapping is found
-                const config = this.configs.find((config) => Object.values(config.mapping.keyboard).includes(e.key))
+                const config = DEFAULT_CONFIGS.find((config) => Object.values(config.mapping.keyboard).includes(e.key))
                 if (config) {
                     this.connect((port) => new KeyboardController(port, config));
                 }
@@ -461,7 +487,7 @@ export class ControllerManager {
         });
 
         window.addEventListener("gamepadconnected", (e) => {
-            const port = this.connect((port) => new GamepadController(port, this.configs[port], e.gamepad));
+            const port = this.connect((port) => new GamepadController(port, DEFAULT_CONFIGS[port], e.gamepad));
             if (port !== -1) {
                 this.gamepads[e.gamepad.index] = port;
             }
@@ -496,6 +522,31 @@ export class ControllerManager {
             return port;
         }
         return -1;
+    }
+
+    loadConfigs(): SavedControllerConfigs {
+        return JSON.parse(localStorage.getItem(ControllerManager.configKey) ?? '{}');
+    }
+
+    saveConfig(port: number) {
+        const configs = this.loadConfigs();
+        const config = this.configs[port];
+        const name = config.name === DEFAULT_CONTROLLER_NAME ? (Math.random() + 1).toString(36).substring(4) : config.name;
+        configs[name] = config;
+        this.configs = configs;
+        localStorage.setItem(ControllerManager.configKey, JSON.stringify(configs));
+    }
+
+    getConfigNames() {
+        return Object.keys(this.configs);
+    }
+
+    setConfig(port: number, name: string) {
+        this.ports[port].setConfig(this.configs[name]);
+    }
+
+    clearConfig(port: number) {
+        this.ports[port].setConfig(DEFAULT_CONFIGS[port]);
     }
 
     disconnect(port: number) {

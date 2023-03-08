@@ -62,12 +62,37 @@ export const mainMenu = (game: BattleHaven): Page => {
                         isSplit: true,
                         disableButtonNavigation: true,
                         entries: ({ controller }) => [
-                            ...Object.entries(controller.mapping).map(([target, source]) => ({
-                                text: `${target.padEnd(7)}: ${source}`,
-                                click: () => game.controllers.updateMapping(controller, target),
-                            })),
                             {
-                                text: 'back',
+                                text: `tag: ${controller.config.name}`,
+                            },
+                            {
+                                text: 'select',
+                                entries: [
+                                    {
+                                        text: 'clear',
+                                        click: () => game.controllers.clearConfig(controller.port)
+                                    },
+                                    ...Object.keys(game.controllers.configs).map((name) => ({
+                                        text: name,
+                                        click: () => game.controllers.setConfig(controller.port, name),
+                                    })),
+                                ],
+                            },
+                            {
+                                text: 'edit',
+                                entries: [
+                                    ...Object.entries(controller.mapping).map(([target, source]) => ({
+                                        text: `${target.padEnd(7)}: ${source}`,
+                                        click: () => game.controllers.updateMapping(controller, target),
+                                    })),
+                                    {
+                                        text: 'save',
+                                        click: () => game.controllers.saveConfig(controller.port)
+                                    },
+                                    {
+                                        text: 'back',
+                                    },
+                                ]
                             },
                         ]
                     },
