@@ -98,7 +98,6 @@ const loadStage = (stage: any) => {
 
 export type GameData = {
     shadow: HTMLImageElement;
-    stages: any;
     entities: Record<string, EntityData>;
     soundpacks: Record<string, SoundPack>;
 };
@@ -107,7 +106,6 @@ export const loadData = async () => {
     const gameData: GameData = {
         shadow: loadImage('./data/shadow.png'),
         entities: {},
-        stages: data.stages,
         soundpacks: {},
     }
 
