@@ -75,6 +75,7 @@ interface ControllerListener {
 }
 
 export class Controller {
+    public resolveNextInput: any;
     public mapping: Record<string, number | string> = {};
     stickX = 0;
     stickY = 0;
@@ -231,7 +232,7 @@ export class Controller {
 }
 
 export class KeyboardController extends Controller {
-    private resolveNextInput: ((value: string) => void) | null = null;
+    public resolveNextInput: ((value: string) => void) | null = null;
     constructor(port: number, config: ControllerConfig) {
         super(port, config);
         this.setConfig(config);
@@ -309,7 +310,7 @@ export class KeyboardController extends Controller {
 }
 
 class GamepadController extends Controller {
-    private resolveNextInput: ((value: number) => void) | null = null;
+    public resolveNextInput: ((value: number) => void) | null = null;
     private snapshot: { buttons: number[] } = {
         buttons: [],
     };
@@ -512,7 +513,8 @@ export class ControllerManager {
 
         window.addEventListener("keydown", (e) => {
             if (
-                !this.ports.find((controller) => controller.key(e.key, true))
+                !this.ports.find((controller) => controller.key(e.key, true)) &&
+                !this.ports.find((controller) => controller.resolveNextInput)
             ) {
                 // If the key is not handled by an existing controller, register a new controller if a matching mapping is found
                 const config = DEFAULT_CONFIGS.find((config) =>
