@@ -111,14 +111,16 @@ export const loadData = async () => {
         soundpacks: {},
     };
 
-    Object.entries(data.entities).forEach(([key, data]) => {
-        gameData.entities[key] = loadEntity(data);
-    });
+    gameData.entities = Object.fromEntries(
+        Object.entries(data.entities).map(([key, data]) => [key, loadEntity(data)])
+    );
 
-    gameData.soundpacks[1] = {
-        audio: await loadAudio(`${data.soundpack.file}.mp3`),
-        mapping: data.soundpack.sound,
-    };
+    gameData.soundpacks = Object.fromEntries(
+        await Promise.all(Object.entries(data.soundpacks).map(async ([key, soundpack]: [string, any]) => [key, {
+            audio: await loadAudio(`${soundpack.file}.mp3`),
+            mapping: soundpack.sound,
+        }]))
+    );
 
     return gameData;
 };
