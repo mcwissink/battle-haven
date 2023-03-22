@@ -144,7 +144,7 @@ export const mainMenu = (game: BattleHaven): Page => {
                 entries: [
                     ...Object.keys(game.debug).map((key) => ({
                         type: 'checkbox',
-                        value: game.debug[key],
+                        value: () => game.debug[key as keyof typeof game.debug],
                         text: `debug ${key}`,
                         click: () => game.toggleDebug(key as any),
                     })),

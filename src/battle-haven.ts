@@ -211,6 +211,5 @@ export class BattleHaven {
 
     toggleDebug = (key: keyof typeof this.debug) => {
         this.debug[key] = !this.debug[key];
-        this.menu.close();
     };
 }

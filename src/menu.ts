@@ -262,7 +262,7 @@ export class Menu {
             this.getActiveEntries(cursor).forEach((entry, index) => {
                 switch (entry.type) {
                     case 'checkbox':
-                        ctx.fillText(`${entry.value ? '■' : '□'} ${entry.text}`, 40, index * ENTRY_HEIGHT);
+                        ctx.fillText(`${entry.value() ? '■' : '□'} ${entry.text}`, 40, index * ENTRY_HEIGHT);
                         break;
                     default:
                         ctx.fillText(entry.text, 40, index * ENTRY_HEIGHT);
