@@ -206,10 +206,8 @@ loadData().then((data) => {
         game: {
             hitStop: 3,
             health: 750,
-        },
-        graphics: {
             frameRate: 30,
-        }
+        },
     });
     BH.start();
     BH.menu.setEntries(mainMenu);

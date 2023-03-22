@@ -45,8 +45,6 @@ interface BattleHavenConfig {
     game: {
         hitStop: number;
         health: number;
-    }
-    graphics: {
         frameRate: number;
     }
 }
@@ -109,26 +107,30 @@ export class BattleHaven {
                 }
             });
         });
-        const dx = time - this.previousTime;
-        this.ctx.fillStyle = "rgba(255, 255, 255, 1)";
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        if (!--this.wait) {
+        const deltaTime = time - this.previousTime;
+
+        // Process game logic at 30 fps
+        // https://stackoverflow.com/questions/19764018/controlling-fps-with-requestanimationframe
+        if (deltaTime > this.config.game.frameRate) {
+            this.previousTime = time - (deltaTime % this.config.game.frameRate);
+
             if (!this.menu.isOpen || this.debug.frames) {
                 this.processTasks();
 
-                this.scene.update(dx);
-                this.scene.entities.forEach((entity) => entity.update(dx));
-                this.scene.effects.forEach((effect) => effect.update(dx));
+                this.scene.update(deltaTime);
+                this.scene.entities.forEach((entity) => entity.update(deltaTime));
+                this.scene.effects.forEach((effect) => effect.update(deltaTime));
             }
-            this.wait = this.debug.frames ? 0 : 2;
         }
+
+        this.ctx.fillStyle = "rgba(255, 255, 255, 1)";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.scene.render(this.ctx);
         this.menu.render(this.ctx);
 
         window.requestAnimationFrame(this.update);
-        this.previousTime = time;
     };
 
     processTasks() {

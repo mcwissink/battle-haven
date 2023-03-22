@@ -143,7 +143,7 @@ export class Entity<
         >,
         public offsetY = 0
     ) {
-        this.health = this.game.config.health;
+        this.health = this.game.config.game.health;
         this.shadow = new Sprite({
             images: [this.game.data.shadow],
             dimensions: () => ({
@@ -198,7 +198,7 @@ export class Entity<
     }
 
     attacking(entity: Entity, rest: number) {
-        this.hitStop = this.game.config.hitStop;
+        this.hitStop = this.game.config.game.hitStop;
         this.attackRest.set(entity, Math.floor(rest / 2));
     }
 
