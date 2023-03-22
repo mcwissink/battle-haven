@@ -14,6 +14,8 @@ interface PathEntry {
 
 export interface Page {
     text: string;
+    type?: string;
+    value?: any;
     isSplit?: boolean;
     isConfirmed?: boolean;
     disableButtonNavigation?: boolean;
@@ -258,7 +260,13 @@ export class Menu {
 
             ctx.fillStyle = "rgba(255, 255, 255, 1)";
             this.getActiveEntries(cursor).forEach((entry, index) => {
-                ctx.fillText(entry.text, 40, index * ENTRY_HEIGHT);
+                switch (entry.type) {
+                    case 'checkbox':
+                        ctx.fillText(`${entry.value ? '■' : '□'} ${entry.text}`, 40, index * ENTRY_HEIGHT);
+                        break;
+                    default:
+                        ctx.fillText(entry.text, 40, index * ENTRY_HEIGHT);
+                }
             });
 
             ctx.strokeStyle = "rgba(255, 255, 255, 1)";
