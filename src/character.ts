@@ -93,7 +93,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         }) => {
             const dvy = this.frame >= 223 && this.frame <= 226 ? -10 : dvyBase;
             this.health -= injury;
-            this.hitStop = this.game.config.hitStop * 2;
+            this.hitStop = this.game.config.game.hitStop * 2;
             this.mechanics.velocity[0] *= 0.7;
             this.mechanics.velocity[1] *= 0.7;
             if (dvx) {
@@ -138,7 +138,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                         },
                         drop: () =>
                             this.mechanics.force(
-                                this.game.config.gravity * 4,
+                                this.game.config.physics.gravity * 4,
                                 1
                             ),
                         attacked: hit,
@@ -411,7 +411,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     },
                     event: {
                         attacked: ({ dvx, dvy }) => {
-                            this.hitStop = this.game.config.hitStop * 2;
+                            this.hitStop = this.game.config.game.hitStop * 2;
                             if (dvx) {
                                 this.mechanics.force(dvx * 0.4);
                             }
@@ -537,16 +537,17 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                                 this.controller.stickY * 50,
                                 1
                             );
-                            this.mechanics.gravity = 0;
+                            // TODO: cleaner method for modifying mechanics
+                            // this.mechanics.gravity = 0;
                         },
                         leave: () => {
-                            this.mechanics.gravity = this.game.config.gravity;
-                            this.mechanics.airFriction = 1;
+                            // this.mechanics.gravity = this.game.config.gravity;
+                            // this.mechanics.airFriction = 1;
                         },
                     },
                     update: () => {
                         if (this.frame === 401) {
-                            this.mechanics.airFriction = 0.5;
+                            // this.mechanics.airFriction = 0.5;
                         }
                         if (this.frame === 403) {
                             this.next.setFrame(212, 1);

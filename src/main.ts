@@ -60,6 +60,7 @@ export const mainMenu = (game: BattleHaven): Page => {
                     { text: "firen", entries: READY, isConfirmed: true },
                     { text: "rudolf", entries: READY, isConfirmed: true },
                     { text: "dennis", entries: READY, isConfirmed: true },
+                    { text: "back" },
                 ],
             },
             {
@@ -195,10 +196,20 @@ loadData().then((data) => {
             zoom: 90,
             speed: 80,
         },
-        hitStop: 3,
-        gravity: 1.7,
-        friction: 0.8,
-        health: 750,
+        physics: {
+            gravity: 1.7,
+            friction: {
+                ground: 0.8,
+                air: 1,
+            },
+        },
+        game: {
+            hitStop: 3,
+            health: 750,
+        },
+        graphics: {
+            frameRate: 30,
+        }
     });
     BH.start();
     BH.menu.setEntries(mainMenu);

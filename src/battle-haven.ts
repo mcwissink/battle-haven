@@ -35,10 +35,20 @@ interface BattleHavenConfig {
         zoom: number;
         speed: number;
     };
-    gravity: number;
-    hitStop: number;
-    friction: number;
-    health: number;
+    physics: {
+        gravity: number;
+        friction: {
+            ground: number,
+            air: number,
+        };
+    }
+    game: {
+        hitStop: number;
+        health: number;
+    }
+    graphics: {
+        frameRate: number;
+    }
 }
 
 export class BattleHaven {
