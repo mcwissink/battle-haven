@@ -318,7 +318,7 @@ export class Scene {
             ctx.fillRect(
                 140 + padding,
                 padding,
-                (entity.health / this.game.config.health) * (400 - padding2),
+                (entity.health / this.game.config.game.health) * (400 - padding2),
                 28 - padding2
             );
             ctx.drawImage(entity.data.face!, 10, 10);
