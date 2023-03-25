@@ -216,7 +216,8 @@ loadData().then((data) => {
         game: {
             hitStop: 3,
             health: 750,
-            frameRate: 1000 / 30,
+            // TODO should be (1000 / fps). But causes jitter?
+            frameRate: 30,
         },
     });
     BH.start();
