@@ -234,8 +234,8 @@ export class Scene {
             },
             [0, 0]
         );
-        const charactersX = characterPositions[0] / this.characters.length;
-        const charactersY = characterPositions[1] / this.characters.length;
+        const charactersX = (characterPositions[0] / this.characters.length) || 0;
+        const charactersY = (characterPositions[1] / this.characters.length) || 0;
         const scalingFactor = this.characters.reduce((acc, entity) => {
             return Math.max(
                 Math.hypot(
@@ -247,10 +247,8 @@ export class Scene {
         }, 0);
 
         const target: Vector = [
-            (cameraHalfWidth - charactersX) * this.game.config.camera.follow ||
-                0,
-            (cameraHalfHeight - charactersY) * this.game.config.camera.follow ||
-                0,
+            charactersX * this.game.config.camera.follow,
+            charactersY * this.game.config.camera.follow  - 300,
         ];
         const cameraFullTranslation = difference(this.cameraPosition, target);
         const [x, y] = normalize(cameraFullTranslation);
@@ -264,15 +262,15 @@ export class Scene {
         );
         this.cameraPosition[0] += minimumTranslation[0];
         this.cameraPosition[1] += minimumTranslation[1];
-        ctx.translate(this.cameraPosition[0], this.cameraPosition[1]);
+        ctx.translate(-this.cameraPosition[0], -this.cameraPosition[1]);
 
-        const scale =
+        const scale = 
             1 +
             this.game.config.camera.zoom / (Math.max(scalingFactor, 50) + 200);
         ctx.scale(scale, scale);
         ctx.translate(
-            -cameraHalfWidth + cameraHalfWidth / scale,
-            -cameraHalfHeight + cameraHalfHeight / scale
+            cameraHalfWidth / scale,
+            cameraHalfHeight / scale
         );
 
         if (
@@ -292,10 +290,17 @@ export class Scene {
     render(ctx: CanvasRenderingContext2D) {
         ctx.save();
         this.camera(ctx);
+
+        this.game.data.stages.cuhk.layer.forEach((layer: any, i: number) => {
+            const l = this.game.data.stages.cuhk.layer.length;
+            const parallax = (i / l) * 0.15;
+            const x = layer.x - (this.cameraPosition[0] * parallax); 
+            ctx.drawImage(layer.spriteSheet.images[0], x - 550, layer.y - 500);
+        });
         // Fake 3D look
         ctx.save();
         ctx.translate(0, -10);
-        this.level.platforms.forEach((platform) => platform.render(ctx));
+        // this.level.platforms.forEach((platform) => platform.render(ctx));
         ctx.restore();
 
         this.entities.forEach((entity) => entity.render(ctx));

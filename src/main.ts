@@ -12,23 +12,28 @@ const READY: Page[] = [{ text: "Ready" }];
 
 const level = (game: BattleHaven) => ({
     platforms: [
-        new Mechanics(game, new Rectangle(200, 20), {
-            position: [500, 245],
-            passthrough: UP_VECTOR,
-        }),
-        new Mechanics(game, new Rectangle(200, 20), {
-            position: [800, 150],
-            passthrough: UP_VECTOR,
-        }),
-        new Mechanics(game, new Rectangle(200, 20), {
-            position: [1100, 245],
-            passthrough: UP_VECTOR,
-        }),
-        new Mechanics(game, new Rectangle(1000, 120), { position: [800, 400] }),
-        new Mechanics(game, new Rectangle(150, 600), { position: [5, 210] }),
-        new Mechanics(game, new Rectangle(1500, 100), { position: [800, 510] }),
-        new Mechanics(game, new Rectangle(150, 600), { position: [1600, 210] }),
+        new Mechanics(game, new Rectangle(1500, 100), { position: [0, 0] }),
+        new Mechanics(game, new Rectangle(150, 600), { position: [-750, 0] }),
+        new Mechanics(game, new Rectangle(150, 600), { position: [750, 0] }),
     ],
+    // platforms: [
+    //     new Mechanics(game, new Rectangle(200, 20), {
+    //         position: [500, 245],
+    //         passthrough: UP_VECTOR,
+    //     }),
+    //     new Mechanics(game, new Rectangle(200, 20), {
+    //         position: [800, 150],
+    //         passthrough: UP_VECTOR,
+    //     }),
+    //     new Mechanics(game, new Rectangle(200, 20), {
+    //         position: [1100, 245],
+    //         passthrough: UP_VECTOR,
+    //     }),
+    //     new Mechanics(game, new Rectangle(1000, 120), { position: [800, 400] }),
+    //     new Mechanics(game, new Rectangle(150, 600), { position: [5, 210] }),
+    //     new Mechanics(game, new Rectangle(1500, 100), { position: [800, 510] }),
+    //     new Mechanics(game, new Rectangle(150, 600), { position: [1600, 210] }),
+    // ],
 });
 
 export const mainMenu = (game: BattleHaven): Page => {
@@ -197,7 +202,7 @@ loadData().then((data) => {
             height: 900,
             shake: 2,
             follow: 1,
-            zoom: 90,
+            zoom: 300,
             speed: 80,
         },
         physics: {

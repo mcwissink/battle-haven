@@ -18,7 +18,7 @@ const loadAudio = async (source: string) => {
 
 const loadImage = (source: string) => {
     const image = new Image();
-    image.src = source.replace("sprite", "./data");
+    image.src = source;
     return image;
 };
 
@@ -39,7 +39,7 @@ const loadEntity = (data: any): EntityData => {
         if (!filePath) {
             throw new Error("Missing file path");
         }
-        return loadImage(filePath);
+        return loadImage(filePath.replace("sprite", "./data"));
     });
 
     const dimensions = (data.bmp.file as any[])
@@ -74,7 +74,7 @@ const loadEntity = (data: any): EntityData => {
 
     return {
         data,
-        face: data.bmp.head ? loadImage(data.bmp.head) : null,
+        face: data.bmp.head ? loadImage(data.bmp.head.replace("sprite", "./data")) : null,
         spriteSheet: {
             images,
             dimensions(frame: number) {
@@ -92,7 +92,7 @@ const loadStage = (stage: any) => {
         layer: stage.layer.map((layer: any) => ({
             ...layer,
             spriteSheet: {
-                images: loadImage(layer.pic),
+                images: [loadImage(layer.pic.replace('bg/cuhk', './data'))],
             },
         })),
     };
@@ -102,6 +102,7 @@ export type GameData = {
     shadow: HTMLImageElement;
     entities: Record<string, EntityData>;
     soundpacks: Record<string, SoundPack>;
+    stages: Record<string, any>;
 };
 
 export const loadData = async () => {
@@ -109,6 +110,7 @@ export const loadData = async () => {
         shadow: loadImage("./data/shadow.png"),
         entities: {},
         soundpacks: {},
+        stages: [],
     };
 
     gameData.entities = Object.fromEntries(
@@ -121,6 +123,12 @@ export const loadData = async () => {
             mapping: soundpack.sound,
         }]))
     );
+
+    gameData.stages = Object.fromEntries(
+        Object.entries(data.stages).map(([key, data]) => [key, loadStage(data)])
+    );
+
+    console.log(gameData.stages);
 
     return gameData;
 };
