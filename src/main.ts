@@ -1,5 +1,5 @@
 import { BattleHaven } from "./battle-haven";
-import { Mechanics, Rectangle, UP_VECTOR } from "./mechanics";
+import { Mechanics, Rectangle } from "./mechanics";
 import { Character } from "./character";
 import { loadData } from "./data-loader";
 import { Page } from "./menu";
@@ -201,7 +201,8 @@ loadData().then((data) => {
             width: 1600,
             height: 900,
             shake: 2,
-            follow: 1,
+            follow: [1, 0],
+            offset: [0, 400],
             zoom: 300,
             speed: 80,
         },

@@ -247,8 +247,8 @@ export class Scene {
         }, 0);
 
         const target: Vector = [
-            charactersX * this.game.config.camera.follow,
-            charactersY * this.game.config.camera.follow  - 300,
+            charactersX * this.game.config.camera.follow[0],
+            charactersY * this.game.config.camera.follow[1],
         ];
         const cameraFullTranslation = difference(this.cameraPosition, target);
         const [x, y] = normalize(cameraFullTranslation);
@@ -262,15 +262,22 @@ export class Scene {
         );
         this.cameraPosition[0] += minimumTranslation[0];
         this.cameraPosition[1] += minimumTranslation[1];
-        ctx.translate(-this.cameraPosition[0], -this.cameraPosition[1]);
 
-        const scale = 
+        // Position
+        ctx.translate(
+            cameraHalfWidth - this.cameraPosition[0] + this.game.config.camera.offset[0],
+            cameraHalfHeight - this.cameraPosition[1] + this.game.config.camera.offset[1]
+        );
+
+        // Zoom
+        const scale =
             1 +
             this.game.config.camera.zoom / (Math.max(scalingFactor, 50) + 200);
+        const translateScale = - 1 + 1 / scale;
         ctx.scale(scale, scale);
         ctx.translate(
-            cameraHalfWidth / scale,
-            cameraHalfHeight / scale
+            this.cameraPosition[0] * translateScale,
+            this.cameraPosition[1] * translateScale
         );
 
         if (

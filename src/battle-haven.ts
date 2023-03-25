@@ -3,6 +3,7 @@ import { ControllerManager } from "./controller";
 import { GameData } from "./data-loader";
 import { Effect } from "./effect";
 import { Entity } from "./entity";
+import { Vector } from "./mechanics";
 import { Menu } from "./menu";
 import { Projectile } from "./projectile";
 import { Scene } from "./scene";
@@ -31,7 +32,8 @@ interface BattleHavenConfig {
         width: number;
         height: number;
         shake: number;
-        follow: number;
+        follow: Vector;
+        offset: Vector;
         zoom: number;
         speed: number;
     };
@@ -41,12 +43,12 @@ interface BattleHavenConfig {
             ground: number,
             air: number,
         };
-    }
+    },
     game: {
         hitStop: number;
         health: number;
         frameRate: number;
-    }
+    },
 }
 
 export class BattleHaven {
