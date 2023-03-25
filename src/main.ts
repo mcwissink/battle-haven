@@ -216,7 +216,7 @@ loadData().then((data) => {
         game: {
             hitStop: 3,
             health: 750,
-            frameRate: 30,
+            frameRate: 1000 / 30,
         },
     });
     BH.start();
