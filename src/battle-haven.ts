@@ -110,20 +110,21 @@ export class BattleHaven {
             });
         });
 
-        const deltaTime = time - this.previousTime;
-
         // Process game logic at 30 fps
         // https://stackoverflow.com/questions/19764018/controlling-fps-with-requestanimationframe
-        if (deltaTime > this.config.game.frameRate) {
-            this.previousTime = time - (deltaTime % this.config.game.frameRate);
 
+
+        const frameInterval = 1000 / this.config.game.frameRate;
+
+        while (time - frameInterval > this.previousTime) {
             if (!this.menu.isOpen || this.debug.frames) {
                 this.processTasks();
 
-                this.scene.update(deltaTime);
-                this.scene.entities.forEach((entity) => entity.update(deltaTime));
-                this.scene.effects.forEach((effect) => effect.update(deltaTime));
+                this.scene.update(0);
+                this.scene.entities.forEach((entity) => entity.update(0));
+                this.scene.effects.forEach((effect) => effect.update(0));
             }
+            this.previousTime += frameInterval;
         }
 
         this.ctx.fillStyle = "rgba(255, 255, 255, 1)";
