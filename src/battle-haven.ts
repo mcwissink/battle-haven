@@ -125,13 +125,13 @@ export class BattleHaven {
                 this.scene.effects.forEach((effect) => effect.update(0));
             }
             this.previousTime += frameInterval;
+
+            this.ctx.fillStyle = "rgba(255, 255, 255, 1)";
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+            this.scene.render(this.ctx);
+            this.menu.render(this.ctx);
         }
-
-        this.ctx.fillStyle = "rgba(255, 255, 255, 1)";
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        this.scene.render(this.ctx);
-        this.menu.render(this.ctx);
 
         window.requestAnimationFrame(this.update);
     };

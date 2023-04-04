@@ -256,10 +256,12 @@ export class Scene {
             x * this.game.config.camera.speed,
             y * this.game.config.camera.speed,
         ];
-        const minimumTranslation = minimum(
-            cameraFullTranslation,
-            cameraLimitedTranslation
-        );
+        const minimumTranslation = cameraFullTranslation;
+            // minimum(
+            //     cameraFullTranslation,
+            //     cameraLimitedTranslation
+            // )
+        ;
         this.cameraPosition[0] += minimumTranslation[0];
         this.cameraPosition[1] += minimumTranslation[1];
 
@@ -298,16 +300,17 @@ export class Scene {
         ctx.save();
         this.camera(ctx);
 
-        this.game.data.stages.cuhk.layer.forEach((layer: any, i: number) => {
-            const l = this.game.data.stages.cuhk.layer.length;
-            const parallax = (i / l) * 0.15;
-            const x = layer.x - (this.cameraPosition[0] * parallax); 
-            ctx.drawImage(layer.spriteSheet.images[0], x - 550, layer.y - 500);
-        });
+        // this.game.data.stages.cuhk.layer.forEach((layer: any, i: number) => {
+        //     const l = this.game.data.stages.cuhk.layer.length;
+        //     const parallax = (i / l) * 0.15;
+        //     const x = layer.x - (this.cameraPosition[0] * parallax); 
+        //     ctx.drawImage(layer.spriteSheet.images[0], x - 550, layer.y - 500);
+        // });
+        
         // Fake 3D look
         ctx.save();
         ctx.translate(0, -10);
-        // this.level.platforms.forEach((platform) => platform.render(ctx));
+        this.level.platforms.forEach((platform) => platform.render(ctx));
         ctx.restore();
 
         this.entities.forEach((entity) => entity.render(ctx));

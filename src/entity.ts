@@ -199,7 +199,7 @@ export class Entity<
 
     attacking(entity: Entity, rest: number) {
         this.hitStop = this.game.config.game.hitStop;
-        this.attackRest.set(entity, Math.floor(rest / 2));
+        this.attackRest.set(entity, rest);
     }
 
     processEvents() {
@@ -261,14 +261,22 @@ export class Entity<
 
             if (!this.isFrozen(nextFrameData)) {
                 if (nextFrameData.dvx) {
-                    this.mechanics.force(
-                        nextFrameData.dvx * this.direction,
-                        0,
-                        Infinity
-                    );
+                    if (Math.abs(nextFrameData.dvx) < 1) {
+                        this.mechanics.velocity[0] *= nextFrameData.dvx;
+                    } else {
+                        this.mechanics.force(
+                            nextFrameData.dvx * this.direction,
+                            0,
+                            Infinity
+                        );
+                    }
                 }
                 if (nextFrameData.dvy) {
-                    this.mechanics.force(nextFrameData.dvy, 1);
+                    if (Math.abs(nextFrameData.dvy) < 1) {
+                        this.mechanics.velocity[1] *= nextFrameData.dvy;
+                    } else {
+                        this.mechanics.force(nextFrameData.dvy, 1);
+                    }
                 }
             }
 

@@ -1,5 +1,5 @@
 import { BattleHaven } from "./battle-haven";
-import { Mechanics, Rectangle } from "./mechanics";
+import { Mechanics, Rectangle, Diamond, UP_VECTOR } from "./mechanics";
 import { Character } from "./character";
 import { loadData } from "./data-loader";
 import { Page } from "./menu";
@@ -15,25 +15,22 @@ const level = (game: BattleHaven) => ({
         new Mechanics(game, new Rectangle(1500, 100), { position: [0, 0] }),
         new Mechanics(game, new Rectangle(150, 600), { position: [-750, 0] }),
         new Mechanics(game, new Rectangle(150, 600), { position: [750, 0] }),
+        new Mechanics(game, new Rectangle(200, 20), {
+            position: [-250, -150],
+            passthrough: UP_VECTOR,
+        }),
+        new Mechanics(game, new Rectangle(200, 20), {
+            position: [0, -250],
+            passthrough: UP_VECTOR,
+        }),
+        new Mechanics(game, new Rectangle(200, 20), {
+            position: [250, -150],
+            passthrough: UP_VECTOR,
+        }),
+        new Mechanics(game, new Diamond(250, 100), {
+            position: [500, -50],
+        }),
     ],
-    // platforms: [
-    //     new Mechanics(game, new Rectangle(200, 20), {
-    //         position: [500, 245],
-    //         passthrough: UP_VECTOR,
-    //     }),
-    //     new Mechanics(game, new Rectangle(200, 20), {
-    //         position: [800, 150],
-    //         passthrough: UP_VECTOR,
-    //     }),
-    //     new Mechanics(game, new Rectangle(200, 20), {
-    //         position: [1100, 245],
-    //         passthrough: UP_VECTOR,
-    //     }),
-    //     new Mechanics(game, new Rectangle(1000, 120), { position: [800, 400] }),
-    //     new Mechanics(game, new Rectangle(150, 600), { position: [5, 210] }),
-    //     new Mechanics(game, new Rectangle(1500, 100), { position: [800, 510] }),
-    //     new Mechanics(game, new Rectangle(150, 600), { position: [1600, 210] }),
-    // ],
 });
 
 export const mainMenu = (game: BattleHaven): Page => {
@@ -204,20 +201,19 @@ loadData().then((data) => {
             follow: [1, 0],
             offset: [0, 400],
             zoom: 300,
-            speed: 80,
+            speed: Infinity,
         },
         physics: {
-            gravity: 1.7,
+            gravity: 0.7,
             friction: {
-                ground: 0.8,
+                ground: 0.9,
                 air: 1,
             },
         },
         game: {
-            hitStop: 3,
+            hitStop: 4,
             health: 750,
-            // TODO should be (1000 / fps). But causes jitter?
-            frameRate: 30,
+            frameRate: 60,
         },
     });
     BH.start();

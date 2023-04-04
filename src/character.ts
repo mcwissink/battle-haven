@@ -21,11 +21,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         public data: EntityData
     ) {
         const doubleJump = () => {
-            if (this.controller.stickY > 0) {
-                return animation.drop;
-            } else {
-                return animation.double_jump;
-            }
+            return animation.double_jump;
         };
 
         const fall = () => {
@@ -50,6 +46,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         };
 
         const land = () => {
+            this.controller.clearComboBuffer();
             this.next.setFrame(animation.crouch, 1);
             this.game.spawn(
                 {
@@ -125,7 +122,7 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
         super(
             game,
             new Mechanics(game, new Diamond(25, 40), {
-                position: [0, -100],
+                position: [0, -200],
             }),
             new Sprite(data.spriteSheet),
             data.data.frame,
@@ -272,7 +269,11 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                                     1.5
                             );
                         },
-                        fall: () => this.next.setFrame(animation.airborn, 1),
+                        fall: () => {
+                            console.log('fall');
+                            this.next.setFrame(animation.airborn, 1);
+                            this.mechanics.velocity[0] *= 0.5;
+                        },
                     },
                     combo: {
                         hit_a: 85,
@@ -349,24 +350,24 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                     combo: {
                         hit_d: animation.drop,
                         hit_a: animation.jump_attack,
-                        hit_j: animation.drop,
                     },
                     update: airMove,
                 },
                 [State.drop]: {
                     event: {
                         enter: () => {
-                            this.mechanics.velocity[0] =
-                                (this.controller.stickDirectionX ||
-                                    this.direction) * 20;
-                            this.mechanics.velocity[1] = 20;
+                            const [x, y] = normalize([
+                                this.controller.stickX,
+                                this.controller.stickY,
+                            ]);
+                            this.mechanics.velocity[0] = x * 20;
+                            this.mechanics.velocity[1] = y * 20;
                         },
                     },
-                    combo: {
-                        hit_a: animation.dash_attack,
-                    },
                     update: () => {
-                        airMove();
+                        this.mechanics.velocity[1] *= 1.03;
+                        this.mechanics.velocity[0] *= 0.9;
+                        this.mechanics.velocity[1] *= 0.9;
                     },
                 },
                 [State.dash]: {
@@ -405,7 +406,6 @@ export class Character extends Entity<CharacterFrameData, CharacterFrame> {
                 },
                 [State.defend]: {
                     combo: {
-                        hit_d: animation.fly,
                         hit_a: animation.grab,
                         hit_Fd: animation.transmission,
                     },

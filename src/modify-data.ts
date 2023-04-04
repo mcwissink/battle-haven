@@ -69,10 +69,56 @@ const buildCustomFrames = (rollingPics: number[]) => ({
         name: "drop",
         pic: 64,
         state: 22,
-        wait: 0,
-        next: 0,
+        wait: 4,
+        next: 393,
         dvx: 0,
         dvy: 0,
+        dvz: 0,
+        centerx: 39,
+        centery: 79,
+        hit_a: 0,
+        hit_d: 0,
+        hit_j: 0,
+        bpoint: {
+            x: 36,
+            y: 30,
+        },
+        wpoint: {
+            kind: 1,
+            x: 25,
+            y: 37,
+            weaponact: 35,
+            attacking: 0,
+            cover: 0,
+            dvx: 0,
+            dvy: 0,
+            dvz: 0,
+        },
+        bdy: [
+            {
+                kind: 0,
+                x: 20,
+                y: 5,
+                w: 27,
+                h: 38,
+            },
+            {
+                kind: 0,
+                x: 16,
+                y: 37,
+                w: 36,
+                h: 22,
+            },
+        ],
+    },
+    393: {
+        name: "drop",
+        pic: 64,
+        state: 22,
+        wait: 8,
+        next: 999,
+        dvx: 0.01,
+        dvy: 0.01,
         dvz: 0,
         centerx: 39,
         centery: 79,
@@ -583,8 +629,12 @@ export const modifyData = (data: any) => {
             ...buildCustomFrames(rollingPics),
         };
 
-        data.bmp.walking_speedz = 7;
-        data.bmp.running_speed += 2;
+        data.bmp.walking_speed *= 0.8;
+        // data.bmp.running_speed *= 1.1;
+        data.bmp.jump_height *= 0.8;
+        data.bmp.jump_distance *= 0.8;
+        data.bmp.dash_height *= 0.8;
+        data.bmp.dash_distance *= 0.8;
 
         // Mod woody teleport to see animation
         // modifyFrames(new Array(28).fill(275).map((v, i) => v + i), (frameData) => {
@@ -620,6 +670,11 @@ export const modifyData = (data: any) => {
         // Allow action out of stop_running
         modifyFrames([218], (frameData) => (frameData.state = 0));
         modifyFrames([210, 211], (frameData) => (frameData.state = 20));
+    } else {
+        Object.values(data.frame).forEach((frameData) => {
+            frameData.dvx *= 0.5;
+            frameData.dvy *= 0.5;
+        });
     }
 
     Object.entries(data.frame).forEach(([, frameData]: any) => {
@@ -637,6 +692,18 @@ export const modifyData = (data: any) => {
         frameData.centery++;
         if (frameData.dvy !== 550) {
             frameData.dvy *= 2;
+        }
+    });
+
+    Object.values(data.frame).forEach((frameData) => {
+        frameData.wait *= 2;
+        if ("itr" in frameData) {
+            frameData.itr.forEach((itr) => {
+                itr.dvx *= 0.5;
+                itr.dvy *= 0.5;
+                itr.vrest *= 2;
+                itr.arest *= 2;
+            });
         }
     });
 };
